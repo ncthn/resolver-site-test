@@ -47,14 +47,14 @@ h2.big{font-family:var(--br);font-weight:700;font-size:clamp(30px,3.8vw,46px);le
    select bands carry a bridge element that spans the seam into the neighbour = double overlap */
 .raised{position:relative;border-radius:40px 40px 0 0;margin-top:-60px;z-index:3;box-shadow:0 -34px 64px -30px rgba(18,18,50,.30)}
 .raised-lg{position:relative;border-radius:48px 48px 0 0;margin-top:-80px;z-index:4;box-shadow:0 -40px 72px -32px rgba(18,18,50,.36)}
-.bridge-d{position:relative;z-index:20;margin-bottom:-96px}   /* element spills DOWN into next band */
+.float{border-radius:40px;margin-top:-60px;z-index:7;box-shadow:0 -30px 60px -30px rgba(18,18,50,.26), 0 44px 84px -38px rgba(18,18,50,.34)}  /* double-overlap: floats over BOTH neighbours */
 .bridge-u{position:relative;z-index:20;margin-top:-128px}     /* element rises UP into previous band */
-.recv-top{padding-top:150px}                                  /* band receiving a bridge gets headroom */
+/* (recv-top removed — no content bridges into empty space) */
 
 /* nav — floating pill that docks on scroll */
-.navwrap{position:fixed;top:0;left:0;right:0;z-index:80;display:flex;justify-content:center;padding:16px 18px;transition:padding .25s}
+.navwrap{position:fixed;top:0;left:0;right:0;z-index:80;display:flex;justify-content:center;padding:18px 18px;transition:padding .32s cubic-bezier(.4,0,.2,1)}
 .navwrap.docked{padding:0}
-nav{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1180px;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);border:1px solid rgba(20,20,50,.07);border-radius:999px;padding:11px 12px 11px 24px;box-shadow:0 18px 40px -26px rgba(18,18,50,.4);transition:border-radius .25s,max-width .25s}
+nav{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1180px;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);border:1px solid rgba(20,20,50,.07);border-radius:999px;padding:11px 12px 11px 24px;box-shadow:0 18px 40px -26px rgba(18,18,50,.4);transition:border-radius .32s cubic-bezier(.4,0,.2,1),max-width .32s cubic-bezier(.4,0,.2,1),box-shadow .32s ease,padding .32s cubic-bezier(.4,0,.2,1)}
 .navwrap.docked nav{border-radius:0;max-width:100%;padding-left:56px;padding-right:24px;box-shadow:0 1px 0 var(--line)}
 .brand{display:flex;align-items:center;gap:9px}
 .wm{font-family:var(--br);font-weight:700;font-size:19px;letter-spacing:-.02em;color:var(--ink)}

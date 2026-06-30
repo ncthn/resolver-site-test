@@ -196,11 +196,11 @@ export function Landing() {
             <div className="acts reveal"><a className="btn btn-light" href="#cta">Start free setup <ArrowRight size={16} /></a><a className="btn btn-ghost-d" href="#cta">Book a demo</a></div>
             <div className="micro reveal"><Check size={13} /> Shadow mode first <Check size={13} /> Live order data <Check size={13} /> Auto-send only by lane</div>
           </div>
-          <div className="reveal bridge-d"><InboxDemo /></div>
+          <div className="reveal"><InboxDemo /></div>
         </div></div>
       </section>
 
-      <section className="band c-white trust raised recv-top">
+      <section className="band c-white trust raised">
         <div className="wrap">
           <div className="cap reveal">Trusted by fast-growing Shopify &amp; dropshipping brands</div>
           <div className="logos reveal"><span>AURORA</span><span>Harbor&nbsp;Goods</span><span>NORTHBOUND</span><span>Lumora</span><span>Maison&nbsp;Vela</span></div>
@@ -223,7 +223,7 @@ export function Landing() {
         </div>
       </section>
 
-      <section id="features" className="band c-tint feat raised">
+      <section id="features" className="band c-tint feat float">
         <div className="wrap"><div className="grid">
           <div>
             <span className="lbl reveal">Per-store control</span>
@@ -307,7 +307,7 @@ export function Landing() {
         </div></div>
       </section>
 
-      <section id="security" className="band c-white sec raised">
+      <section id="security" className="band c-white sec float">
         <div className="wrap">
           <span className="lbl reveal">Security &amp; trust</span>
           <h2 className="big reveal" style={{ marginTop: 10 }}>Your customers' data, handled properly.</h2>
@@ -324,7 +324,7 @@ export function Landing() {
         </div>
       </section>
 
-      <section id="pricing" className="band c-white raised"><Pricing /></section>
+      <section id="pricing" className="band c-white float"><Pricing /></section>
       <section id="faq" className="band c-tint raised"><Faq /></section>
 
       <section id="cta" className="band c-indigo end raised-lg">
