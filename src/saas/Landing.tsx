@@ -179,7 +179,7 @@ const STEPS: [LucideIcon, string, string, string][] = [
 ]
 const NAVITEMS: [LucideIcon, string][] = [[Inbox, 'Tickets'], [CircleCheck, 'Resolved'], [Mail, 'Compose'], [ListChecks, 'Tasks & rules'], [BarChart3, 'Reporting']]
 const STATS: [string, string, boolean][] = [['92%', 'of tickets resolved before you read them', false], ['< 2 min', 'average first reply, day or night', true], ['30+', 'languages, answered natively', false], ['120 hrs', 'saved per week on support', false]]
-const STORES: [string, string, string, string, string][] = [['L', 'Lumora', '12 open', 'AUTO', '#23278F'], ['V', 'Vexa', '5 open', 'SHADOW', '#0E9488'], ['N', 'Northbound', '9 open', 'AUTO', '#2A2FB8'], ['M', 'Maison Vela', '3 open', 'SHADOW', '#D14343']]
+const STORES: [string, string, string, string, string][] = [['L', 'Lumora', '12 open', 'AUTO', '#23278F'], ['V', 'Vexa', '5 open', 'SHADOW', '#5B61E6'], ['N', 'Northbound', '9 open', 'AUTO', '#2A2FB8'], ['M', 'Maison Vela', '3 open', 'SHADOW', '#D14343']]
 const SEC: [LucideIcon, string, string][] = [
   [Lock, 'Encrypted end to end', 'Data encrypted in transit and at rest with AES-256. Tokens scoped to the minimum Shopify access needed.'],
   [ShieldCheck, 'GDPR compliant', 'Full data-subject request handling, EU data residency available, and customer redaction webhooks supported.'],
@@ -197,13 +197,13 @@ export function Landing() {
     <div id="top" ref={ref}>
       <Nav />
 
-      <section className="band c-indigo hero">
+      <section className="band hero">
         <div className="wrap"><div className="grid">
           <div>
             <span className="hbadge reveal"><Sparkles size={13} /> AI support agent for Shopify</span>
-            <h1 className="reveal">Your support inbox, resolved by morning.</h1>
+            <h1 className="reveal">Your support inbox, <em>resolved by morning.</em></h1>
             <p className="sub reveal">Resolver reads every email, pulls the real Shopify order, and drafts the reply in your customer's language — then sends it, or hands the risky ones to you. You wake up to a cleared queue.</p>
-            <div className="acts reveal"><a className="btn btn-light" href="#cta">Start free setup <ArrowRight size={16} /></a><a className="btn btn-ghost-d" href="#cta">Book a demo</a></div>
+            <div className="acts reveal"><a className="btn btn-indigo" href="#cta">Start free setup <ArrowRight size={16} /></a><a className="btn btn-ghost" href="#cta">Book a demo</a></div>
             <div className="micro reveal"><Check size={13} /> Shadow mode first <Check size={13} /> Live order data <Check size={13} /> Auto-send only by lane</div>
           </div>
           <div className="reveal"><InboxDemo /></div>

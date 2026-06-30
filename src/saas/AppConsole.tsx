@@ -10,7 +10,7 @@ const LOGO = '/logo/recolor/oct-bluewhite-t.png' // blue mark — light app chro
 
 const STORES = [
   { id: 'aurora', name: 'AURORA', hue: '#2A2FB8', count: 12 },
-  { id: 'harbor', name: 'Harbor Goods', hue: '#0E9488', count: 7 },
+  { id: 'harbor', name: 'Harbor Goods', hue: '#5B61E6', count: 7 },
   { id: 'northbound', name: 'Northbound', hue: '#23278F', count: 5 },
 ]
 
@@ -71,7 +71,7 @@ const CONVS: Conv[] = [
 const LANE: Record<string, string> = { c1: 'WISMO', c2: 'Disputes', c3: 'Returns', c4: 'Address changes' }
 
 const FLAG_META: Record<Flag, { label: string; cls: string; dot: string }> = {
-  auto: { label: 'Auto-drafted', cls: 'cs-b-auto', dot: '#0E9488' },
+  auto: { label: 'Auto-drafted', cls: 'cs-b-auto', dot: '#5B61E6' },
   esc: { label: 'Escalated', cls: 'cs-b-esc', dot: '#D14343' },
   sent: { label: 'Auto-sent', cls: 'cs-b-sent', dot: '#8C8DA3' },
   wait: { label: 'Needs you', cls: 'cs-b-wait', dot: '#2A2FB8' },
@@ -79,10 +79,91 @@ const FLAG_META: Record<Flag, { label: string; cls: string; dot: string }> = {
 
 const TABS = ['Needs you', 'Auto-sent', 'Escalated', 'All'] as const
 
+const KPIS: { Ic: LucideIcon; label: string; value: string; delta: string; up: boolean; soft: string; fg: string }[] = [
+  { Ic: CircleCheck, label: 'Tickets resolved', value: '1,284', delta: '+18%', up: true, soft: 'var(--teal-soft)', fg: 'var(--teal)' },
+  { Ic: Zap, label: 'Auto-send rate', value: '72%', delta: '+6 pts', up: true, soft: '#ECEBF8', fg: 'var(--indigo)' },
+  { Ic: Clock, label: 'Avg first reply', value: '0.9s', delta: '−2.1s', up: true, soft: 'var(--teal-soft)', fg: 'var(--teal)' },
+  { Ic: ShieldCheck, label: 'Escalated to human', value: '4.3%', delta: '−0.8 pts', up: true, soft: '#ECEBF8', fg: 'var(--indigo)' },
+]
+const TREND = [['Mon', 62], ['Tue', 78], ['Wed', 54], ['Thu', 88], ['Fri', 100], ['Sat', 46], ['Sun', 58]] as const
+const LANES: [string, number, boolean][] = [['WISMO', 84, true], ['Returns', 71, true], ['Address changes', 63, true], ['Disputes', 0, false]]
+const STORE_ROWS = [
+  { name: 'AURORA', hue: '#2A2FB8', open: 12, resolved: '612', auto: '74%', resp: '0.8s' },
+  { name: 'Harbor Goods', hue: '#5B61E6', open: 7, resolved: '408', auto: '69%', resp: '1.1s' },
+  { name: 'Northbound', hue: '#23278F', open: 5, resolved: '264', auto: '71%', resp: '0.9s' },
+]
+
+function Report() {
+  return (
+    <div className="cs-report">
+      <header className="cs-rep-head">
+        <div>
+          <div className="cs-rep-title">Reporting</div>
+          <div className="cs-rep-sub">AURORA · all lanes</div>
+        </div>
+        <span className="cs-lane-chip"><Clock size={13} /> Last 7 days</span>
+      </header>
+
+      <div className="cs-kpis">
+        {KPIS.map((k) => (
+          <div className="cs-kpi" key={k.label}>
+            <div className="cs-kpi-ic" style={{ background: k.soft, color: k.fg }}><k.Ic size={17} /></div>
+            <div className="cs-kpi-n">{k.value}</div>
+            <div className="cs-kpi-l">{k.label}</div>
+            <div className={'cs-kpi-d ' + (k.up ? 'up' : 'dn')}>{k.delta}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="cs-rep-grid">
+        <div className="cs-rep-card">
+          <div className="cs-rep-card-h">Resolved per day</div>
+          <div className="cs-bars">
+            {TREND.map(([d, pct]) => (
+              <div className="cs-bar-col" key={d}>
+                <div className="cs-bar-wrap"><div className="cs-bar" style={{ height: pct + '%' }} /></div>
+                <span className="cs-bar-d">{d}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="cs-rep-card">
+          <div className="cs-rep-card-h">Resolved by lane</div>
+          <div className="cs-lanes">
+            {LANES.map(([name, pct, auto]) => (
+              <div className="cs-lane-row" key={name}>
+                <span className="cs-lane-nm">{name}</span>
+                <span className="cs-lane-bar"><i style={{ width: Math.max(pct, 3) + '%', background: auto ? 'var(--teal)' : 'var(--tx-faint)' }} /></span>
+                <span className="cs-lane-pct">{auto ? pct + '%' : 'human'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="cs-rep-card">
+        <div className="cs-rep-card-h">By store</div>
+        <table className="cs-table">
+          <thead><tr><th>Store</th><th>Open</th><th>Resolved</th><th>Auto-send</th><th>Avg first reply</th></tr></thead>
+          <tbody>
+            {STORE_ROWS.map((s) => (
+              <tr key={s.name}>
+                <td><span className="cs-dot" style={{ background: s.hue }} />{s.name}</td>
+                <td>{s.open}</td><td>{s.resolved}</td><td>{s.auto}</td><td>{s.resp}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 export function AppConsole() {
   const [sel, setSel] = useState('c1')
   const [tab, setTab] = useState<typeof TABS[number]>('Needs you')
   const [autopilot, setAutopilot] = useState(true)
+  const [view, setView] = useState<'inbox' | 'reporting'>('inbox')
   const c = CONVS.find((x) => x.id === sel)!
 
   return (
@@ -98,12 +179,15 @@ export function AppConsole() {
         </button>
 
         <nav className="cs-nav">
-          {NAV.map(([Ic, label, n], i) => (
-            <a key={label} className={'cs-navi' + (i === 0 ? ' on' : '')}>
-              <Ic size={17} /> <span>{label}</span>
-              {n != null && <span className="cs-count">{n}</span>}
-            </a>
-          ))}
+          {NAV.map(([Ic, label, n], i) => {
+            const v = i === 0 ? 'inbox' : i === 4 ? 'reporting' : null
+            return (
+              <a key={label} className={'cs-navi' + (v && v === view ? ' on' : '')} onClick={() => v && setView(v)} style={v ? { cursor: 'pointer' } : undefined}>
+                <Ic size={17} /> <span>{label}</span>
+                {n != null && <span className="cs-count">{n}</span>}
+              </a>
+            )
+          })}
         </nav>
 
         <div className="cs-rail-card">
@@ -120,6 +204,7 @@ export function AppConsole() {
         </div>
       </aside>
 
+      {view === 'reporting' ? <Report /> : (<>
       {/* ---- queue ---- */}
       <section className="cs-queue">
         <header className="cs-q-head">
@@ -224,6 +309,7 @@ export function AppConsole() {
           </div>
         </div>
       </aside>
+      </>)}
     </div>
   )
 }
