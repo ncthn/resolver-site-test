@@ -326,32 +326,70 @@ export function Landing() {
       </section>
 
       <section className="band c-indigo raised-lg">
-        <div className="wrap">
-          <span className="lbl reveal">Shadow mode</span>
-          <h2 className="big reveal" style={{ marginTop: 16, maxWidth: '20ch', color: '#fff' }}>Nothing sends until you trust it.</h2>
-          <p className="sub reveal" style={{ opacity: .85, marginTop: 16, maxWidth: '58ch', fontSize: 17 }}>Resolver starts in shadow mode — it drafts every reply and sends nothing while you watch. Flip lanes to auto-send one at a time, each with a delay, a cancel window, and risky tickets always kept for a human.</p>
-          <div className="pipe reveal"><span className="node">Draft</span><ArrowRight className="arr" size={16} /><span className="node">Approved</span><ArrowRight className="arr" size={16} /><span className="node on"><Zap size={14} /> Auto-send</span></div>
-          <div className="quote br reveal">"I read the first fifty drafts. They were all right. Now it just runs."</div>
-          <div className="qm reveal">store owner · 4 stores · 2,000 tickets / month</div>
-        </div>
+        <div className="wrap"><div className="cols2">
+          <div>
+            <span className="lbl reveal">Shadow mode</span>
+            <h2 className="big reveal" style={{ marginTop: 16, maxWidth: '15ch', color: '#fff' }}>Nothing sends until you trust it.</h2>
+            <p className="sub reveal" style={{ opacity: .85, marginTop: 16, maxWidth: '46ch', fontSize: 16 }}>Resolver starts in shadow mode — it drafts every reply and sends nothing while you watch. Flip lanes to auto-send one at a time, each with a delay, a cancel window, and risky tickets always kept for a human.</p>
+            <div className="pipe reveal"><span className="node">Draft</span><ArrowRight className="arr" size={16} /><span className="node">Approved</span><ArrowRight className="arr" size={16} /><span className="node on"><Zap size={14} /> Auto-send</span></div>
+            <div className="quote br reveal" style={{ fontSize: 21 }}>"I read the first fifty drafts. They were all right. Now it just runs."</div>
+            <div className="qm reveal">store owner · 4 stores · 2,000 tickets / month</div>
+          </div>
+          <div className="reveal">
+            <div className="shcard">
+              <div className="shcard-h"><span className="shdot" /> Held for a human · never auto-sent</div>
+              <div className="shrow"><span className="ha-av esc">AW</span><div><b>A. Weber · #1991</b><i>"…reporting this to my bank and my lawyer."</i></div></div>
+              <div className="shrisk"><ShieldCheck size={14} /> Legal threat detected — pulled from auto-send and routed to you with the full order attached.</div>
+              <div className="shrow ok"><span className="ha-av">ML</span><div><b>Maria Lopez · #1042</b><i>Auto-drafted · 96% confidence · cleared &amp; sent</i></div></div>
+              <div className="shrow ok"><span className="ha-av">JC</span><div><b>James Carter · #2090</b><i>Return label · within window · auto-sent</i></div></div>
+            </div>
+          </div>
+        </div></div>
       </section>
 
       <section className="band c-white raised">
         <div className="wrap">
-          <span className="lbl reveal">Any language</span>
-          <h2 className="big reveal" style={{ marginTop: 16 }}>Replies natively. Your team only reads English.</h2>
-          <p className="p reveal" style={{ color: 'var(--tx-soft)', marginTop: 14, maxWidth: '52ch', fontSize: 16 }}>Your buyers are in the US, France, Germany, Mexico and beyond. Resolver writes in their language and shows you the English alongside — control without a translator.</p>
-          <div className="reveal"><LanguagesDemo /></div>
+          <span className="lbl reveal">Results</span>
+          <h2 className="big reveal" style={{ marginTop: 16 }}>The numbers after one month live.</h2>
+          <div className="resgrid">
+            {([['Tickets resolved', '1,284', '+18%'], ['Auto-send rate', '72%', '+6 pts'], ['Avg first reply', '0.9s', '−2.1s'], ['Escalated to human', '4.3%', '−0.8 pts']] as [string, string, string][]).map(([l, v, d], i) => (
+              <div className="cs-kpi reveal" key={i}><div className="cs-kpi-ic" style={{ background: '#ECEBF8', color: 'var(--indigo)' }}><BarChart3 size={17} /></div><div className="cs-kpi-n">{v}</div><div className="cs-kpi-l">{l}</div><div className="cs-kpi-d" style={{ background: '#ECEBF8', color: 'var(--indigo)' }}>{d}</div></div>
+            ))}
+          </div>
+          <div className="resbento">
+            <div className="rescard reveal">
+              <div className="rescard-h">Resolved per day</div>
+              <div className="cs-bars">{([['Mon', 62], ['Tue', 78], ['Wed', 54], ['Thu', 88], ['Fri', 100], ['Sat', 46], ['Sun', 58]] as [string, number][]).map(([d, p]) => <div className="cs-bar-col" key={d}><div className="cs-bar-wrap"><div className="cs-bar" style={{ height: p + '%' }} /></div><span className="cs-bar-d">{d}</span></div>)}</div>
+            </div>
+            <div className="rescard reveal">
+              <div className="rescard-h">Resolved by lane</div>
+              <div className="cs-lanes">{([['WISMO', 84, true], ['Returns', 71, true], ['Address', 63, true], ['Disputes', 0, false]] as [string, number, boolean][]).map(([n, p, a]) => <div className="cs-lane-row" key={n}><span className="cs-lane-nm">{n}</span><span className="cs-lane-bar"><i style={{ width: Math.max(a ? p : 100, 4) + '%', background: a ? 'var(--indigo)' : 'var(--tx-faint)' }} /></span><span className="cs-lane-pct">{a ? p + '%' : 'human'}</span></div>)}</div>
+            </div>
+          </div>
+          <div className="rescard full reveal">
+            <div className="rescard-h">By store</div>
+            <table className="cs-table"><thead><tr><th>Store</th><th>Open</th><th>Resolved</th><th>Auto-send</th><th>Avg first reply</th></tr></thead><tbody>
+              {([['AURORA', '#2A2FB8', '12', '612', '74%', '0.8s'], ['Harbor Goods', '#5B61E6', '7', '408', '69%', '1.1s'], ['Northbound', '#23278F', '5', '264', '71%', '0.9s']] as string[][]).map((s) => <tr key={s[0]}><td><span className="cs-dot" style={{ background: s[1] }} />{s[0]}</td><td>{s[2]}</td><td>{s[3]}</td><td>{s[4]}</td><td>{s[5]}</td></tr>)}
+            </tbody></table>
+          </div>
         </div>
       </section>
 
       <section className="band c-tint raised">
-        <div className="wrap">
-          <span className="lbl reveal">One inbox, every store</span>
-          <h2 className="big reveal" style={{ marginTop: 16 }}>Run ten storefronts without ten VAs.</h2>
-          <p className="p reveal" style={{ color: 'var(--tx-soft)', marginTop: 14, maxWidth: '52ch', fontSize: 16 }}>Every store flows into one shared queue — each with its own voice, policy and shadow/auto setting. Filter to one, or work them all at once.</p>
-          <div className="stores">{STORES.map(([a, n, o, b, c], i) => <div className="scard reveal" key={i}><div className="av" style={{ background: c }}>{a}</div><div className="nm">{n}</div><div className="mt">{o} <span className={'ba ' + (b === 'AUTO' ? 'auto' : 'sh')}>{b}</span></div></div>)}</div>
-        </div>
+        <div className="wrap"><div className="cols2">
+          <div>
+            <span className="lbl reveal">Any language</span>
+            <h2 className="reveal br" style={{ marginTop: 12, fontWeight: 700, fontSize: 'clamp(23px,2.5vw,31px)', letterSpacing: '-.02em' }}>Replies natively. Your team reads English.</h2>
+            <p className="p reveal" style={{ color: 'var(--tx-soft)', marginTop: 12, fontSize: 15.5 }}>Buyers in the US, France, Germany, Mexico and beyond — Resolver writes in their language and shows the English alongside.</p>
+            <div className="reveal"><LanguagesDemo /></div>
+          </div>
+          <div>
+            <span className="lbl reveal">One inbox, every store</span>
+            <h2 className="reveal br" style={{ marginTop: 12, fontWeight: 700, fontSize: 'clamp(23px,2.5vw,31px)', letterSpacing: '-.02em' }}>Run ten storefronts without ten VAs.</h2>
+            <p className="p reveal" style={{ color: 'var(--tx-soft)', marginTop: 12, fontSize: 15.5 }}>Every store flows into one shared queue — each with its own voice, policy and shadow/auto setting.</p>
+            <div className="stores2">{STORES.map(([a, n, o, b, c], i) => <div className="scard reveal" key={i}><div className="av" style={{ background: c }}>{a}</div><div className="nm">{n}</div><div className="mt">{o} <span className={'ba ' + (b === 'AUTO' ? 'auto' : 'sh')}>{b}</span></div></div>)}</div>
+          </div>
+        </div></div>
       </section>
 
       <section className="band c-indigo esc raised">
