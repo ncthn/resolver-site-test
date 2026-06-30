@@ -29,14 +29,14 @@ const LOGO_B = '/logo/recolor/oct-bluewhite-t.png' // blue mark — light backgr
 
 /* ---------- nav ---------- */
 function Nav() {
-  const [docked, setDocked] = useState(false)
+  const [floated, setFloated] = useState(false)
   useEffect(() => {
-    const onScroll = () => setDocked(window.scrollY > 24)
+    const onScroll = () => setFloated(window.scrollY > 24)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
   return (
-    <div className={'navwrap' + (docked ? ' docked' : '')}>
+    <div className={'navwrap' + (floated ? ' floated' : '')}>
       <nav>
         <a className="brand" href="#top"><img className="logo" src={LOGO_B} alt="resolver.chat" /><span className="wm">resolver<span style={{ opacity: .55 }}>.chat</span></span></a>
         <div className="nl"><a href="#how">How it works</a><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#security">Security</a><a href="#faq">FAQ</a></div>
