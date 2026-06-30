@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
-const LOGO_W = '/logo/recolor/oct-whiteblue-t.png'
+const LOGO = '/logo/recolor/oct-bluewhite-t.png' // blue mark — light app chrome
 
 const STORES = [
   { id: 'aurora', name: 'AURORA', hue: '#2A2FB8', count: 12 },
@@ -68,6 +68,8 @@ const CONVS: Conv[] = [
   },
 ]
 
+const LANE: Record<string, string> = { c1: 'WISMO', c2: 'Disputes', c3: 'Returns', c4: 'Address changes' }
+
 const FLAG_META: Record<Flag, { label: string; cls: string; dot: string }> = {
   auto: { label: 'Auto-drafted', cls: 'cs-b-auto', dot: '#0E9488' },
   esc: { label: 'Escalated', cls: 'cs-b-esc', dot: '#D14343' },
@@ -87,7 +89,7 @@ export function AppConsole() {
     <div className="console">
       {/* ---- sidebar ---- */}
       <aside className="cs-rail">
-        <div className="cs-brand"><img src={LOGO_W} alt="" /><span>resolver<span style={{ opacity: .55 }}>.chat</span></span></div>
+        <div className="cs-brand"><img src={LOGO} alt="" /><span>resolver<span style={{ opacity: .55 }}>.chat</span></span></div>
 
         <button className="cs-store">
           <span className="cs-store-dot" style={{ background: STORES[0].hue }}>A</span>
@@ -159,6 +161,7 @@ export function AppConsole() {
             </div>
           </div>
           <div className="cs-c-actions">
+            <span className="cs-lane-chip"><Zap size={13} /> {LANE[c.id]} lane</span>
             <button className="cs-chip-btn"><Globe size={14} /> {c.order.no}</button>
             <button className="cs-chip-btn esc"><Gavel size={14} /> Escalate</button>
           </div>
@@ -172,12 +175,16 @@ export function AppConsole() {
               <div className="cs-bubble">{m.t}<span className="cs-at">{m.at}</span></div>
             </div>
           ))}
+        </div>
 
-          {/* AI draft */}
+        {/* AI draft = the compose surface, docked at the bottom (the hero) */}
+        <div className="cs-dock">
           <div className={'cs-draft' + (c.draft.esc ? ' esc' : '')}>
             <div className="cs-draft-h">
-              <span className="cs-draft-tag"><Sparkles size={13} /> {c.draft.esc ? 'Held for human' : 'Auto-drafted'}</span>
-              {!c.draft.esc && <span className="cs-draft-meta"><Clock size={12} /> {c.draft.ms} · {c.draft.conf}% confidence</span>}
+              <span className="cs-draft-tag"><span className="cs-spark"><Sparkles size={12} /></span> {c.draft.esc ? 'Held for a human' : 'Resolver drafted a reply'}</span>
+              {!c.draft.esc
+                ? <span className="cs-conf"><span className="cs-conf-bar"><i style={{ width: c.draft.conf + '%' }} /></span>{c.draft.conf}% · {c.draft.ms}</span>
+                : <span className="cs-draft-meta cs-hold"><Clock size={12} /> never auto-sent</span>}
             </div>
             <p className="cs-draft-body">{c.draft.body}</p>
             <div className="cs-draft-chips">
@@ -186,14 +193,9 @@ export function AppConsole() {
             <div className="cs-draft-acts">
               {c.draft.esc
                 ? (<><button className="cs-act prim"><Send size={15} /> Send to specialist</button><button className="cs-act"><Pencil size={15} /> Edit</button></>)
-                : (<><button className="cs-act go"><Send size={15} /> Approve &amp; send</button><button className="cs-act"><Pencil size={15} /> Edit</button><button className="cs-act"><RefreshCw size={15} /> Regenerate</button></>)}
+                : (<><button className="cs-act go"><Send size={15} /> Approve &amp; send</button><button className="cs-act"><Pencil size={15} /> Edit</button><button className="cs-act ic" title="Regenerate"><RefreshCw size={15} /></button></>)}
             </div>
           </div>
-        </div>
-
-        <div className="cs-composer">
-          <input placeholder={`Write a reply in ${c.lang === 'EN' ? 'English' : c.lang + ' / English'}…`} />
-          <button className="cs-send"><Send size={16} /></button>
         </div>
       </main>
 
