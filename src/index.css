@@ -1,3 +1,12 @@
+@import "tailwindcss";
+@theme {
+  --color-indigo:#2A2FB8; --color-indigod:#23278F; --color-ink:#16181F;
+  --color-tint:#EBE9F6; --color-cream:#ECEAFB; --color-teal:#0E9488;
+  --color-tealsoft:#D6F0EC; --color-txsoft:#5A5B6E; --color-faint:#8C8DA3;
+  --color-line:#E9E7F1; --color-rred:#D14343;
+  --font-display:'Bricolage Grotesque',sans-serif;
+  --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
+}
 :root{
   --indigo:#2A2FB8; --indigo-d:#23278F; --ink:#16181F; --paper:#FFFFFF;
   --tint:#EBE9F6; --tint-2:#F3F2FB; --tx-soft:#5A5B6E; --tx-faint:#8C8DA3;
