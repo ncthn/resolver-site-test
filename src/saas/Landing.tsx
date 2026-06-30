@@ -339,7 +339,7 @@ export function Landing() {
         <div className="wrap">
           <div className="foot">
             <div>
-              <a className="brand" href="#top"><img className="logo" src={LOGO_W} alt="resolver.chat" style={{ height: 27 }} /><span className="wm" style={{ color: '#fff' }}>resolver<span style={{ opacity: .6 }}>.chat</span></span></a>
+              <a className="brand" href="#top"><img className="logo" src={LOGO_W} alt="resolver.chat" style={{ height: 27 }} /><span className="wm" style={{ color: '#fff' }}>resolver.chat</span></a>
               <p className="tag">AI customer support that resolves itself — grounded in your real Shopify orders.</p>
               <div className="social"><a href="#" aria-label="X"><Twitter size={16} /></a><a href="#" aria-label="LinkedIn"><Linkedin size={16} /></a><a href="#" aria-label="GitHub"><Github size={16} /></a></div>
             </div>

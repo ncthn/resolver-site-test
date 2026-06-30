@@ -52,10 +52,12 @@ h2.big{font-family:var(--br);font-weight:700;font-size:clamp(30px,3.8vw,46px);le
 /* (recv-top removed — no content bridges into empty space) */
 
 /* nav — floating pill that docks on scroll */
-.navwrap{position:fixed;top:0;left:0;right:0;z-index:80;display:flex;justify-content:center;padding:18px 18px;transition:padding .32s cubic-bezier(.4,0,.2,1)}
-.navwrap.docked{padding:0}
-nav{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1180px;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);border:1px solid rgba(20,20,50,.07);border-radius:999px;padding:11px 12px 11px 24px;box-shadow:0 18px 40px -26px rgba(18,18,50,.4);transition:border-radius .32s cubic-bezier(.4,0,.2,1),max-width .32s cubic-bezier(.4,0,.2,1),box-shadow .32s ease,padding .32s cubic-bezier(.4,0,.2,1)}
-.navwrap.docked nav{border-radius:0;max-width:100%;padding-left:56px;padding-right:24px;box-shadow:0 1px 0 var(--line)}
+.navwrap{position:fixed;top:0;left:0;right:0;z-index:80;display:flex;justify-content:center;padding:18px 18px;transition:padding .34s cubic-bezier(.4,0,.2,1)}
+.navwrap.docked{padding:0;transition:padding .34s cubic-bezier(.4,0,.2,1) .08s}
+/* UN-DOCK order: bar detaches + shrinks first (max-width/padding), corners round LAST (border-radius delayed) */
+nav{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1180px;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);border:1px solid rgba(20,20,50,.07);border-radius:999px;padding:11px 12px 11px 24px;box-shadow:0 18px 40px -26px rgba(18,18,50,.4);will-change:max-width,border-radius,padding;transition:max-width .34s cubic-bezier(.4,0,.2,1),padding .34s cubic-bezier(.4,0,.2,1),border-radius .22s cubic-bezier(.4,0,.2,1) .14s,background .3s ease,box-shadow .3s ease}
+/* DOCK order: corners square FIRST (border-radius, no delay), then bar expands to the edges (max-width/padding delayed) */
+.navwrap.docked nav{border-radius:0;max-width:100%;padding-left:56px;padding-right:24px;box-shadow:0 1px 0 var(--line);transition:border-radius .2s cubic-bezier(.4,0,.2,1),max-width .34s cubic-bezier(.4,0,.2,1) .08s,padding .34s cubic-bezier(.4,0,.2,1) .08s,background .3s ease,box-shadow .3s ease}
 .brand{display:flex;align-items:center;gap:9px}
 .wm{font-family:var(--br);font-weight:700;font-size:19px;letter-spacing:-.02em;color:var(--ink)}
 .nl{display:flex;gap:24px;font-size:14px;font-weight:500;color:var(--tx-soft)}
