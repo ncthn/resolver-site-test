@@ -196,11 +196,11 @@ export function Landing() {
             <div className="acts reveal"><a className="btn btn-light" href="#cta">Start free setup <ArrowRight size={16} /></a><a className="btn btn-ghost-d" href="#cta">Book a demo</a></div>
             <div className="micro reveal"><Check size={13} /> Shadow mode first <Check size={13} /> Live order data <Check size={13} /> Auto-send only by lane</div>
           </div>
-          <div className="reveal"><InboxDemo /></div>
+          <div className="reveal bridge-d"><InboxDemo /></div>
         </div></div>
       </section>
 
-      <section className="band c-white trust">
+      <section className="band c-white trust raised recv-top">
         <div className="wrap">
           <div className="cap reveal">Trusted by fast-growing Shopify &amp; dropshipping brands</div>
           <div className="logos reveal"><span>AURORA</span><span>Harbor&nbsp;Goods</span><span>NORTHBOUND</span><span>Lumora</span><span>Maison&nbsp;Vela</span></div>
@@ -297,7 +297,7 @@ export function Landing() {
             <p className="sub reveal" style={{ opacity: .85, marginTop: 14, maxWidth: '42ch', fontSize: 16 }}>Resolver detects chargeback language, legal threats and refunds over your threshold, pulls them out of auto-send, and pushes them to the top of your queue with full order context attached.</p>
           </div>
           <div className="reveal">
-            <div className="escbox">
+            <div className="escbox bridge-u">
               <div style={{ fontSize: 15 }}>"…I'm reporting this to my bank and my lawyer."</div>
               <div className="pillE"><Gavel size={12} /> ESCALATED · HUMAN</div>
               <div style={{ fontSize: 13, color: '#B6B6DC', marginTop: 14 }}>Pulled from auto-send · flagged: legal threat · routed to a human with order #1991 attached.</div>

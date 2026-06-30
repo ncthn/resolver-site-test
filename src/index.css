@@ -38,14 +38,18 @@ h2.big{font-family:var(--br);font-weight:700;font-size:clamp(30px,3.8vw,46px);le
 .reveal.in{opacity:1;transform:none}
 
 /* ---- bands: selective, deliberate overlap ---- */
-.band{position:relative;width:100%;padding:96px 0}
+.band{position:relative;width:100%;padding:96px 0;overflow:visible}
 .c-indigo{background:var(--indigo);color:#ECEAFB}
 .c-tint{background:var(--tint);color:var(--ink)}
 .c-white{background:var(--paper);color:var(--ink)}
 .c-indigo .lbl{color:#A9ABE8}.c-tint .lbl,.c-white .lbl{color:var(--indigo)}
-/* raised = lifts over the previous band (rounded top, pulled up); used deliberately, not everywhere */
-.raised{border-radius:46px 46px 0 0;margin-top:-46px;z-index:3;box-shadow:0 -22px 50px -34px rgba(18,18,50,.22)}
-.raised-lg{border-radius:54px 54px 0 0;margin-top:-64px;z-index:4;box-shadow:0 -26px 60px -36px rgba(18,18,50,.3)}
+/* OVERLAP SYSTEM: every band visibly lifts over the previous (rounded top + real shadow);
+   select bands carry a bridge element that spans the seam into the neighbour = double overlap */
+.raised{position:relative;border-radius:40px 40px 0 0;margin-top:-60px;z-index:3;box-shadow:0 -34px 64px -30px rgba(18,18,50,.30)}
+.raised-lg{position:relative;border-radius:48px 48px 0 0;margin-top:-80px;z-index:4;box-shadow:0 -40px 72px -32px rgba(18,18,50,.36)}
+.bridge-d{position:relative;z-index:20;margin-bottom:-96px}   /* element spills DOWN into next band */
+.bridge-u{position:relative;z-index:20;margin-top:-128px}     /* element rises UP into previous band */
+.recv-top{padding-top:150px}                                  /* band receiving a bridge gets headroom */
 
 /* nav — floating pill that docks on scroll */
 .navwrap{position:fixed;top:0;left:0;right:0;z-index:80;display:flex;justify-content:center;padding:16px 18px;transition:padding .25s}
@@ -231,7 +235,7 @@ nav{display:flex;align-items:center;justify-content:space-between;width:100%;max
 .end .acts{display:flex;gap:12px;justify-content:center;margin-top:30px}
 
 /* footer */
-footer{background:#13153A;color:#C7C8EC;padding:74px 0 44px}
+footer{background:var(--indigo);color:#D6D6F4;padding:64px 0 44px}
 .foot{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:30px}
 .foot .tag{font-size:14px;color:#A9AAD6;margin-top:14px;max-width:30ch}
 .foot .social{display:flex;gap:12px;margin-top:18px}
