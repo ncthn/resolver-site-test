@@ -123,7 +123,7 @@ function Pricing() {
   return (
     <div className="wrap">
       <span className="lbl reveal">Pricing</span>
-      <h2 className="big reveal" style={{ marginTop: 10 }}>Pricing that scales with your tickets.</h2>
+      <h2 className="big reveal" style={{ marginTop: 16 }}>Pricing that scales with your tickets.</h2>
       <div className="ptoggle reveal">
         <span className={annual ? '' : 'on'}>Monthly</span>
         <button className={'switch' + (annual ? ' annual' : '')} onClick={() => setAnnual((a) => !a)} aria-label="toggle billing"><span className="knob" /></button>
@@ -158,7 +158,7 @@ function Faq() {
   return (
     <div className="wrap">
       <span className="lbl reveal" style={{ display: 'block', textAlign: 'center' }}>FAQ</span>
-      <h2 className="big reveal" style={{ marginTop: 10, textAlign: 'center' }}>Questions, answered.</h2>
+      <h2 className="big reveal" style={{ marginTop: 16, textAlign: 'center' }}>Questions, answered.</h2>
       <div className="faq">
         {FAQS.map(([q, a], i) => (
           <div key={i} className={'qa reveal' + (open === i ? ' open' : '')}>
@@ -228,7 +228,7 @@ export function Landing() {
       <section id="how" className="band c-white raised">
         <div className="wrap">
           <span className="lbl reveal">How it works</span>
-          <h2 className="big reveal" style={{ marginTop: 10 }}>Live in 10 minutes, resolving by tonight.</h2>
+          <h2 className="big reveal" style={{ marginTop: 16 }}>Live in 10 minutes, resolving by tonight.</h2>
           <div className="steps">{STEPS.map(([Ic, n, h, p], i) => <div className="step reveal" key={i}><div className="si"><Ic size={20} /></div><div className="n">{n}</div><h4>{h}</h4><p>{p}</p></div>)}</div>
         </div>
       </section>
@@ -237,7 +237,7 @@ export function Landing() {
         <div className="wrap"><div className="grid">
           <div>
             <span className="lbl reveal">Per-store control</span>
-            <h2 className="reveal" style={{ marginTop: 10 }}>Set the voice. Keep control.</h2>
+            <h2 className="reveal" style={{ marginTop: 16 }}>Set the voice. Keep control.</h2>
             <p className="p reveal">Give every storefront its own tone, policy and signature — then decide, lane by lane, what runs on autopilot and what waits for you.</p>
             <a className="btn btn-indigo reveal" style={{ marginTop: 24 }} href="#cta">Explore settings <ArrowRight size={16} /></a>
             <div className="navlist">{NAVITEMS.map(([Ic, t], i) => <div className="li reveal" key={i}><Ic className="ic" size={18} />{t}</div>)}</div>
@@ -253,7 +253,7 @@ export function Landing() {
       <section className="band c-white duo raised">
         <div className="wrap">
           <span className="lbl reveal">Grounded</span>
-          <h2 className="big reveal" style={{ marginTop: 10 }}>It shows its work — on the real order.</h2>
+          <h2 className="big reveal" style={{ marginTop: 16 }}>It shows its work — on the real order.</h2>
           <div className="pair">
             <div className="dpanel lite reveal">
               <div className="dt"><ScanSearch size={16} /> Reasoning</div>
@@ -273,7 +273,7 @@ export function Landing() {
       <section className="band c-indigo raised-lg">
         <div className="wrap">
           <span className="lbl reveal">Shadow mode</span>
-          <h2 className="big reveal" style={{ marginTop: 10, maxWidth: '20ch', color: '#fff' }}>Nothing sends until you trust it.</h2>
+          <h2 className="big reveal" style={{ marginTop: 16, maxWidth: '20ch', color: '#fff' }}>Nothing sends until you trust it.</h2>
           <p className="sub reveal" style={{ opacity: .85, marginTop: 16, maxWidth: '58ch', fontSize: 17 }}>Resolver starts in shadow mode — it drafts every reply and sends nothing while you watch. Flip lanes to auto-send one at a time, each with a delay, a cancel window, and risky tickets always kept for a human.</p>
           <div className="pipe reveal"><span className="node">Draft</span><ArrowRight className="arr" size={16} /><span className="node">Approved</span><ArrowRight className="arr" size={16} /><span className="node on"><Zap size={14} /> Auto-send</span></div>
           <div className="quote br reveal">"I read the first fifty drafts. They were all right. Now it just runs."</div>
@@ -284,7 +284,7 @@ export function Landing() {
       <section className="band c-white raised">
         <div className="wrap">
           <span className="lbl reveal">Any language</span>
-          <h2 className="big reveal" style={{ marginTop: 10 }}>Replies natively. Your team only reads English.</h2>
+          <h2 className="big reveal" style={{ marginTop: 16 }}>Replies natively. Your team only reads English.</h2>
           <p className="p reveal" style={{ color: 'var(--tx-soft)', marginTop: 14, maxWidth: '52ch', fontSize: 16 }}>Your buyers are in the US, France, Germany, Mexico and beyond. Resolver writes in their language and shows you the English alongside — control without a translator.</p>
           <div className="reveal"><LanguagesDemo /></div>
         </div>
@@ -293,7 +293,7 @@ export function Landing() {
       <section className="band c-tint raised">
         <div className="wrap">
           <span className="lbl reveal">One inbox, every store</span>
-          <h2 className="big reveal" style={{ marginTop: 10 }}>Run ten storefronts without ten VAs.</h2>
+          <h2 className="big reveal" style={{ marginTop: 16 }}>Run ten storefronts without ten VAs.</h2>
           <p className="p reveal" style={{ color: 'var(--tx-soft)', marginTop: 14, maxWidth: '52ch', fontSize: 16 }}>Every store flows into one shared queue — each with its own voice, policy and shadow/auto setting. Filter to one, or work them all at once.</p>
           <div className="stores">{STORES.map(([a, n, o, b, c], i) => <div className="scard reveal" key={i}><div className="av" style={{ background: c }}>{a}</div><div className="nm">{n}</div><div className="mt">{o} <span className={'ba ' + (b === 'AUTO' ? 'auto' : 'sh')}>{b}</span></div></div>)}</div>
         </div>
@@ -303,7 +303,7 @@ export function Landing() {
         <div className="wrap"><div className="grid">
           <div>
             <span className="lbl reveal">Escalate lane</span>
-            <h2 className="big reveal" style={{ marginTop: 10, color: '#fff' }}>Chargebacks and lawyers never get auto-replied.</h2>
+            <h2 className="big reveal" style={{ marginTop: 16, color: '#fff' }}>Chargebacks and lawyers never get auto-replied.</h2>
             <p className="sub reveal" style={{ opacity: .85, marginTop: 14, maxWidth: '42ch', fontSize: 16 }}>Resolver detects chargeback language, legal threats and refunds over your threshold, pulls them out of auto-send, and pushes them to the top of your queue with full order context attached.</p>
           </div>
           <div className="reveal">
@@ -320,7 +320,7 @@ export function Landing() {
       <section id="security" className="band c-white sec float">
         <div className="wrap">
           <span className="lbl reveal">Security &amp; trust</span>
-          <h2 className="big reveal" style={{ marginTop: 10 }}>Your customers' data, handled properly.</h2>
+          <h2 className="big reveal" style={{ marginTop: 16 }}>Your customers' data, handled properly.</h2>
           <div className="grid">{SEC.map(([Ic, h, p], i) => <div className="seccard reveal" key={i}><div className="ic"><Ic size={20} /></div><h4>{h}</h4><p>{p}</p></div>)}</div>
           <div className="badges reveal">{['AES-256 encryption', 'GDPR ready', 'Built for Shopify', 'SOC 2 (in progress)', 'EU data residency'].map((b) => <span className="badge" key={b}><ShieldCheck size={13} /> {b}</span>)}</div>
         </div>
@@ -329,7 +329,7 @@ export function Landing() {
       <section className="band c-tint raised">
         <div className="wrap">
           <span className="lbl reveal">Loved by operators</span>
-          <h2 className="big reveal" style={{ marginTop: 10 }}>From first sale to peak season.</h2>
+          <h2 className="big reveal" style={{ marginTop: 16 }}>From first sale to peak season.</h2>
           <div className="tcards">{TESTI.map(([av, nm, rl, q], i) => <div className="tcard reveal" key={i}><div className="stars">{[0, 1, 2, 3, 4].map((s) => <Star key={s} size={14} fill="currentColor" />)}</div><div className="q">"{q}"</div><div className="who"><div className="av">{av}</div><div><div className="nm">{nm}</div><div className="rl">{rl}</div></div></div></div>)}</div>
         </div>
       </section>
