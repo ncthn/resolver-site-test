@@ -12,13 +12,23 @@ function useReveal() {
   useEffect(() => {
     const els = Array.from(ref.current?.querySelectorAll<HTMLElement>('.reveal') ?? [])
     const revealAll = () => els.forEach((e) => e.classList.add('in'))
-    if (typeof IntersectionObserver === 'undefined') { revealAll(); return }
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduce || typeof IntersectionObserver === 'undefined') { revealAll(); return }
+    // reveal anything already in the viewport on mount immediately — the hero (always
+    // above the fold) and any jumped-to section never wait on the observer or flash blank.
+    const vh = window.innerHeight
+    const pending: HTMLElement[] = []
+    els.forEach((el) => {
+      const r = el.getBoundingClientRect()
+      if (r.top < vh && r.bottom > 0) el.classList.add('in')
+      else pending.push(el)
+    })
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } })
     }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' })
-    els.forEach((el) => io.observe(el))
+    pending.forEach((el) => io.observe(el))
     // safety net: never leave any section invisible (slow devices / fast scroll)
-    const fb = window.setTimeout(revealAll, 1800)
+    const fb = window.setTimeout(revealAll, 1000)
     return () => { io.disconnect(); clearTimeout(fb) }
   }, [])
   return ref
