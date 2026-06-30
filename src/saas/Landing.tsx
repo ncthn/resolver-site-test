@@ -3,7 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   Inbox, Package, Globe, ShieldCheck, Zap, Check, ArrowRight, Plus, Star,
   Lock, ScanSearch, MessageSquare, Sparkles, ListChecks, BarChart3, Mail,
-  CircleCheck, Gavel, Twitter, Linkedin, Github,
+  CircleCheck, Gavel, Twitter, Linkedin, Github, Send, Pencil, RefreshCw,
 } from 'lucide-react'
 
 /* ---------- scroll reveal ---------- */
@@ -191,6 +191,44 @@ const TESTI: [string, string, string, string][] = [
   ['DS', 'Dani Soto', 'Owner, Northbound', 'Shadow mode sold me. I watched it for a week, trusted it, flipped the lanes. Now I barely open the inbox.'],
 ]
 
+/* ---------- app-UI hero showcase (real console slice) ---------- */
+function HeroConsole() {
+  return (
+    <div className="heroapp reveal">
+      <div className="ha-chrome">
+        <aside className="ha-rail">
+          <div className="ha-brand"><img src={LOGO_B} alt="" /><span>resolver<i>.chat</i></span></div>
+          <div className="ha-store"><span className="ha-sd">A</span><span>AURORA<small>12 open</small></span></div>
+          <div className="ha-nav">
+            <span className="on"><Inbox size={14} /> Inbox <b>12</b></span>
+            <span><CircleCheck size={14} /> Resolved</span>
+            <span><BarChart3 size={14} /> Reporting</span>
+          </div>
+          <div className="ha-auto"><Zap size={12} /> Autopilot · 2 lanes</div>
+        </aside>
+        <div className="ha-main">
+          <div className="ha-q">
+            <div className="ha-row sel"><span className="ha-av">ML</span><span className="ha-rmain"><b>Maria Lopez</b><i>Where is my order?</i><span className="ha-tags"><span className="cs-badge cs-b-auto">Auto-drafted</span><span className="cs-lang">EN</span></span></span></div>
+            <div className="ha-row"><span className="ha-av esc">AW</span><span className="ha-rmain"><b>A. Weber</b><i>Chargeback threatened</i><span className="ha-tags"><span className="cs-badge cs-b-esc">Escalated</span><span className="cs-lang">DE</span></span></span></div>
+          </div>
+          <div className="cs-draft ha-draft">
+            <div className="cs-draft-h"><span className="cs-draft-tag"><span className="cs-spark"><Sparkles size={12} /></span> Resolver drafted a reply</span><span className="cs-conf"><span className="cs-conf-bar"><i style={{ width: '96%' }} /></span>96% · 0.8s</span></div>
+            <p className="cs-draft-body">Hi Maria — your order #1042 shipped and is in transit, arriving in 2–3 days. Here's live tracking: CP998…</p>
+            <div className="cs-draft-chips"><span className="cs-dchip"><Check size={11} /> Order #1042</span><span className="cs-dchip"><Check size={11} /> Live tracking</span><span className="cs-dchip"><Check size={11} /> Refund policy</span><span className="cs-dchip"><Check size={11} /> Tone: warm</span></div>
+            <div className="cs-draft-acts"><button className="cs-act go"><Send size={14} /> Approve &amp; send</button><button className="cs-act"><Pencil size={14} /> Edit</button><button className="cs-act ic"><RefreshCw size={14} /></button></div>
+          </div>
+        </div>
+      </div>
+      <div className="ha-ctx">
+        <div className="ha-ctx-h">ORDER #1042</div>
+        <div className="ha-ctx-line"><Package size={13} /> Aurora Linen Set</div>
+        <div className="ha-ctx-kv"><span>Status</span><b className="teal">In transit</b></div>
+        <div className="ha-ctx-kv"><span>Total</span><b>$148.00</b></div>
+      </div>
+    </div>
+  )
+}
+
 export function Landing() {
   const ref = useReveal()
   return (
@@ -206,7 +244,7 @@ export function Landing() {
             <div className="acts reveal"><a className="btn btn-indigo" href="#cta">Start free setup <ArrowRight size={16} /></a><a className="btn btn-ghost" href="#cta">Book a demo</a></div>
             <div className="micro reveal"><Check size={13} /> Shadow mode first <Check size={13} /> Live order data <Check size={13} /> Auto-send only by lane</div>
           </div>
-          <div className="reveal"><InboxDemo /></div>
+          <HeroConsole />
         </div></div>
       </section>
 
@@ -219,10 +257,26 @@ export function Landing() {
       </section>
 
       <section className="band c-tint raised">
-        <div className="wrap">
-          <span className="pill-tag reveal"><img src={LOGO_B} style={{ height: 15 }} /> Ask Resolver — how do I get started?</span>
-          <p className="lede reveal">Most support volume is <b>repeat work</b> — WISMO, returns, address changes, cancellations. Resolver clears it <b>while you sleep</b>, so your team only touches what truly needs a human.</p>
-        </div>
+        <div className="wrap"><div className="stmt">
+          <div className="stmt-l">
+            <span className="pill-tag reveal"><img src={LOGO_B} style={{ height: 15 }} /> Ask Resolver — how do I get started?</span>
+            <p className="lede reveal">Most support volume is <b>repeat work</b> — WISMO, returns, address changes, cancellations. Resolver clears it <b>while you sleep</b>, so your team only touches what truly needs a human.</p>
+            <div className="stmt-chips reveal">
+              <span><b>~70%</b> is repeat work</span>
+              <span><b>0</b> rules to write</span>
+              <span>clears <b>overnight</b></span>
+            </div>
+          </div>
+          <div className="stmt-r">
+            {([['WISMO', 84, true], ['Returns', 71, true], ['Address changes', 63, true], ['Disputes', 0, false]] as [string, number, boolean][]).map(([nm, pct, auto], i) => (
+              <div className="lanetile reveal" key={i}>
+                <div className="lt-top"><span className="lt-nm">{nm}</span><span className="lt-pct">{auto ? pct + '%' : 'human'}</span></div>
+                <div className="lt-bar"><i style={{ width: (auto ? pct : 100) + '%', background: auto ? 'var(--indigo)' : 'var(--tx-faint)' }} /></div>
+                <div className="lt-sub">{auto ? 'auto-resolved' : 'always kept for a human'}</div>
+              </div>
+            ))}
+          </div>
+        </div></div>
       </section>
 
       <section id="how" className="band c-white raised">
@@ -246,6 +300,7 @@ export function Landing() {
             <div className="setcard reveal"><div className="lf"><span className="ci"><MessageSquare size={16} /></span><div><div className="t">Tone of voice</div><div className="s">How replies should sound</div></div></div><div className="v">Warm ▾</div></div>
             <div className="setcard reveal"><div className="lf"><span className="ci"><ScanSearch size={16} /></span><div><div className="t">Response length</div><div className="s">Short, medium or detailed</div></div></div><div className="v lite">Short ▾</div></div>
             <div className="setcard reveal"><div className="lf"><span className="ci"><Lock size={16} /></span><div><div className="t">Prohibited phrases</div><div className="s">Words it should never use</div></div></div><div className="v lite">Manage · 29</div></div>
+            <div className="setcard reveal"><div className="lf"><span className="ci"><Zap size={16} /></span><div><div className="t">Autopilot lanes</div><div className="s">Auto-send on for 2 lanes</div></div></div><div className="v">On ▾</div></div>
           </div>
         </div></div>
       </section>
