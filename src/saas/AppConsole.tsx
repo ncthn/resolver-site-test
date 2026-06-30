@@ -11,7 +11,7 @@ const LOGO = '/logo/recolor/oct-bluewhite-t.png' // blue mark — light app chro
 const STORES = [
   { id: 'aurora', name: 'AURORA', hue: '#2A2FB8', count: 12 },
   { id: 'harbor', name: 'Harbor Goods', hue: '#0E9488', count: 7 },
-  { id: 'northbound', name: 'Northbound', hue: '#7A43C9', count: 5 },
+  { id: 'northbound', name: 'Northbound', hue: '#23278F', count: 5 },
 ]
 
 const NAV: [LucideIcon, string, number | null][] = [
@@ -73,7 +73,7 @@ const LANE: Record<string, string> = { c1: 'WISMO', c2: 'Disputes', c3: 'Returns
 const FLAG_META: Record<Flag, { label: string; cls: string; dot: string }> = {
   auto: { label: 'Auto-drafted', cls: 'cs-b-auto', dot: '#0E9488' },
   esc: { label: 'Escalated', cls: 'cs-b-esc', dot: '#D14343' },
-  sent: { label: 'Auto-sent', cls: 'cs-b-sent', dot: '#7A43C9' },
+  sent: { label: 'Auto-sent', cls: 'cs-b-sent', dot: '#8C8DA3' },
   wait: { label: 'Needs you', cls: 'cs-b-wait', dot: '#2A2FB8' },
 }
 

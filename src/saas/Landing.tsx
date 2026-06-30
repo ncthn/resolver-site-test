@@ -179,7 +179,7 @@ const STEPS: [LucideIcon, string, string, string][] = [
 ]
 const NAVITEMS: [LucideIcon, string][] = [[Inbox, 'Tickets'], [CircleCheck, 'Resolved'], [Mail, 'Compose'], [ListChecks, 'Tasks & rules'], [BarChart3, 'Reporting']]
 const STATS: [string, string, boolean][] = [['92%', 'of tickets resolved before you read them', false], ['< 2 min', 'average first reply, day or night', true], ['30+', 'languages, answered natively', false], ['120 hrs', 'saved per week on support', false]]
-const STORES: [string, string, string, string, string][] = [['L', 'Lumora', '12 open', 'AUTO', '#7C3AED'], ['V', 'Vexa', '5 open', 'SHADOW', '#0E9488'], ['N', 'Northbound', '9 open', 'AUTO', '#2A2FB8'], ['M', 'Maison Vela', '3 open', 'SHADOW', '#D14343']]
+const STORES: [string, string, string, string, string][] = [['L', 'Lumora', '12 open', 'AUTO', '#23278F'], ['V', 'Vexa', '5 open', 'SHADOW', '#0E9488'], ['N', 'Northbound', '9 open', 'AUTO', '#2A2FB8'], ['M', 'Maison Vela', '3 open', 'SHADOW', '#D14343']]
 const SEC: [LucideIcon, string, string][] = [
   [Lock, 'Encrypted end to end', 'Data encrypted in transit and at rest with AES-256. Tokens scoped to the minimum Shopify access needed.'],
   [ShieldCheck, 'GDPR compliant', 'Full data-subject request handling, EU data residency available, and customer redaction webhooks supported.'],
