@@ -64,7 +64,7 @@ function GlassNav() {
   return (
     <div className={'navwrap' + (floated ? ' floated' : '')}>
       <nav>
-        <a className="brand" href="#top"><img className="logo" src={LOGO_B} alt="resolver.chat" /><span className="wm">resolver<span style={{ opacity: .55 }}>.chat</span></span></a>
+        <a className="brand" href="#top"><img className="logo" src={LOGO_B} alt="resolver.chat" /><span className="wm">resolver<span className="dot">.chat</span></span></a>
         <div className="nl"><a href="#how">How it works</a><a href="#features">Features</a><a href="#results">Results</a><a href="#pricing">Pricing</a><a href="#security">Security</a><a href="#faq">FAQ</a></div>
         <div className="nr"><a className="login" href="#">Sign in</a><a className="btn btn-indigo" href="#cta">Start setup</a></div>
       </nav>
@@ -72,36 +72,74 @@ function GlassNav() {
   )
 }
 
-/* ---------------- hero: real app UI (signature instrument #1) ---------------- */
+/* ---------------- hero: real app UI, LIVE — tickets resolve themselves ---------------- */
+type HStage = 'new' | 'drafting' | 'sent'
+const HPOOL: { name: string; initials: string; subj: string; lang: string; order: string; body: string }[] = [
+  { name: 'Maria Lopez', initials: 'ML', subj: 'Where is my order?', lang: 'EN', order: '#1042', body: "Hi Maria — your order #1042 shipped and is in transit, arriving in 2–3 days. Here's live tracking: CP998…" },
+  { name: 'James Carter', initials: 'JC', subj: 'Can I return this?', lang: 'EN', order: '#2090', body: "Hi James — you're within the 30-day window. Here's your prepaid return label and the 3 quick steps." },
+  { name: 'Noah Dubois', initials: 'ND', subj: 'Où est ma commande ?', lang: 'FR', order: '#2114', body: 'Bonjour Noah — votre commande #2114 est en route et arrive dans 2 à 3 jours. Voici votre suivi en direct.' },
+  { name: 'Sofia Rossi', initials: 'SR', subj: 'Change my address', lang: 'IT', order: '#2061', body: 'Ciao Sofia — ho aggiornato il tuo indirizzo. Il tuo ordine #2061 non era ancora stato spedito.' },
+  { name: 'Lena Meyer', initials: 'LM', subj: 'Cancel my order', lang: 'DE', order: '#2137', body: 'Hallo Lena — deine Bestellung #2137 wurde storniert. Die Rückerstattung ist unterwegs.' },
+]
+const HBADGE: Record<HStage, [string, string]> = { new: ['cs-b-new', 'New'], drafting: ['cs-b-wait', 'Drafting…'], sent: ['cs-b-done', '✓ Auto-sent'] }
+
 function HeroConsole() {
+  const [q, setQ] = useState<{ p: number; stage: HStage }[]>([{ p: 0, stage: 'drafting' }, { p: 1, stage: 'new' }])
+  const [done, setDone] = useState(47)
+  const nextP = useRef(2)
+  useEffect(() => {
+    const t = setInterval(() => {
+      setQ(([a, b]) => {
+        if (a.stage === 'new') return [{ ...a, stage: 'drafting' }, b]
+        if (a.stage === 'drafting') return [{ ...a, stage: 'sent' }, b]
+        const fresh = { p: nextP.current % HPOOL.length, stage: 'new' as HStage }
+        nextP.current++
+        setDone((d) => d + 1)
+        return [b.stage === 'new' ? { ...b, stage: 'drafting' } : b, fresh]
+      })
+    }, 1800)
+    return () => clearInterval(t)
+  }, [])
+  const act = q.find((x) => x.stage !== 'sent') ?? q[0]
+  const t = HPOOL[act.p % HPOOL.length]
+  const open = 4 + ((59 - done) % 9)
   return (
     <div className="heroapp reveal">
       <div className="ha-chrome">
         <aside className="ha-rail">
           <div className="ha-brand"><img src={LOGO_B} alt="" /><span>resolver<i>.chat</i></span></div>
-          <div className="ha-store"><span className="ha-sd">A</span><span>AURORA<small>12 open</small></span></div>
+          <div className="ha-store"><span className="ha-sd">A</span><span>AURORA<small>{open} open</small></span></div>
           <div className="ha-nav">
-            <span className="on"><Inbox size={14} /> Inbox <b>12</b></span>
-            <span><CircleCheck size={14} /> Resolved</span>
+            <span className="on"><Inbox size={14} /> Inbox <b>{open}</b></span>
+            <span><CircleCheck size={14} /> Resolved <b className="dim">{done}</b></span>
             <span><BarChart3 size={14} /> Reporting</span>
           </div>
           <div className="ha-auto"><Zap size={12} /> Autopilot · 2 lanes</div>
         </aside>
         <div className="ha-main">
           <div className="ha-q">
-            <div className="ha-row sel"><span className="ha-av">ML</span><span className="ha-rmain"><b>Maria Lopez</b><i>Where is my order?</i><span className="ha-tags"><span className="cs-badge cs-b-auto">Auto-drafted</span><span className="cs-lang">EN</span></span></span></div>
-            <div className="ha-row"><span className="ha-av esc">AW</span><span className="ha-rmain"><b>A. Weber</b><i>Chargeback threatened</i><span className="ha-tags"><span className="cs-badge cs-b-esc">Escalated</span><span className="cs-lang">DE</span></span></span></div>
+            {q.map((x) => {
+              const p = HPOOL[x.p % HPOOL.length]
+              const [cls, label] = HBADGE[x.stage]
+              return (
+                <div className={'ha-row st-' + x.stage + (x.stage === 'drafting' ? ' sel' : '')} key={x.p + p.name}>
+                  <span className="ha-av">{p.initials}</span>
+                  <span className="ha-rmain"><b>{p.name}</b><i>{p.subj}</i><span className="ha-tags"><span className={'cs-badge ' + cls}>{label}</span><span className="cs-lang">{p.lang}</span></span></span>
+                </div>
+              )
+            })}
+            <div className="ha-row"><span className="ha-av esc">AW</span><span className="ha-rmain"><b>A. Weber</b><i>Chargeback threatened</i><span className="ha-tags"><span className="cs-badge cs-b-esc">Escalated · human</span><span className="cs-lang">DE</span></span></span></div>
           </div>
-          <div className="cs-draft ha-draft">
+          <div className="cs-draft ha-draft" key={act.p}>
             <div className="cs-draft-h"><span className="cs-draft-tag"><span className="cs-spark"><Sparkles size={12} /></span> Resolver drafted a reply</span><span className="cs-conf"><span className="cs-conf-bar"><i style={{ width: '96%' }} /></span>96% · 0.8s</span></div>
-            <p className="cs-draft-body">Hi Maria — your order #1042 shipped and is in transit, arriving in 2–3 days. Here's live tracking: CP998…</p>
-            <div className="cs-draft-chips"><span className="cs-dchip"><Check size={11} /> Order #1042</span><span className="cs-dchip"><Check size={11} /> Live tracking</span><span className="cs-dchip"><Check size={11} /> Refund policy</span><span className="cs-dchip"><Check size={11} /> Tone: warm</span></div>
+            <p className="cs-draft-body">{t.body}</p>
+            <div className="cs-draft-chips"><span className="cs-dchip"><Check size={11} /> Order {t.order}</span><span className="cs-dchip"><Check size={11} /> Live tracking</span><span className="cs-dchip"><Check size={11} /> Store policy</span><span className="cs-dchip"><Check size={11} /> Tone: warm</span></div>
             <div className="cs-draft-acts"><button className="cs-act go"><Send size={14} /> Approve &amp; send</button><button className="cs-act"><Pencil size={14} /> Edit</button><button className="cs-act ic"><RefreshCw size={14} /></button></div>
           </div>
         </div>
       </div>
       <div className="ha-ctx">
-        <div className="ha-ctx-h">ORDER #1042</div>
+        <div className="ha-ctx-h">ORDER {t.order}</div>
         <div className="ha-ctx-line"><Package size={13} /> Aurora Linen Set</div>
         <div className="ha-ctx-kv"><span>Status</span><b>In transit</b></div>
         <div className="ha-ctx-kv"><span>Total</span><b>$148.00</b></div>
@@ -159,14 +197,14 @@ function StatsSheet() {
 }
 
 /* ---------------- repeat-work bento ---------------- */
-const LANES: [string, number, boolean][] = [['WISMO', 84, true], ['Returns', 71, true], ['Address changes', 63, true], ['Disputes', 0, false]]
+const LANES: [string, number, boolean][] = [['"Where is my order?"', 84, true], ['Returns', 71, true], ['Address changes', 63, true], ['Disputes', 0, false]]
 function RepeatWork() {
   return (
     <section className="sheet c-tint" style={{ zIndex: 4 }}>
       <div className="wrap"><div className="stmt">
         <div>
           <span className="pill-tag reveal"><img src={LOGO_B} style={{ height: 15 }} /> Ask Resolver — how do I get started?</span>
-          <p className="lede reveal">Most support volume is <b>repeat work</b> — WISMO, returns, address changes, cancellations. Resolver clears it <b>while you sleep</b>.</p>
+          <p className="lede reveal">Most support volume is <b>repeat work</b> — "where is my order?", returns, address changes, cancellations. Resolver clears it <b>while you sleep</b>.</p>
           <div className="stmt-chips reveal">
             <span><b>~70%</b> is repeat work</span>
             <span><b>0</b> rules to write</span>
@@ -213,53 +251,74 @@ function HowItWorks() {
   )
 }
 
-/* ---------------- per-store control bento ---------------- */
-const NAVITEMS: [LucideIcon, string][] = [[Inbox, 'Tickets'], [CircleCheck, 'Resolved'], [Mail, 'Compose'], [ListChecks, 'Tasks & rules'], [BarChart3, 'Reporting']]
+/* ---------------- per-store control: set it once → every draft follows ---------------- */
 function ControlBento() {
   return (
     <section className="sheet c-tint float" id="features" style={{ zIndex: 6 }}>
       <div className="wrap"><div className="cgrid">
         <div className="ctile big reveal">
-          <span className="lbl">Per-store control</span>
-          <h2 className="big" style={{ marginTop: 14 }}>Set the voice. Keep control.</h2>
-          <p className="ssub">Give every storefront its own tone, policy and signature — then decide, lane by lane, what runs on autopilot and what waits for you.</p>
-          <div className="navlist">{NAVITEMS.map(([Ic, t], i) => <div className="li" key={i}><Ic className="ic" size={18} />{t}</div>)}</div>
-          <a className="btn btn-indigo" style={{ marginTop: 26 }} href="#cta">Explore settings <ArrowRight size={16} /></a>
+          <span className="lbl">You stay the boss</span>
+          <h2 className="big" style={{ marginTop: 14 }}>Tell it how to sound. Once.</h2>
+          <p className="ssub">Five minutes of setup per store — pick a tone, set your rules, list what it must never say. From then on, every single draft follows them. No macros, no templates, no training period.</p>
+          <div className="blist">
+            <div className="bli"><span className="bic"><MessageSquare size={15} /></span><div><b>One voice per store</b><i>Warm for AURORA, formal for Harbor Goods — each brand sounds like itself.</i></div></div>
+            <div className="bli"><span className="bic"><Lock size={15} /></span><div><b>Hard guardrails</b><i>Words it can't use, promises it can't make, discounts it can't give.</i></div></div>
+            <div className="bli"><span className="bic"><Zap size={15} /></span><div><b>Autopilot per ticket type</b><i>Order-status questions send themselves; disputes never do.</i></div></div>
+          </div>
+          <a className="btn btn-indigo" style={{ marginTop: 28 }} href="#cta">Start setup <ArrowRight size={16} /></a>
         </div>
         <div className="ctile stack">
+          <div className="stack-cap reveal">You set it once…</div>
           <div className="setcard reveal"><div className="lf"><span className="ci"><MessageSquare size={16} /></span><div><div className="t">Tone of voice</div><div className="s">How replies should sound</div></div></div><div className="v">Warm ▾</div></div>
           <div className="setcard reveal"><div className="lf"><span className="ci"><ScanSearch size={16} /></span><div><div className="t">Response length</div><div className="s">Short, medium or detailed</div></div></div><div className="v lite">Short ▾</div></div>
-          <div className="setcard reveal"><div className="lf"><span className="ci"><Lock size={16} /></span><div><div className="t">Prohibited phrases</div><div className="s">Words it should never use</div></div></div><div className="v lite">Manage · 29</div></div>
-          <div className="setcard reveal"><div className="lf"><span className="ci"><Zap size={16} /></span><div><div className="t">Autopilot lanes</div><div className="s">Auto-send on for 2 lanes</div></div></div><div className="v">On ▾</div></div>
-          <div className="ctile-stat reveal"><div className="bn sm">29</div><div className="sl">guardrail phrases enforced on every draft, every store</div></div>
+          <div className="setcard reveal"><div className="lf"><span className="ci"><Lock size={16} /></span><div><div className="t">Prohibited phrases</div><div className="s">"free", "guaranteed", "refund immediately"…</div></div></div><div className="v lite">Manage · 29</div></div>
+          <div className="stack-cap reveal">…and every draft follows it</div>
+          <div className="proofcard reveal">
+            <div className="pc-h"><Sparkles size={13} /> Draft · Maria Lopez</div>
+            <p>"Hi Maria — thanks for your patience! Your order shipped and arrives in 2–3 days. Here's your live tracking."</p>
+            <div className="cs-draft-chips"><span className="cs-dchip"><Check size={11} /> Warm</span><span className="cs-dchip"><Check size={11} /> Short</span><span className="cs-dchip"><Check size={11} /> 0 banned words</span><span className="cs-dchip"><Check size={11} /> No promises</span></div>
+          </div>
         </div>
       </div></div>
     </section>
   )
 }
 
-/* ---------------- grounded (3-col instrument row) ---------------- */
+/* ---------------- grounded: reads the order → decides → replies with tracking IN the message ---------------- */
 function Grounded() {
   return (
     <section className="sheet c-white" style={{ zIndex: 7 }}>
       <div className="wrap">
-        <SectionHead eyebrow="Grounded" title="It shows its work — on the real order." />
+        <SectionHead eyebrow="No made-up answers" title="Every reply is built from the real order." sub="Before it writes a word, Resolver opens the customer's actual Shopify order — and the live tracking link goes straight into the message." />
         <div className="ggrid">
-          <div className="dpanel lite reveal">
-            <div className="dt"><ScanSearch size={16} /> Reasoning</div>
-            {([['Customer', 'Maria Lopez · #1042'], ['Knowledge', 'Order · tracking · policy'], ['Tone', 'Warm · short'], ['Action', 'Send live tracking + ETA']] as [string, string][]).map(([a, b], i) => <div className="think" key={i}><span>{a}</span><span className="r">{b}</span></div>)}
-            <div className="think ok"><span>Risk check</span><span className="r">clear · auto-send</span></div>
+          <div className="gstep reveal">
+            <div className="gs-h"><span className="gs-n">1</span> Reads the real order <ArrowRight className="gs-arr" size={15} /></div>
+            <div className="dpanel lite">
+              <div className="gc-h">Shopify · Order #1042</div>
+              <div className="gc-l"><Package size={14} /> Aurora Linen Set — Sand</div>
+              <div className="gc-kv"><span>Status</span><b>In transit</b></div>
+              <div className="gc-kv"><span>Tracking</span><b className="trackb"><Truck size={12} /> CP998341US · live</b></div>
+              <div className="gc-kv"><span>Placed</span><b>21 days ago</b></div>
+              <div className="gc-kv"><span>Total</span><b>$148.00</b></div>
+              <div className="gc-kv"><span>Customer</span><b>3 orders · since 2025</b></div>
+              <div className="gc-kv"><span>Your policy</span><b>Refund after 30 days</b></div>
+            </div>
           </div>
-          <div className="dpanel ind reveal">
-            <div className="dt"><Globe size={16} /> Reply sent · in the customer's language</div>
-            <div className="b me">Where is my order? I placed it 3 weeks ago.</div>
-            <div className="b">Hi Maria! Your order #1042 shipped and is in transit, arriving in 2–3 days. Here's live tracking — I'll keep an eye on it.</div>
-            <div className="src">Grounded in<span><Package size={11} /> order #1042</span><span><Globe size={11} /> tracking</span><span><ShieldCheck size={11} /> policy</span></div>
+          <div className="gstep reveal">
+            <div className="gs-h"><span className="gs-n">2</span> Decides what to do <ArrowRight className="gs-arr" size={15} /></div>
+            <div className="dpanel lite">
+              {([['Question', '"Where is my order?"'], ['Answer lives in', 'Tracking + ETA'], ['Tone', 'Warm · short'], ['Language', 'English']] as [string, string][]).map(([a, b], i) => <div className="think" key={i}><span>{a}</span><span className="r">{b}</span></div>)}
+              <div className="think ok"><span>Risk check</span><span className="r">clear → auto-send</span></div>
+            </div>
           </div>
-          <div className="gctx">
-            <div className="gcard reveal"><div className="gc-h">Order #1042</div><div className="gc-l"><Package size={14} /> Aurora Linen Set — Sand</div><div className="gc-kv"><span>Status</span><b>In transit</b></div><div className="gc-kv"><span>Placed</span><b>21 days ago</b></div><div className="gc-kv"><span>Total</span><b>$148.00</b></div></div>
-            <div className="gcard reveal"><div className="gc-h">Fulfillment</div><div className="gc-l"><Truck size={14} /> CP998341US</div><div className="gc-kv"><span>Carrier</span><b>Live tracking</b></div></div>
-            <div className="gcard reveal"><div className="gc-h">Customer</div><div className="gc-l"><User size={14} /> 3 orders · since Mar 2025</div></div>
+          <div className="gstep reveal">
+            <div className="gs-h"><span className="gs-n">3</span> Replies — tracking included</div>
+            <div className="dpanel ind">
+              <div className="dt"><Globe size={16} /> Sent · 0.8s after the email landed</div>
+              <div className="b me">Where is my order? I placed it 3 weeks ago.</div>
+              <div className="b">Hi Maria! Your order #1042 shipped and is in transit, arriving in 2–3 days. Track it live here: <span className="track"><Truck size={11} /> CP998341US ↗</span> — I'll keep an eye on it for you.</div>
+              <div className="src">Every claim traced to<span><Package size={11} /> order #1042</span><span><Truck size={11} /> live tracking</span><span><ShieldCheck size={11} /> your policy</span></div>
+            </div>
           </div>
         </div>
       </div>
@@ -273,10 +332,14 @@ function ShadowMode() {
     <section className="sheet c-grad" style={{ zIndex: 8 }}>
       <div className="wrap"><div className="cols2">
         <div>
-          <span className="lbl reveal">Shadow mode</span>
-          <h2 className="big reveal" style={{ marginTop: 14, maxWidth: '14ch' }}>Nothing sends until you trust it.</h2>
-          <p className="ssub reveal" style={{ maxWidth: '46ch' }}>Resolver starts in shadow mode — it drafts every reply and sends nothing while you watch. Flip lanes to auto-send one at a time, each with a delay, a cancel window, and risky tickets always kept for a human.</p>
-          <div className="pipe reveal"><span className="node">Draft</span><ArrowRight className="arr" size={16} /><span className="node">Approved</span><ArrowRight className="arr" size={16} /><span className="node on"><Zap size={14} /> Auto-send</span></div>
+          <span className="lbl reveal">Zero risk to start</span>
+          <h2 className="big reveal" style={{ marginTop: 14, maxWidth: '15ch' }}>It sends nothing until you say so.</h2>
+          <p className="ssub reveal" style={{ maxWidth: '48ch' }}>Install it and change nothing about how you work. Resolver just writes the drafts — you read them. When they look right, let it send one ticket type at a time.</p>
+          <div className="tl reveal">
+            <div className="tl-i"><span className="tl-n">1</span><div><b>Day one — it only drafts</b><i>Every reply is written for you. Nothing reaches a customer.</i></div></div>
+            <div className="tl-i"><span className="tl-n">2</span><div><b>When you're ready — let one type send</b><i>Start with "where is my order?". Each send has a delay and a cancel window.</i></div></div>
+            <div className="tl-i"><span className="tl-n">3</span><div><b>Always — risky ones wait for you</b><i>Chargebacks, legal threats and big refunds are never sent automatically.</i></div></div>
+          </div>
           <div className="quote br reveal">"I read the first fifty drafts. They were all right. Now it just runs."</div>
           <div className="qm reveal">store owner · 4 stores · 2,000 tickets / month</div>
         </div>
@@ -327,18 +390,29 @@ function Results() {
 }
 
 /* ---------------- global ops: languages + stores ---------------- */
-const REPLIES: Record<string, string> = {
-  EN: "Hi! Your order is on the way and arrives in 2–3 days. Here's your live tracking — I'll keep an eye on it. Thanks for your patience!",
-  FR: 'Bonjour ! Votre commande est en route et arrive dans 2 à 3 jours. Voici votre suivi en direct — je garde un œil dessus. Merci de votre patience !',
-  DE: 'Hallo! Ihre Bestellung ist unterwegs und kommt in 2–3 Tagen an. Hier ist Ihre Live-Sendungsverfolgung — ich behalte sie im Auge.',
-  ES: 'Hola! Tu pedido está en camino y llega en 2–3 días. Aquí tienes el seguimiento en vivo — estaré pendiente. ¡Gracias por tu paciencia!',
+const LDEMO: Record<string, { cust: string; reply: string }> = {
+  FR: { cust: "Où est ma commande ? Je l'ai passée il y a 3 semaines.", reply: 'Bonjour ! Votre commande est en route — arrivée dans 2 à 3 jours. Voici votre suivi en direct.' },
+  DE: { cust: 'Wo ist meine Bestellung? Ich habe vor 3 Wochen bestellt.', reply: 'Hallo! Ihre Bestellung ist unterwegs — Ankunft in 2–3 Tagen. Hier ist Ihre Live-Sendungsverfolgung.' },
+  ES: { cust: '¿Dónde está mi pedido? Lo hice hace 3 semanas.', reply: 'Hola! Tu pedido está en camino — llega en 2–3 días. Aquí tienes el seguimiento en vivo.' },
 }
 function LanguagesDemo() {
   const [lang, setLang] = useState('FR')
+  const d = LDEMO[lang]
   return (
     <div>
-      <div className="langtabs">{Object.keys(REPLIES).map((l) => <button key={l} className={'tb' + (l === lang ? ' on' : '')} onClick={() => setLang(l)}>{l}</button>)}</div>
-      <div className="reply" key={lang}>{REPLIES[lang]}</div>
+      <div className="langtabs">
+        <span className="lt-lbl">Customer writes in</span>
+        {Object.keys(LDEMO).map((l) => <button key={l} className={'tb' + (l === lang ? ' on' : '')} onClick={() => setLang(l)}>{l}</button>)}
+      </div>
+      <div className="lchat" key={lang}>
+        <div className="lc-b cust">{d.cust}</div>
+        <div className="lc-b bot"><Sparkles size={12} /> {d.reply}</div>
+      </div>
+      <div className="lc-en" key={lang + '-en'}>
+        <div className="lc-en-h">What you see — English, side by side</div>
+        <div className="lc-en-l"><b>Customer:</b> Where is my order? I placed it 3 weeks ago.</div>
+        <div className="lc-en-l"><b>Resolver:</b> Hi! Your order is on the way — arriving in 2–3 days. Here's your live tracking.</div>
+      </div>
     </div>
   )
 }
@@ -354,15 +428,16 @@ function GlobalOps() {
       <div className="wrap"><div className="cols2 top">
         <div>
           <span className="lbl reveal">Any language</span>
-          <h3 className="h3 reveal">Replies natively. Your team reads English.</h3>
-          <p className="ssub reveal">Buyers in the US, France, Germany, Mexico and beyond — Resolver writes in their language and shows the English alongside.</p>
+          <h3 className="h3 reveal">Your customer reads French. You read English.</h3>
+          <p className="ssub reveal">Resolver detects the language, answers natively in it, and shows you the English right next to it — you stay in control without a translator.</p>
           <div className="reveal"><LanguagesDemo /></div>
-          <div className="chiprow reveal"><span><Languages size={12} /> 30+ languages</span><span><ScanSearch size={12} /> auto-detected</span><span><Globe size={12} /> English shown alongside</span></div>
+          <div className="chiprow reveal"><span><Languages size={12} /> 30+ languages</span><span><ScanSearch size={12} /> auto-detected</span><span><Globe size={12} /> no translator needed</span></div>
         </div>
         <div>
           <span className="lbl reveal">One inbox, every store</span>
           <h3 className="h3 reveal">Run ten storefronts without ten VAs.</h3>
-          <p className="ssub reveal">Every store flows into one shared queue — each with its own voice, policy and shadow/auto setting.</p>
+          <p className="ssub reveal">All your stores land in one queue. Each keeps its own voice and its own rules — and you see everything in one place.</p>
+          <div className="qsum reveal"><Inbox size={14} /> One queue · <b>27 open</b> across 4 stores</div>
           <div className="stores2">{STORES.map(([a, n, o, b, c], i) => <div className="scard reveal" key={i}><div className="av" style={{ background: c }}>{a}</div><div className="nm">{n}</div><div className="mt">{o} <span className={'ba ' + (b === 'AUTO' ? 'auto' : 'sh')}>{b}</span></div></div>)}</div>
         </div>
       </div></div>
