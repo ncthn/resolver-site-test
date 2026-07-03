@@ -18,6 +18,13 @@ mockApi method with the real endpoint — the UI needs no changes.
 | cancelAutoSend        | (pending_auto_send cancel)                   | clears auto_send_queued_at |
 | unlinkOrder           | POST /api/tickets/:id/unlink-order           | rematch = POST /:id/rematch, match = /:id/match-order |
 | getLog                | (ai-activity feed)                           | |
+| deleteTicket          | DELETE /api/tickets/:id                      | soft delete to bin |
+| restoreTicket         | POST /api/tickets/:id/restore                | |
+| permanentDelete       | DELETE /api/tickets/:id/permanent            | |
+| postSupplier          | POST /api/tickets/:id/supplier               | opens supplier request, status -> WAITING_SUPPLIER |
+| refreshOrder          | POST /api/tickets/:id/refresh-order          | re-pull order snapshot |
+| sendCompose           | (compose/outbound send)                      | |
+| getTasks/toggleTask   | (tasks queue)                                | |
 
 Semantics respected from production:
 - `auto_send_queued_at` = ISO time of the dispatcher attempt (3-MINUTE window,
@@ -34,6 +41,4 @@ Semantics respected from production:
 - Send button: 180s anti-double-send cooldown after a successful send.
 - No avatars anywhere — sender identity is text.
 
-Not yet in the preview (exists in production, add when wiring): bin restore /
-permanent delete, merge-duplicates, order-timeline, refresh-order, supplier
-message compose, attachments.
+Not yet in the preview (exists in production, add when wiring): merge-duplicates, attachments, per-message supplier thread.

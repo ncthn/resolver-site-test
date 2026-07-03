@@ -25,7 +25,7 @@ const reduced = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* Scroll reveal — blurred fade-up, one treatment everywhere. */
-function Reveal({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
+export function Reveal({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
   return (
     <motion.div
       className={className}
@@ -49,17 +49,17 @@ function Brand() {
 }
 
 /* ============ nav ============ */
-function Nav() {
+export function Nav() {
   return (
     <header className="nv">
       <div className="wrap nv-in">
         <Brand />
         <nav className="nv-links" aria-label="Primary">
-          <a href="#how">How it works</a>
-          <a href="#detect">Use cases</a>
-          <a href="#platform">Platform</a>
-          <a href="#security">Security</a>
-          <a href="#pricing">Pricing</a>
+          <a href="/#how">How it works</a>
+          <a href="/#detect">Use cases</a>
+          <a href="/#platform">Platform</a>
+          <a href="/#security">Security</a>
+          <a href="/pricing">Pricing</a>
         </nav>
         <div className="nv-cta">
           <a className="login" href={LOGIN}>Log in</a>
@@ -991,19 +991,17 @@ function Cta() {
 }
 
 /* ============ footer ============ */
-function Foot() {
+export function Foot() {
   const cols: [string, [string, string][]][] = [
     ['Product', [
-      ['How it works', '#how'], ['Use cases', '#detect'], ['Platform', '#platform'],
-      ['Security', '#security'], ['Pricing', '#pricing'], ['FAQ', '#faq'],
+      ['How it works', '/#how'], ['Use cases', '/#detect'], ['Platform', '/#platform'],
+      ['Security', '/#security'], ['Pricing', '/pricing'], ['Integrations', '/integrations'],
     ]],
     ['Company', [
-      ['About', 'https://resolver.chat/about'], ['Contact', 'https://resolver.chat/contact'],
-      ['Blog', 'https://resolver.chat/blog'],
+      ['About', '/about'], ['Contact', '/contact'], ['FAQ', '/faq'],
     ]],
     ['Legal', [
-      ['Privacy', 'https://resolver.chat/privacy'], ['Terms', 'https://resolver.chat/terms'],
-      ['Cookies', 'https://resolver.chat/cookies'],
+      ['Privacy', '/privacy'], ['Terms', '/terms'], ['Cookies', '/cookies'],
     ]],
   ];
   return (

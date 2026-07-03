@@ -10,7 +10,7 @@ import {
   ChevronsUpDown, Package, Truck, ShieldCheck, Send, Pencil, Trash2,
   RefreshCw, Gavel, Clock, Check, Zap, ArrowUpRight, User, LayoutDashboard,
   Filter, FileText, Landmark, X, Plus, PauseCircle, Languages, ChevronDown,
-  Unlink, Loader2, Factory,
+  Unlink, Loader2, Factory, RotateCcw, Tag,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { Category, Ticket, TicketStatus } from './console/types'
@@ -165,6 +165,25 @@ function Overview({ shopId }: { shopId: string }) {
 }
 
 /* ------------- tickets: the 3-pane, running the real state machine ----- */
+function CategoryDropdown({ t }: { t: Ticket }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="c-status-wrap">
+      <button className="c-chip-btn" onClick={() => setOpen(!open)}>
+        <Tag size={13} /> {CATEGORY_LABEL[t.category]} <ChevronDown size={13} />
+      </button>
+      {open && (
+        <div className="c-menu">
+          {(Object.keys(CATEGORY_LABEL) as Category[]).map((c) => (
+            <button key={c} className={c === t.category ? 'on' : ''} onClick={() => { api.patchCategory(t.id, c); setOpen(false) }}>
+              {CATEGORY_LABEL[c]} {c === t.category && <Check size={13} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 function StatusDropdown({ t }: { t: Ticket }) {
   const [open, setOpen] = useState(false)
   return (
@@ -218,7 +237,8 @@ function TicketsView({ shopId }: { shopId: string }) {
   // listTickets is async in production; the mock store is read synchronously.
   const tickets = ((): Ticket[] => {
     const base = ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
-      .map((id) => api.getTicket(id)!)
+      .map((id) => api.getTicket(id))
+      .filter((t): t is Ticket => !!t && !t.is_deleted)
       .filter((t) => shopId === 'all' || t.shop_id === shopId)
       .filter((t) => !q || (t.subject + t.customer_email + (t.customer_name ?? '') + (t.order_name ?? '')).toLowerCase().includes(q.toLowerCase()))
     if (filter === 'All') return base
@@ -295,9 +315,18 @@ function TicketsView({ shopId }: { shopId: string }) {
                 <Languages size={12} /> {mirror ? 'Showing EN' : `Original · ${t.customer_language.toUpperCase()}`}
               </button>
             )}
+            <CategoryDropdown t={t} />
             <StatusDropdown t={t} />
+            {!t.supplier_status && (
+              <button className="c-chip-btn" title="Open a supplier request" onClick={() => api.postSupplier(t.id, 'Stock / reshipment check')}>
+                <Factory size={13} /> Ask supplier
+              </button>
+            )}
             <button className={'c-chip-btn' + (t.ai_disabled ? ' red' : '')} onClick={() => api.postAiToggle(t.id)} title="Per-ticket AI kill switch">
               <Zap size={13} /> {t.ai_disabled ? 'AI off' : 'AI on'}
+            </button>
+            <button className="c-chip-btn" title="Move to bin" onClick={() => api.deleteTicket(t.id)}>
+              <Trash2 size={13} />
             </button>
           </div>
         </header>
@@ -394,6 +423,20 @@ function TicketsView({ shopId }: { shopId: string }) {
                 <div className="c-kv"><span>Total</span><b>{t.order_snapshot.currency === 'EUR' ? '€' : '$'}{t.order_snapshot.total_price}</b></div>
                 <div className="c-kv"><span>Ships to</span><b>{t.order_snapshot.shipping_country}</b></div>
                 <a className="link">Open in Shopify <ArrowUpRight size={12} /></a>
+                <a className="link" onClick={() => api.refreshOrder(t.id)}><RotateCcw size={12} /> Refresh snapshot</a>
+              </div>
+            </div>
+            <div className="sec">
+              <div className="h">Timeline</div>
+              <div className="card">
+                <div className="c-tl">
+                  <div className="e done"><i /><span>Order placed · {timeAgo(t.order_snapshot.created_at)} ago</span></div>
+                  <div className={'e' + (t.order_snapshot.fulfillment_status === 'fulfilled' ? ' done' : '')}><i /><span>Fulfilled</span></div>
+                  {t.order_snapshot.tracking_status[0] && (
+                    <div className={'e' + (/transit|Deliver/i.test(t.order_snapshot.tracking_status[0]) ? ' done' : '')}><i /><span>{t.order_snapshot.tracking_status[0]}</span></div>
+                  )}
+                  <div className={'e' + (/^Delivered/i.test(t.order_snapshot.tracking_status[0] ?? '') ? ' done' : '')}><i /><span>Delivered</span></div>
+                </div>
               </div>
             </div>
             {t.order_snapshot.tracking_numbers.length > 0 && (
@@ -463,16 +506,31 @@ function StaticList({ title, sub, rows }: { title: string; sub: string; rows: [s
 }
 
 function Compose() {
+  const [from, setFrom] = useState('support@aurora.com')
+  const [to, setTo] = useState('')
+  const [subject, setSubject] = useState('')
+  const [body, setBody] = useState('')
+  const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const doSend = async () => {
+    if (!to || !subject) return
+    setState('sending')
+    await api.sendCompose(from, to, subject)
+    setState('sent')
+    setTo(''); setSubject(''); setBody('')
+    setTimeout(() => setState('idle'), 2500)
+  }
   return (
     <div className="c-page">
       <header className="c-page-h"><div><h1>Compose</h1><p>New outbound email</p></div></header>
       <div className="c-card c-compose">
-        <label>From<select><option>support@aurora.com (AURORA)</option><option>hello@harborgoods.com</option></select></label>
-        <label>To<input placeholder="customer@email.com" /></label>
-        <label>Subject<input placeholder="Subject" /></label>
-        <label>Message<textarea rows={8} placeholder="Write your message — or type # to attach an order." /></label>
+        <label>From<select value={from} onChange={(e) => setFrom(e.target.value)}><option>support@aurora.com</option><option>hello@harborgoods.com</option><option>care@northbound.co</option></select></label>
+        <label>To<input placeholder="customer@email.com" value={to} onChange={(e) => setTo(e.target.value)} /></label>
+        <label>Subject<input placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} /></label>
+        <label>Message<textarea rows={8} placeholder="Write your message — or type # to attach an order." value={body} onChange={(e) => setBody(e.target.value)} /></label>
         <div className="row">
-          <button className="c-act prim"><Send size={14} /> Send</button>
+          <button className="c-act prim" disabled={state !== 'idle' || !to || !subject} onClick={doSend}>
+            {state === 'sending' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {state === 'sent' ? 'Sent ✓' : 'Send'}
+          </button>
           <button className="c-act"><FileText size={14} /> Save draft</button>
         </div>
       </div>
@@ -518,6 +576,77 @@ function AiLog() {
               <span className={'ic ' + e.kind}>{e.kind === 'hold' ? <PauseCircle size={13} /> : e.kind === 'send' ? <Send size={12} /> : <Check size={13} />}</span>
               <span className="t"><b>{e.ev}</b> — {e.detail}</span>
               <span className="at">{timeAgo(e.at)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BinView() {
+  useStore()
+  const rows = ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
+    .map((id) => api.getTicket(id))
+    .filter((t): t is Ticket => !!t && !!t.is_deleted)
+  return (
+    <div className="c-page">
+      <header className="c-page-h"><div><h1>Bin</h1><p>Deleted conversations — recoverable for 30 days</p></div></header>
+      <div className="c-card">
+        <div className="c-rows">
+          {rows.length === 0 && <p className="c-note" style={{ marginTop: 0 }}>Bin is empty.</p>}
+          {rows.map((t) => (
+            <div className="c-ev" key={t.id}>
+              <span className="t"><b>{t.subject}</b> — {t.customer_name ?? t.customer_email}</span>
+              <button className="c-act" onClick={() => api.restoreTicket(t.id)}><RotateCcw size={13} /> Restore</button>
+              <button className="c-act red" onClick={() => api.permanentDelete(t.id)}><Trash2 size={13} /> Delete forever</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TasksView() {
+  useStore()
+  return (
+    <div className="c-page">
+      <header className="c-page-h"><div><h1>Tasks</h1><p>Follow-ups the AI queued for you</p></div></header>
+      <div className="c-card">
+        <div className="c-rows">
+          {api.getTasks().map((k) => (
+            <div className="c-ev" key={k.id} style={k.done ? { opacity: .45 } : undefined}>
+              <button className={'c-check' + (k.done ? ' on' : '')} onClick={() => api.toggleTask(k.id)} aria-label="toggle task">
+                {k.done && <Check size={12} strokeWidth={3} />}
+              </button>
+              <span className="t" style={k.done ? { textDecoration: 'line-through' } : undefined}><b>{k.t}</b> — {k.d}</span>
+              <span className="at">{k.due}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SentView() {
+  useStore()
+  const fromTickets = ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
+    .map((id) => api.getTicket(id))
+    .filter((t): t is Ticket => !!t)
+    .flatMap((t) => t.messages.filter((m) => !m.is_customer).map((m) => ({ at: m.date, to: t.customer_email, subject: 'Re: ' + t.subject, from: m.from })))
+  const rows = [...api.getOutbound(), ...fromTickets].sort((a, b) => b.at.localeCompare(a.at))
+  return (
+    <div className="c-page">
+      <header className="c-page-h"><div><h1>Sent</h1><p>Outbound mail across stores</p></div></header>
+      <div className="c-card">
+        <div className="c-rows">
+          {rows.length === 0 && <p className="c-note" style={{ marginTop: 0 }}>Nothing sent yet.</p>}
+          {rows.map((r, i) => (
+            <div className="c-ev" key={i}>
+              <span className="t"><b>{r.subject}</b> — to {r.to} · from {r.from}</span>
+              <span className="at">{timeAgo(r.at)}</span>
             </div>
           ))}
         </div>
@@ -645,18 +774,14 @@ export function AppConsole() {
     overview: () => <Overview shopId={shopId} />,
     tickets: () => <TicketsView shopId={shopId} />,
     resolved: () => <DerivedList title="Resolved" sub="Closed conversations" filterFn={(t) => t.status === 'RESOLVED'} empty="Nothing resolved yet today." />,
-    bin: () => <StaticList title="Bin" sub="Deleted conversations — recoverable for 30 days" rows={[['Spam · "Grow your store 10x"', 'deleted manually', 'yesterday']]} />,
+    bin: () => <BinView />,
     filtered: () => <StaticList title="Filtered" sub="Suppressed inbound — never reached the inbox" rows={[
       ['Newsletter · Shopify Weekly', 'marketing filter', '2h'],
       ['Auto-reply · Out of office', 'loop protection', '3h'],
     ]} />,
     compose: () => <Compose />,
-    sent: () => <DerivedList title="Sent" sub="Outbound mail across stores" filterFn={(t) => t.messages.some((m) => !m.is_customer)} empty="Nothing sent yet." />,
-    tasks: () => <StaticList title="Tasks" sub="Follow-ups the AI queued for you" rows={[
-      ['Check reshipment stock · Aurora Linen Set', 'damage claim #2061 awaiting supplier', 'due today'],
-      ['Confirm supplier ETA · Harbor Robe', 'restock answer promised to 2 customers', 'due tomorrow'],
-      ['Review dispute evidence · #1991', 'chargeback deadline in 6 days', 'due in 3 days'],
-    ]} />,
+    sent: () => <SentView />,
+    tasks: () => <TasksView />,
     customs: () => <StaticList title="Customs" sub="Clearance requests detected in tracking" rows={[
       ['#1042 · CP998341US', 'cleared this morning — customer notified in draft', '2h'],
       ['#2088 · CP584201US', 'fee requested by carrier — customer asked to pay €4.20', 'yesterday'],

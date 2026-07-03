@@ -71,6 +71,7 @@ export interface Ticket {
   auto_send_queued_at?: string
   /** Per-ticket kill switch — pipeline skips drafting AND auto-send. */
   ai_disabled?: boolean
+  is_deleted?: boolean
   supplier_status: 'REQUESTED' | 'SUPPLIER_REPLIED' | 'RESOLVED' | null
   supplier_request_type: string | null
   is_stuck: boolean

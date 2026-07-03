@@ -283,3 +283,65 @@ export async function unlinkOrder(id: string) {
 }
 export function getLog() { return LOG }
 export function getTicket(id: string) { return TICKETS.find((x) => x.id === id) }
+
+/* ---- bin (DELETE /api/tickets/:id · POST /:id/restore · DELETE /:id/permanent) */
+export async function deleteTicket(id: string) {
+  await delay()
+  const t = TICKETS.find((x) => x.id === id)!
+  t.is_deleted = true
+  log('Moved to bin', t.subject, 'hold')
+  notify()
+}
+export async function restoreTicket(id: string) {
+  await delay()
+  const t = TICKETS.find((x) => x.id === id)!
+  t.is_deleted = false
+  log('Restored from bin', t.subject, 'ok')
+  notify()
+}
+export async function permanentDelete(id: string) {
+  await delay()
+  const i = TICKETS.findIndex((x) => x.id === id)
+  if (i >= 0) { log('Permanently deleted', TICKETS[i].subject, 'hold'); TICKETS.splice(i, 1) }
+  notify()
+}
+/** POST /api/tickets/:id/supplier — open a supplier request (SupplierBridge). */
+export async function postSupplier(id: string, requestType: string) {
+  await delay(250)
+  const t = TICKETS.find((x) => x.id === id)!
+  t.supplier_status = 'REQUESTED'
+  t.supplier_request_type = requestType
+  t.status = 'WAITING_SUPPLIER'
+  log('Supplier requested', `${requestType} · ${t.subject}`, 'hold')
+  notify()
+}
+/** POST /api/tickets/:id/refresh-order — re-pull the order snapshot. */
+export async function refreshOrder(id: string) {
+  await delay(700)
+  const t = TICKETS.find((x) => x.id === id)!
+  log('Order refreshed', `${t.order_name ?? t.subject} · snapshot re-pulled from Shopify`, 'ok')
+  notify()
+}
+/* ---- outbound compose (POST /api/compose in production) */
+const OUTBOUND: { at: string; to: string; subject: string; from: string }[] = []
+export async function sendCompose(from: string, to: string, subject: string) {
+  await delay(300)
+  OUTBOUND.unshift({ at: new Date().toISOString(), to, subject, from })
+  log('Outbound sent', `${subject} → ${to}`, 'send')
+  notify()
+}
+export function getOutbound() { return OUTBOUND }
+/* ---- tasks (production: tasks queue) */
+const TASKS = [
+  { id: 'k1', t: 'Check reshipment stock · Aurora Linen Set', d: 'damage claim #2061 awaiting supplier', due: 'due today', done: false },
+  { id: 'k2', t: 'Confirm supplier ETA · Harbor Robe', d: 'restock answer promised to 2 customers', due: 'due tomorrow', done: false },
+  { id: 'k3', t: 'Review dispute evidence · #1991', d: 'chargeback deadline in 6 days', due: 'due in 3 days', done: false },
+]
+export function getTasks() { return TASKS }
+export async function toggleTask(id: string) {
+  await delay(60)
+  const k = TASKS.find((x) => x.id === id)!
+  k.done = !k.done
+  if (k.done) log('Task completed', k.t, 'ok')
+  notify()
+}

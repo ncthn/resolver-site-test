@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc --noEmit",
-    "build": "tsc --noEmit && vite build && npx esbuild server.ts --bundle --platform=node --format=esm --outfile=server.mjs --packages=external && mkdir -p dist/brand dist/app && cp dist/index.html dist/brand/index.html && cp dist/index.html dist/app/index.html",
+    "build": "tsc --noEmit && vite build && npx esbuild server.ts --bundle --platform=node --format=esm --outfile=server.mjs --packages=external && mkdir -p dist/brand dist/app dist/pricing dist/about dist/contact dist/integrations dist/faq dist/privacy dist/terms dist/cookies && cp dist/index.html dist/brand/index.html && cp dist/index.html dist/app/index.html && cp dist/index.html dist/pricing/index.html && cp dist/index.html dist/about/index.html && cp dist/index.html dist/contact/index.html && cp dist/index.html dist/integrations/index.html && cp dist/index.html dist/faq/index.html && cp dist/index.html dist/privacy/index.html && cp dist/index.html dist/terms/index.html && cp dist/index.html dist/cookies/index.html",
     "start": "NODE_ENV=production node server.mjs"
   },
   "dependencies": {

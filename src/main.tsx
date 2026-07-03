@@ -3,12 +3,24 @@ import './index.css'
 import { Landing } from './saas/Landing'
 import { AppConsole } from './saas/AppConsole'
 import { BrandPage } from './saas/BrandPage'
+import { PricingPage, AboutPage, ContactPage, IntegrationsPage, FaqPage, PrivacyPage, TermsPage, CookiesPage } from './saas/pages'
 
-// Paths work locally + on the web-service backend; #hash is the fallback for
-// static hosts with no SPA rewrite rule.
+// Path routing with #hash fallback for static hosts without rewrites.
 const path = window.location.pathname.replace(/\/+$/, '')
 const hash = window.location.hash.replace(/^#\/?/, '').replace(/\/+$/, '')
-const route = path === '/app' || hash === 'app' ? 'app' : path === '/brand' || hash === 'brand' ? 'brand' : 'landing'
-createRoot(document.getElementById('root')!).render(
-  route === 'app' ? <AppConsole /> : route === 'brand' ? <BrandPage /> : <Landing />
-)
+const r = (p: string) => path === '/' + p || hash === p
+
+const ROUTES: [boolean, () => React.ReactElement][] = [
+  [r('app'), () => <AppConsole />],
+  [r('brand'), () => <BrandPage />],
+  [r('pricing'), () => <PricingPage />],
+  [r('about'), () => <AboutPage />],
+  [r('contact'), () => <ContactPage />],
+  [r('integrations'), () => <IntegrationsPage />],
+  [r('faq'), () => <FaqPage />],
+  [r('privacy'), () => <PrivacyPage />],
+  [r('terms'), () => <TermsPage />],
+  [r('cookies'), () => <CookiesPage />],
+]
+const match = ROUTES.find(([ok]) => ok)
+createRoot(document.getElementById('root')!).render(match ? match[1]() : <Landing />)
