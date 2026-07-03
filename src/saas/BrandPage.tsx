@@ -10,8 +10,7 @@ const COLORS = [
   { name: 'Ink', hex: '#16181C', use: 'Text, primary buttons, dark cards. The brand carries in black.' },
   { name: 'Paper', hex: '#FFFFFF', use: 'Page ground. Sections alternate paper and band.' },
   { name: 'Band', hex: '#F5F5F4', use: 'Soft section bands and card fills. Never pure gray — warm bias.' },
-  { name: 'Indigo', hex: '#2A2FB8', use: 'The octagon’s own blue. Logo, category dots, links on hover. Scarce.' },
-  { name: 'Indigo hover', hex: '#4046E3', use: 'Interactive states of indigo elements only.' },
+  { name: 'Indigo (heritage)', hex: '#2A2FB8', use: 'The original mark’s blue. NOT used in UI — kept only as the app-icon variant.' },
   { name: 'Success', hex: '#3D7A50', use: 'Live / fulfilled / sent states. On #E8F0EB chips.' },
   { name: 'Risk', hex: '#B4472F', use: 'Chargeback, legal, escalation. On #FBEFEC chips.' },
   { name: 'Text soft', hex: '#6B6E76', use: 'Body copy and secondary text.' },
@@ -101,11 +100,11 @@ export function BrandPage() {
       {/* 02 color */}
       <section className="bp-sec">
         <span className="n">02 · Color</span>
-        <h2>Monochrome ground, one scarce blue.</h2>
+        <h2>Monochrome. Full stop.</h2>
         <p className="d">
-          The page is ink on paper with warm-gray bands. Indigo is rationed: it appears in
-          the mark, category dots, and interactive accents — never as a section background.
-          Semantic green/red exist only inside product UI chips.
+          Ink on paper with warm-gray bands — no accent color in the UI at all. The decision
+          is final: V1 monochrome, indigo dropped. Semantic green/red exist only inside
+          product UI status chips.
         </p>
         <div className="bp-grid c4">
           {COLORS.map((c) => (
@@ -195,12 +194,11 @@ export function BrandPage() {
 
       {/* 07 variants */}
       <section className="bp-sec">
-        <span className="n">07 · Accent direction — pick one</span>
+        <span className="n">07 · Accent direction — DECIDED: V1</span>
         <h2>Three treatments, same system.</h2>
         <p className="d">
-          The system above holds in all three. V1 is what the site ships today. V2 spends
-          the octagon&rsquo;s indigo on CTAs and highlights. V3 inverts key surfaces for a
-          heavier, darker presence.
+          Decision made July 2026: V1 monochrome ships, and even the &ldquo;slight indigo&rdquo;
+          accents were dropped after review. V2/V3 kept below for the record only.
         </p>
         <div className="bp-grid c3">
           <Variant tone="mono" />

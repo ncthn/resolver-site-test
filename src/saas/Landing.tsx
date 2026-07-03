@@ -79,7 +79,7 @@ function ConsoleMock() {
       <div className="console-mock">
         <aside className="cm-side">
           <div className="hd">Inbox</div>
-          <div className="cm-row on"><span className="dot" style={{ background: 'var(--indigo)' }} />Where is my order?<span className="n">12</span></div>
+          <div className="cm-row on"><span className="dot" style={{ background: 'var(--ink)' }} />Where is my order?<span className="n">12</span></div>
           <div className="cm-row"><span className="dot" style={{ background: '#8A8D94' }} />Returns &amp; refunds<span className="n">4</span></div>
           <div className="cm-row"><span className="dot" style={{ background: '#8A8D94' }} />Order changes<span className="n">3</span></div>
           <div className="cm-row"><span className="dot" style={{ background: '#8A8D94' }} />Product questions<span className="n">6</span></div>
@@ -170,7 +170,7 @@ function Hero() {
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
           transition={{ duration: 0.65, ease: [0.2, 0.7, 0.2, 1] }}
         >
-          Your customer emails, <span className="hl">answered from the real order.</span>
+          Your customer emails, answered from the real order.
         </motion.h1>
         <motion.p
           className="lede"
@@ -209,7 +209,7 @@ function Hero() {
 
 /* ============ live classifier (how-card 1) ============ */
 const CLS_CATS: [string, string, number][] = [
-  ['Where is my order?', 'var(--indigo)', 12],
+  ['Where is my order?', 'var(--ink)', 12],
   ['Returns & refunds', '#8A8D94', 4],
   ['Order changes', '#8A8D94', 3],
   ['Chargeback threat', '#B4472F', 1],
@@ -1034,11 +1034,7 @@ function Foot() {
   );
 }
 
-export function Landing({ accent = false }: { accent?: boolean } = {}) {
-  useEffect(() => {
-    document.body.classList.toggle('v2', accent);
-    return () => document.body.classList.remove('v2');
-  }, [accent]);
+export function Landing() {
   return (
     <div>
       <Nav />

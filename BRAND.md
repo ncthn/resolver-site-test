@@ -11,7 +11,7 @@ for any session continuing the work.
   icon/favicon; white for dark surfaces. Lockup = mark at ~20px beside
   `resolver.chat` in Inter Tight 600, 7px gap. Never letterspace or recolor.
 - **Color**: ink `#16181C`, paper `#FFFFFF`, band `#F5F5F4` (warm gray),
-  indigo `#2A2FB8` (scarce: logo, dots, accents; hover `#4046E3`), success
+  indigo `#2A2FB8` (HERITAGE ONLY — dropped from all UI July 2026; survives solely as the blue app-icon asset), success
   `#3D7A50` on `#E8F0EB`, risk `#B4472F` on `#FBEFEC`, body text `#6B6E76`,
   faint `#9A9DA4`, hairline `rgba(22,24,28,.07)`.
 - **Type**: Inter Tight only (Google Fonts), weights 400/500/600. Headlines
@@ -29,7 +29,7 @@ for any session continuing the work.
 
 ## Accent-direction variants (owner to pick — see /brand §07)
 
-V1 monochrome (ships today) · V2 indigo-accent CTAs · V3 ink-forward dark.
+DECIDED: V1 monochrome, all indigo accents dropped (July 2026). V2/V3 rejected.
 
 ## Engineering
 

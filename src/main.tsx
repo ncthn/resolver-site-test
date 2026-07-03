@@ -8,7 +8,7 @@ import { BrandPage } from './saas/BrandPage'
 // static hosts with no SPA rewrite rule.
 const path = window.location.pathname.replace(/\/+$/, '')
 const hash = window.location.hash.replace(/^#\/?/, '').replace(/\/+$/, '')
-const route = path === '/app' || hash === 'app' ? 'app' : path === '/brand' || hash === 'brand' ? 'brand' : path === '/v2' || hash === 'v2' ? 'v2' : 'landing'
+const route = path === '/app' || hash === 'app' ? 'app' : path === '/brand' || hash === 'brand' ? 'brand' : 'landing'
 createRoot(document.getElementById('root')!).render(
-  route === 'app' ? <AppConsole /> : route === 'brand' ? <BrandPage /> : <Landing accent={route === 'v2'} />
+  route === 'app' ? <AppConsole /> : route === 'brand' ? <BrandPage /> : <Landing />
 )

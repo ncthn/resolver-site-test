@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "resolver-site-test",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "/private/tmp/claude-501/-Users-comedownmachine-Apps/02ff3e94-3aff-4471-af63-5e811f2b352c/scratchpad/resolver-site-test",
+      "port": 5173
+    }
+  ]
+}
