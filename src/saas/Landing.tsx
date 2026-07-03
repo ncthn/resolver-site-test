@@ -335,8 +335,11 @@ function Detect() {
   return (
     <section className="detect" id="detect">
       <div className="wrap">
+        <Reveal className="center" >
+          <span className="eyebrow">Use cases</span>
+        </Reveal>
         <Reveal>
-          <div className="detect-stage" aria-label={`Detecting requests like ${PILLS.join(', ')} before they escalate`}>
+          <div className="detect-stage" style={{ marginTop: 40 }} aria-label={`Detecting requests like ${PILLS.join(', ')} before they escalate`}>
             <span className="side">Detecting requests like</span>
             <div className="pillcol-mask" aria-hidden="true">
               <div className="pillcol">
@@ -558,7 +561,11 @@ function Stats() {
   ];
   return (
     <section className="stats wrap">
-      <div className="stats-grid">
+      <Reveal className="center">
+        <span className="eyebrow">Guarantees</span>
+        <h2 className="sec-h2" style={{ marginTop: 18 }}>What you control, always.</h2>
+      </Reveal>
+      <div className="stats-grid" style={{ marginTop: 48 }}>
         <Reveal>
           <div className="stats-copy" style={{ height: '100%' }}>
             <h3>Real controls.<br />Not a black box.</h3>
@@ -678,48 +685,82 @@ function Setup() {
   );
 }
 
-/* ============ security: shield + globe + analytics demo ============ */
+/* ============ security: dot-matrix shield + rotating dot globe ============ */
 function Shield() {
   return (
     <div className="shield-wrap" aria-hidden="true">
-      <span className="shield-ring" />
       <svg viewBox="0 0 170 190" fill="none">
+        <defs>
+          <pattern id="shdots" width="9" height="9" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="1.5" fill="rgba(22,24,28,.38)" />
+          </pattern>
+          <clipPath id="shclip">
+            <path d="M85 8 L152 34 V96 C152 140 122 168 85 182 C48 168 18 140 18 96 V34 Z" />
+          </clipPath>
+          <linearGradient id="shscan" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#fff" stopOpacity="0" />
+            <stop offset=".5" stopColor="#fff" stopOpacity=".85" />
+            <stop offset="1" stopColor="#fff" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <g clipPath="url(#shclip)">
+          <rect x="0" y="0" width="170" height="190" fill="url(#shdots)" />
+          <rect className="sh-scan" x="0" y="-60" width="170" height="60" fill="url(#shscan)" />
+        </g>
         <path
-          className="shield-dash"
           d="M85 8 L152 34 V96 C152 140 122 168 85 182 C48 168 18 140 18 96 V34 Z"
-          stroke="var(--ink)" strokeWidth="1.6"
+          stroke="var(--ink)" strokeWidth="1.4" opacity=".55"
         />
-        <path d="M62 92 L79 110 L112 72" stroke="var(--ink)" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="85" cy="94" r="30" fill="#fff" stroke="var(--line)" />
+        <path d="M71 94 L81 105 L100 82" stroke="var(--ink)" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </div>
   );
 }
+
+/* Rotating dot-sphere: ~230 fibonacci points, orthographic projection, rAF. */
 function Globe() {
-  // CSS-3D wireframe sphere: dashed meridians spinning around Y + fixed latitudes.
-  const R = 95;
-  const lats = [
-    { z: 0, r: R },
-    { z: 58, r: Math.sqrt(R * R - 58 * 58) },
-    { z: -58, r: Math.sqrt(R * R - 58 * 58) },
-  ];
+  const ref = useRef<SVGSVGElement>(null);
+  useEffect(() => {
+    const svg = ref.current;
+    if (!svg) return;
+    const N = 230, R = 86, CX = 95, CY = 95;
+    const pts: { x: number; y: number; z: number }[] = [];
+    const ga = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < N; i++) {
+      const y = 1 - (i / (N - 1)) * 2;
+      const rad = Math.sqrt(1 - y * y);
+      const th = ga * i;
+      pts.push({ x: Math.cos(th) * rad, y, z: Math.sin(th) * rad });
+    }
+    const dots = pts.map(() => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      svg.appendChild(c);
+      return c;
+    });
+    let t = 0;
+    let raf = 0;
+    const still = reduced();
+    const draw = () => {
+      for (let i = 0; i < N; i++) {
+        const p = pts[i];
+        const sx = p.x * Math.cos(t) + p.z * Math.sin(t);
+        const sz = -p.x * Math.sin(t) + p.z * Math.cos(t);
+        const depth = (sz + 1) / 2; // 0 back, 1 front
+        const d = dots[i];
+        d.setAttribute('cx', String(CX + sx * R));
+        d.setAttribute('cy', String(CY + p.y * R));
+        d.setAttribute('r', String(0.9 + depth * 1.5));
+        d.setAttribute('fill', `rgba(22,24,28,${(0.10 + depth * 0.55).toFixed(3)})`);
+      }
+      if (!still) { t += 0.0042; raf = requestAnimationFrame(draw); }
+    };
+    draw();
+    return () => { cancelAnimationFrame(raf); dots.forEach((d) => d.remove()); };
+  }, []);
   return (
     <div className="globe" aria-hidden="true">
-      <div className="globe-in">
-        {[0, 36, 72, 108, 144].map((deg) => (
-          <div className="mer" key={deg} style={{ transform: `rotateY(${deg}deg)` }} />
-        ))}
-        {lats.map((l, i) => (
-          <div
-            className="lat"
-            key={i}
-            style={{
-              width: l.r * 2,
-              height: l.r * 2,
-              transform: `translate(-50%,-50%) rotateX(90deg) translateZ(${l.z}px)`,
-            }}
-          />
-        ))}
-      </div>
+      <svg ref={ref} viewBox="0 0 190 190" />
     </div>
   );
 }

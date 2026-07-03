@@ -2,10 +2,13 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { Landing } from './saas/Landing'
 import { AppConsole } from './saas/AppConsole'
+import { BrandPage } from './saas/BrandPage'
 
-// path /app works locally + on the real web-service backend; #app is the fallback
-// for the static test env (no SPA rewrite rule there).
+// Paths work locally + on the web-service backend; #hash is the fallback for
+// static hosts with no SPA rewrite rule.
 const path = window.location.pathname.replace(/\/+$/, '')
 const hash = window.location.hash.replace(/^#\/?/, '').replace(/\/+$/, '')
-const isApp = path === '/app' || hash === 'app'
-createRoot(document.getElementById('root')!).render(isApp ? <AppConsole /> : <Landing />)
+const route = path === '/app' || hash === 'app' ? 'app' : path === '/brand' || hash === 'brand' ? 'brand' : 'landing'
+createRoot(document.getElementById('root')!).render(
+  route === 'app' ? <AppConsole /> : route === 'brand' ? <BrandPage /> : <Landing />
+)
