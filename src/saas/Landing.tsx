@@ -1,48 +1,26 @@
-// Resolver — marketing site, "engineering document" direction.
-// Ink + cool paper, the octagon's indigo as the only accent, IBM Plex Mono
-// microlabels indexing every section, hairline rules, rectangular buttons.
-// Schibsted Grotesk display · Instrument Sans body. No fabricated stats,
-// no customer logos we don't have — serious means honest.
+// Resolver — marketing site. Monochrome restraint: ink on white, soft gray
+// bands, borderless rounded cards, pill buttons, one neutral typeface.
+// The product mockups do the selling; the octagon mark carries the only
+// real color. No fabricated stats, no customer logos we don't have.
 import { useState } from 'react';
-import { motion } from 'motion/react';
 import {
-  ShoppingBag, Mail, GitBranch, Languages, ShieldAlert,
-  FileSearch, Check, Plus, Inbox, Scale, Eye,
-  PackageSearch, PenLine, SlidersHorizontal, BellRing, LineChart, Lock,
+  ShoppingBag, Mail, Check, Plus, CircleCheck, PenLine, Inbox,
+  Undo2, CreditCard, UserX, Timer, ListTree, Megaphone, BarChart3,
+  Languages, Eye, Lock, Scale,
 } from 'lucide-react';
 
 const LOGO_B = '/logo/recolor/oct-bluewhite-t.png'; // blue mark — light surfaces
-const LOGO_W = '/logo/recolor/oct-whiteblue-t.png'; // white mark — dark surfaces
 
 const START = 'https://resolver.chat/get-started';
 const LOGIN = 'https://resolver.chat/login';
 const DEMO = 'https://resolver.chat/contact';
 const PRICING_FULL = 'https://resolver.chat/pricing';
 
-/* One reveal treatment, used everywhere: restrained fade-up on scroll. */
-const rise = {
-  initial: { y: 18 },
-  whileInView: { y: 0 },
-  viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.5, ease: [0.2, 0.7, 0.2, 1] as const },
-};
-
-function Idx({ n, t }: { n: string; t: string }) {
-  return (
-    <div className="idx">
-      <span className="n">{n}</span>
-      <span className="t">{t}</span>
-    </div>
-  );
-}
-
-function Brand({ onInk = false }: { onInk?: boolean }) {
+function Brand() {
   return (
     <a className="brand" href="#top" aria-label="Resolver home">
-      <img src={onInk ? LOGO_W : LOGO_B} alt="" />
-      <span className="wm" style={onInk ? { color: 'var(--dk-tx)' } : undefined}>
-        resolver<i>.chat</i>
-      </span>
+      <img src={LOGO_B} alt="" />
+      <span className="wm">resolver.chat</span>
     </a>
   );
 }
@@ -55,14 +33,13 @@ function Nav() {
         <Brand />
         <nav className="nv-links" aria-label="Primary">
           <a href="#how">How it works</a>
-          <a href="#platform">Platform</a>
-          <a href="#security">Security</a>
+          <a href="#detect">Use cases</a>
+          <a href="#features">Features</a>
           <a href="#pricing">Pricing</a>
-          <a href="#faq">FAQ</a>
         </nav>
         <div className="nv-cta">
           <a className="login" href={LOGIN}>Log in</a>
-          <a className="btn sec sm" href={DEMO}>Book a demo</a>
+          <a className="btn soft sm demo" href={DEMO}>Book a demo</a>
           <a className="btn pri sm" href={START}>Start free</a>
         </div>
       </div>
@@ -70,397 +47,317 @@ function Nav() {
   );
 }
 
-/* ============ hero ============ */
-function ResolutionRecord() {
+/* ============ hero + product shot ============ */
+function ConsoleMock() {
   return (
-    <motion.div
-      className="rr"
-      initial={{ y: 24 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.6, delay: 0.25, ease: [0.2, 0.7, 0.2, 1] }}
-      aria-label="Example of a resolved ticket"
-    >
-      <div className="rr-top">
-        <span className="id">TICKET #4471 · SARAH K. · EN-US</span>
-        <span className="st">Resolved</span>
-      </div>
-      <div className="rr-body">
-        <p className="rr-msg">
-          <b>Where is my order?</b> — &ldquo;It&rsquo;s been 9 days and nothing has arrived.
-          I&rsquo;m starting to think this shop is a scam.&rdquo;
-        </p>
-        <div className="rr-order">
-          <div className="kv">
-            <span className="k">Order</span><span className="v">#1042 · 2 items · $74.00</span>
-            <span className="k">Carrier</span><span className="v">DHL · <em>in transit</em> · customs cleared</span>
-            <span className="k">Est. delivery</span><span className="v">2–3 days</span>
+    <div className="shot" role="img" aria-label="The Resolver inbox: a ticket matched to its Shopify order with a drafted reply ready to approve">
+      <div className="shot-bar"><i /><i /><i /><span className="addr">app.resolver.chat</span></div>
+      <div className="console-mock">
+        <aside className="cm-side">
+          <div className="hd">Inbox</div>
+          <div className="cm-row on"><span className="dot" style={{ background: 'var(--indigo)' }} />Where is my order?<span className="n">12</span></div>
+          <div className="cm-row"><span className="dot" style={{ background: '#8A8D94' }} />Returns &amp; refunds<span className="n">4</span></div>
+          <div className="cm-row"><span className="dot" style={{ background: '#8A8D94' }} />Order changes<span className="n">3</span></div>
+          <div className="cm-row"><span className="dot" style={{ background: '#8A8D94' }} />Product questions<span className="n">6</span></div>
+          <div className="cm-row"><span className="dot" style={{ background: '#B4472F' }} />Escalated<span className="n">1</span></div>
+          <div className="hd" style={{ marginTop: 14 }}>Store</div>
+          <div className="cm-row">Analytics</div>
+          <div className="cm-row">Automation log</div>
+          <div className="cm-row">Settings</div>
+        </aside>
+        <div className="cm-main">
+          <div className="subj">Where is my order?</div>
+          <div className="meta">Sarah K. · sarah.k@gmail.com · 9:14 AM</div>
+          <div className="cm-ev">
+            <span className="ic ok"><CircleCheck size={13} strokeWidth={2.4} /></span>
+            <div>
+              <div className="t">Customer matched in Shopify<span>9:14:03</span></div>
+              <div className="d">Email matched to an existing customer</div>
+            </div>
+          </div>
+          <div className="cm-ev">
+            <span className="ic ok"><CircleCheck size={13} strokeWidth={2.4} /></span>
+            <div>
+              <div className="t">Order found: #1042<span>9:14:10</span></div>
+              <div className="d">Ana Coat Beige · $189.00</div>
+            </div>
+          </div>
+          <div className="cm-ev">
+            <span className="ic ok"><CircleCheck size={13} strokeWidth={2.4} /></span>
+            <div>
+              <div className="t">Shipping status retrieved: In transit<span>9:14:15</span></div>
+              <div className="d">1Z999AA10123456784 (UPS) · customs cleared</div>
+            </div>
+          </div>
+          <div className="cm-ev">
+            <span className="ic ai"><PenLine size={12} strokeWidth={2.4} /></span>
+            <div>
+              <div className="t">Reply drafted<span>9:14:22</span></div>
+            </div>
+          </div>
+          <div className="cm-draft">
+            Hi Sarah,<br /><br />
+            Thanks for reaching out! Your order has been shipped and is currently in
+            transit — it cleared customs this morning and should arrive within 2–3 days.
+            You can track it live here: ups.com/track<br /><br />
+            Best regards,<br />Diana
+            <div className="acts"><span className="a1">Approve &amp; send</span><span className="a2">Edit</span></div>
           </div>
         </div>
-        <div className="rr-draft">
-          Hi Sarah — your order #1042 cleared customs this morning and is with DHL for
-          final delivery, estimated in 2–3 days. Here&rsquo;s your live tracking link.
-          Sorry for the wait.
-        </div>
+        <aside className="cm-ctx">
+          <div>
+            <div className="hd">Order</div>
+            <div className="cm-kv" style={{ marginTop: 10 }}>
+              <span className="k">Number</span><span className="v">#1042</span>
+              <span className="k">Status</span><span className="v"><span className="pill-st">Fulfilled</span></span>
+              <span className="k">Placed</span><span className="v">Jun 24, 3:45 PM</span>
+            </div>
+          </div>
+          <div className="cm-sep" />
+          <div>
+            <div className="hd">Items</div>
+            <div className="cm-kv" style={{ marginTop: 10 }}>
+              <span className="k">Product</span><span className="v">Ana Coat Beige</span>
+              <span className="k">Quantity</span><span className="v">1</span>
+              <span className="k">Price</span><span className="v">$189.00</span>
+            </div>
+          </div>
+          <div className="cm-sep" />
+          <div>
+            <div className="hd">Shipping</div>
+            <div className="cm-kv" style={{ marginTop: 10 }}>
+              <span className="k">Status</span><span className="v"><span className="pill-tr">In transit</span></span>
+              <span className="k">Carrier</span><span className="v">UPS</span>
+              <span className="k">ETA</span><span className="v">2–3 days</span>
+            </div>
+          </div>
+        </aside>
       </div>
-      <div className="rr-foot">
-        <span className="lane">Auto-send</span>
-        <span className="hold">Cancel window 30s</span>
-        <span className="tm">matched on order # · confidence high</span>
-      </div>
-    </motion.div>
+    </div>
   );
 }
 
 function Hero() {
   return (
-    <section className="hero" id="top">
-      <div className="wrap hero-grid">
-        <div>
-          <div>
-            <span className="mono acc">AI support operations · Shopify</span>
-          </div>
-          <motion.h1
-            initial={{ y: 16 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.55, delay: 0.08, ease: [0.2, 0.7, 0.2, 1] }}
-          >
-            Support that reads the order <span className="u">before it answers.</span>
-          </motion.h1>
-          <motion.p
-            className="lede"
-            initial={{ y: 14 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.55, delay: 0.16, ease: [0.2, 0.7, 0.2, 1] }}
-          >
-            Resolver matches every customer email to the live Shopify order, drafts the
-            reply in the customer&rsquo;s language, and holds anything risky for a human.
-            You approve — or turn on auto-send one lane at a time.
-          </motion.p>
-          <motion.div
-            className="ctas"
-            initial={{ y: 12 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.5, delay: 0.24 }}
-          >
-            <a className="btn pri" href={START}>Start free</a>
-            <a className="btn sec" href={DEMO}>Book a demo</a>
-          </motion.div>
-          <div className="fine">
-            <span>Shadow mode by default</span>
-            <span>No reply sent without your rules</span>
-          </div>
-        </div>
-        <ResolutionRecord />
-      </div>
-      <div className="wrap ints">
-        <div className="ints-in">
-          <span className="cap">Runs on</span>
-          <span className="it"><ShoppingBag size={16} strokeWidth={2.2} />Shopify Admin</span>
-          <span className="it"><Mail size={16} strokeWidth={2.2} />Gmail</span>
-          <span className="it"><PackageSearch size={16} strokeWidth={2.2} />Live carrier tracking</span>
-          <span className="it"><Languages size={16} strokeWidth={2.2} />40+ languages</span>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ============ detection ticker ============ */
-const DETECT = [
-  'Where is my order?', 'Address change', 'Cancellation request', 'Refund demand',
-  'Tracking not updating', 'Damaged on arrival', 'Wrong size received', 'Customs fee dispute',
-  'Duplicate order', 'Payment question', 'Return request', 'Order never arrived',
-];
-const DETECT_RISK = ['Chargeback threat', 'Legal threat'];
-
-function Ticker() {
-  const rowA = [...DETECT.slice(0, 6), DETECT_RISK[0], ...DETECT.slice(6, 9)];
-  const rowB = [...DETECT.slice(9), DETECT_RISK[1], ...DETECT.slice(0, 5)];
-  const Chip = ({ label }: { label: string }) => (
-    <span className={DETECT_RISK.includes(label) ? 'tick-chip risk' : 'tick-chip'}>
-      <b aria-hidden="true" />{label}
-    </span>
-  );
-  return (
-    <section className="tick">
-      <motion.div className="wrap" {...rise}>
-        <Idx n="01" t="Detection" />
-        <h2 className="sec-h2">Every request classified<br />before it escalates.</h2>
-        <p className="sec-sub">
-          Resolver reads each inbound email, identifies what the customer actually needs,
-          and routes it — including the two categories that must never get an automated
-          reply.
+    <>
+      <section className="hero wrap" id="top">
+        <h1>Your customer emails, answered from the real order.</h1>
+        <p className="lede">
+          Resolver matches every support email to the live Shopify order and drafts the
+          reply in the customer&rsquo;s language — ready to approve, or to send on its own
+          once you trust it.
         </p>
-      </motion.div>
-      <div className="tick-rail" aria-hidden="true">
-        <div className="tick-row">
-          {[...rowA, ...rowA].map((l, i) => <Chip key={`a${i}`} label={l} />)}
+        <div className="ctas">
+          <a className="btn pri" href={START}>Start free</a>
+          <a className="btn soft" href={DEMO}>Book a demo</a>
         </div>
-        <div className="tick-row rev">
-          {[...rowB, ...rowB].map((l, i) => <Chip key={`b${i}`} label={l} />)}
-        </div>
+      </section>
+      <div className="stage">
+        <div className="wrap"><ConsoleMock /></div>
       </div>
-    </section>
+    </>
   );
 }
 
-/* ============ how it works ============ */
+/* ============ how it works: 3 soft cards ============ */
 function How() {
-  const steps = [
-    {
-      n: 'STEP 01', t: 'Match', ic: <FileSearch size={19} strokeWidth={2} />,
-      p: 'Each email is matched to the Shopify order — by order number, then by customer email — and enriched with fulfillment status and live carrier tracking.',
-    },
-    {
-      n: 'STEP 02', t: 'Draft', ic: <PenLine size={19} strokeWidth={2} />,
-      p: 'Resolver writes the reply in the customer’s language, grounded in the real order data and your store’s policies — not a template, not a guess.',
-    },
-    {
-      n: 'STEP 03', t: 'Decide', ic: <GitBranch size={19} strokeWidth={2} />,
-      p: 'The draft lands in a lane you control: hold for approval, or auto-send with a delay and a cancel window. Risky tickets always escalate to a human.',
-    },
-  ];
   return (
-    <section className="steps" id="how">
-      <motion.div className="wrap" {...rise}>
-        <Idx n="02" t="How it works" />
-        <h2 className="sec-h2">Match. Draft. Decide.</h2>
-        <p className="sec-sub">
-          Three stages, each one inspectable. You can read exactly why every reply says
-          what it says.
-        </p>
-        <div className="steps-grid">
-          {steps.map((s) => (
-            <div className="step" key={s.t}>
-              <span className="sn">{s.n}</span>
-              <h3>{s.t}</h3>
-              <p>{s.p}</p>
-              <div className="sic">{s.ic}</div>
+    <section className="how wrap" id="how">
+      <div className="center">
+        <span className="eyebrow">How it works</span>
+        <h2 className="sec-h2" style={{ marginTop: 18 }}>Ready-to-send replies,<br />powered by your store&rsquo;s live data.</h2>
+      </div>
+      <div className="how-grid">
+        <div className="hcard">
+          <h3>Detect &amp; categorize every request</h3>
+          <p>Resolver reads each inbound email and identifies what the customer actually needs — no rules to configure.</p>
+          <div className="visual">
+            <div className="hviz">
+              <div className="l hl"><span className="sw" style={{ background: 'var(--indigo)' }} />Where is my order? <span style={{ marginLeft: 'auto', color: 'var(--tx-faint)' }}>12</span></div>
+              <div className="l"><span className="sw" style={{ background: '#8A8D94' }} />Returns &amp; refunds <span style={{ marginLeft: 'auto', color: 'var(--tx-faint)' }}>4</span></div>
+              <div className="l"><span className="sw" style={{ background: '#8A8D94' }} />Order changes <span style={{ marginLeft: 'auto', color: 'var(--tx-faint)' }}>3</span></div>
+              <div className="l"><span className="sw" style={{ background: '#B4472F' }} />Chargeback threat <span style={{ marginLeft: 'auto', color: 'var(--tx-faint)' }}>1</span></div>
+              <div className="l"><span className="sw" style={{ background: '#8A8D94' }} />Product questions <span style={{ marginLeft: 'auto', color: 'var(--tx-faint)' }}>6</span></div>
             </div>
-          ))}
+          </div>
         </div>
-      </motion.div>
+        <div className="hcard">
+          <h3>Pull the order &amp; tracking context automatically</h3>
+          <p>Order, fulfillment, customer history, live carrier events — everything needed to resolve the issue, attached to the ticket.</p>
+          <div className="visual">
+            <div className="hviz">
+              <div className="kv2">Order <b>#1042 · $189.00</b></div>
+              <div className="kv2">Status <b>Fulfilled</b></div>
+              <div className="kv2">Carrier <b>UPS · In transit</b></div>
+              <div className="kv2">Customs <b>Cleared</b></div>
+              <div className="kv2">ETA <b>2–3 days</b></div>
+            </div>
+          </div>
+        </div>
+        <div className="hcard">
+          <h3>Draft a personal reply in their language</h3>
+          <p>Written in your store&rsquo;s tone, grounded in the real data, in the customer&rsquo;s own language. You approve — or automate it.</p>
+          <div className="visual">
+            <div className="hviz">
+              <div className="l" style={{ paddingLeft: 4, color: 'var(--tx-faint)', fontSize: 11 }}>DE · inbound</div>
+              <div className="bubble">Wo ist meine Bestellung? Es sind schon 9 Tage…</div>
+              <div className="l" style={{ paddingLeft: 4, color: 'var(--tx-faint)', fontSize: 11, marginTop: 6 }}>DE · drafted reply</div>
+              <div className="bubble">Hallo Lena — deine Bestellung #2087 ist unterwegs und kommt in 2–3 Tagen an. Hier ist dein Live-Tracking…</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
 
-/* ============ cost of silence (dark) ============ */
-function Cost() {
+/* ============ integrations ============ */
+function Integrations() {
+  return (
+    <section className="ints wrap">
+      <div className="ints-card">
+        <div className="tx">
+          <h3>Connected to the tools already running your store</h3>
+          <p>Customer, order, and delivery data pulled automatically — so every reply is grounded in what actually happened.</p>
+        </div>
+        <div className="apps">
+          <div className="appic"><span className="tile"><ShoppingBag size={24} strokeWidth={1.8} /></span>Shopify</div>
+          <div className="appic"><span className="tile"><Mail size={24} strokeWidth={1.8} /></span>Gmail</div>
+          <div className="appic"><span className="tile"><Timer size={24} strokeWidth={1.8} /></span>Tracking</div>
+          <div className="appic"><span className="tile"><Languages size={24} strokeWidth={1.8} /></span>40+ languages</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============ detection set piece ============ */
+const PILLS = [
+  'Where is my order?', 'Address changes', 'Order cancellations', 'Refund requests',
+  'Shipping delays', 'Damaged items', 'Returns', 'Chargeback threats',
+  'Customs questions', 'Duplicate orders', 'Wrong size received', 'Payment issues',
+];
+function Detect() {
+  return (
+    <section className="detect" id="detect">
+      <div className="wrap">
+        <div className="detect-stage" aria-label={`Detecting requests like ${PILLS.join(', ')} before they escalate`}>
+          <span className="side">Detecting requests like</span>
+          <div className="pillcol-mask" aria-hidden="true">
+            <div className="pillcol">
+              {[...PILLS, ...PILLS].map((p, i) => (
+                <span key={i} className={p === 'Chargeback threats' ? 'dpill risk' : 'dpill'}>{p}</span>
+              ))}
+            </div>
+          </div>
+          <span className="side">before they escalate.</span>
+        </div>
+        <p className="detect-sub">Chargeback and legal language is never auto-replied — it goes straight to a human.</p>
+      </div>
+    </section>
+  );
+}
+
+/* ============ money section ============ */
+function Money() {
+  return (
+    <section className="money wrap">
+      <div className="center">
+        <span className="eyebrow">Why it matters</span>
+        <h2 className="sec-h2" style={{ marginTop: 18 }}>Slow support isn&rsquo;t just slow.<br />It&rsquo;s silently costing you money.</h2>
+      </div>
+      <div className="money-grid">
+        <div className="mcard">
+          <span className="mic"><Undo2 size={19} strokeWidth={2} /></span>
+          <h3>Refunds you could&rsquo;ve prevented</h3>
+          <p>Small delivery questions escalate into unnecessary refunds when customers are left without answers.</p>
+        </div>
+        <div className="mcard">
+          <span className="mic"><CreditCard size={19} strokeWidth={2} /></span>
+          <h3>Disputes you didn&rsquo;t see coming</h3>
+          <p>Unresolved frustration quietly turns into chargebacks, complaints, and bad reviews if you don&rsquo;t answer fast.</p>
+        </div>
+        <div className="mcard">
+          <span className="mic"><UserX size={19} strokeWidth={2} /></span>
+          <h3>Customers you lost without noticing</h3>
+          <p>Slow responses damage trust and reduce the chances customers ever come back.</p>
+        </div>
+        <div className="mcard cta" style={{ gridColumn: 'span 3' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap', width: '100%' }}>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <h3>Ready to stop losing money to slow support?</h3>
+              <p style={{ marginTop: 6 }}>Put Resolver in shadow mode tonight and judge it on its drafts.</p>
+            </div>
+            <a className="btn" href={START} style={{ background: '#fff', color: 'var(--ink)' }}>Start free</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============ features: quiet 4-col ============ */
+function Features() {
   const cols = [
     {
-      n: 'FAILURE 01', t: 'WISMO becomes a refund',
-      p: 'A "where is my order?" left unanswered for days turns into a refund demand — for a package that was already on the truck. The money was never at risk until the silence made it so.',
-      tag: 'Preventable with a same-day, tracking-grounded reply',
+      ic: <ListTree size={19} strokeWidth={2} />, t: 'Approval & auto-send controls',
+      p: 'Review replies manually, or automate specific lanes with a delay and a cancel window. Every store starts in shadow mode.',
     },
     {
-      n: 'FAILURE 02', t: 'A dispute becomes a chargeback',
-      p: 'Chargeback language hides inside ordinary-looking emails. Miss it in a crowded inbox and the first time you hear about it is from your payment processor — with a fee attached.',
-      tag: 'Preventable with detection and human escalation',
+      ic: <Eye size={19} strokeWidth={2} />, t: 'Action & conversation timelines',
+      p: 'Every AI action is recorded — what was matched, drafted, and sent, and why. Audit everything.',
     },
     {
-      n: 'FAILURE 03', t: 'A slow reply becomes a lost customer',
-      p: 'Long shipping windows already test a customer’s patience. A support queue measured in days confirms their worst assumption about your store. They don’t complain twice — they leave.',
-      tag: 'Preventable with drafts ready before you open the inbox',
+      ic: <Megaphone size={19} strokeWidth={2} />, t: 'Brand voice personalization',
+      p: 'Replies aligned with your store’s tone, policies, and support SOP — configured per store.',
+    },
+    {
+      ic: <BarChart3 size={19} strokeWidth={2} />, t: 'Support analytics',
+      p: 'Identify recurring issues, delivery problems, and refund patterns across your inbox.',
     },
   ];
   return (
-    <section className="dark cost">
-      <motion.div className="wrap" {...rise}>
-        <Idx n="03" t="Cost of silence" />
-        <h2 className="sec-h2">Slow support doesn&rsquo;t feel expensive.<br />It is.</h2>
-        <div className="cost-grid">
-          {cols.map((c) => (
-            <div className="cost-col" key={c.n}>
-              <span className="cn">{c.n}</span>
-              <h3>{c.t}</h3>
-              <p>{c.p}</p>
-              <span className="tag">{c.tag}</span>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-    </section>
-  );
-}
-
-/* ============ platform split ============ */
-function Split() {
-  const drafting = [
-    { b: 'Order matching', s: 'order number first, customer email second — with the evidence shown' },
-    { b: 'Language detection', s: 'replies written in the customer’s language, not translated boilerplate' },
-    { b: 'Tracking enrichment', s: 'live carrier events folded into the reply, customs status included' },
-    { b: 'Policy grounding', s: 'your SOP and store policies constrain every draft' },
-    { b: 'Brand voice', s: 'tone configured per store, from plain to formal' },
-  ];
-  const control = [
-    { b: 'Approval queue', s: 'every draft reviewable before anything leaves the building' },
-    { b: 'Send lanes', s: 'off · shadow · live — switched per category, per store' },
-    { b: 'Cancel window', s: 'auto-sends wait out a delay you set; one click pulls them back' },
-    { b: 'Escalation rules', s: 'chargeback and legal language always routes to a human' },
-    { b: 'Kill switch', s: 'one setting stops all automated sending, immediately' },
-  ];
-  return (
-    <section className="split" id="platform">
-      <motion.div className="wrap" {...rise}>
-        <Idx n="04" t="Platform" />
-        <h2 className="sec-h2">A drafting engine.<br />And a control plane over it.</h2>
-        <p className="sec-sub">
-          The AI writes; you govern. The two halves ship as one product — automation
-          without a control plane is how support tools end up apologizing in public.
-        </p>
-        <div className="split-grid">
-          <div className="split-card">
-            <span className="sc-cap">Drafting engine</span>
-            <h3>Replies grounded in the order</h3>
-            <p className="sc-sub">Everything the AI writes is anchored to data it can cite.</p>
-            <div className="split-list">
-              {drafting.map((li) => (
-                <div className="split-li" key={li.b}>
-                  <Check size={16} strokeWidth={2.4} />
-                  <span><b>{li.b}</b> — {li.s}</span>
-                </div>
-              ))}
-            </div>
+    <section className="feats wrap" id="features">
+      <div className="center">
+        <span className="eyebrow">Features</span>
+        <h2 className="sec-h2" style={{ marginTop: 18 }}>All the tools to scale support<br />without scaling your team.</h2>
+      </div>
+      <div className="feats-grid">
+        {cols.map((c) => (
+          <div className="fcol" key={c.t}>
+            <span className="fic">{c.ic}</span>
+            <h4>{c.t}</h4>
+            <p>{c.p}</p>
           </div>
-          <div className="split-card inkside">
-            <span className="sc-cap">Control plane</span>
-            <h3>Nothing sends without your rules</h3>
-            <p className="sc-sub">Autonomy is granted lane by lane, and revocable in one click.</p>
-            <div className="split-list">
-              {control.map((li) => (
-                <div className="split-li" key={li.b}>
-                  <Check size={16} strokeWidth={2.4} />
-                  <span><b>{li.b}</b> — {li.s}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </section>
-  );
-}
-
-/* ============ feature bento ============ */
-function Bento() {
-  return (
-    <section className="bento">
-      <motion.div className="wrap" {...rise}>
-        <div className="bento-grid">
-          <div className="bcard w3">
-            <div className="bic"><Eye size={17} strokeWidth={2.2} /></div>
-            <h4>Shadow mode</h4>
-            <p>
-              Resolver drafts silently alongside your team while you compare its answers
-              to yours. Turn on sending only when the drafts have earned it — per lane,
-              per store.
-            </p>
-            <div className="bmini">
-              <div className="row"><span>WISMO lane</span><span className="ok">LIVE</span></div>
-              <div className="row"><span>Refund lane</span><span>SHADOW</span></div>
-              <div className="row"><span>Disputes</span><span className="no">HUMAN ONLY</span></div>
-            </div>
-          </div>
-          <div className="bcard w3">
-            <div className="bic"><Languages size={17} strokeWidth={2.2} /></div>
-            <h4>Native-language replies</h4>
-            <p>
-              The customer writes in German, the reply goes out in German — drafted
-              directly, not machine-translated after the fact. Your team reviews an
-              English mirror of every draft.
-            </p>
-            <div className="bmini">
-              <div className="row"><span>Inbound</span><span>DE · &ldquo;Wo ist meine Bestellung?&rdquo;</span></div>
-              <div className="row"><span>Outbound</span><span className="ok">DE · draft ready</span></div>
-              <div className="row"><span>Review copy</span><span>EN · mirrored</span></div>
-            </div>
-          </div>
-          <div className="bcard w2">
-            <div className="bic"><SlidersHorizontal size={17} strokeWidth={2.2} /></div>
-            <h4>Per-store policies</h4>
-            <p>Each store carries its own voice, SOP, and lane configuration. Run three brands without the replies blurring together.</p>
-          </div>
-          <div className="bcard w2">
-            <div className="bic"><BellRing size={17} strokeWidth={2.2} /></div>
-            <h4>Escalation triggers</h4>
-            <p>Chargeback language, legal threats, and anything below the confidence bar skip automation and go to the top of the human queue.</p>
-          </div>
-          <div className="bcard w2">
-            <div className="bic"><LineChart size={17} strokeWidth={2.2} /></div>
-            <h4>Automation log</h4>
-            <p>Every automated action is recorded: what sent, when, on which lane, and why. Audit the machine like you&rsquo;d audit an employee.</p>
-          </div>
-        </div>
-      </motion.div>
-    </section>
-  );
-}
-
-/* ============ facts band ============ */
-function Facts() {
-  const facts = [
-    { v: <>40<i>+</i></>, k: 'Languages detected and replied in-language' },
-    { v: <>3</>, k: 'Send lanes per store — off, shadow, live' },
-    { v: <>0</>, k: 'Auto-replies ever sent to chargeback or legal threats' },
-    { v: <>1</>, k: 'Switch to stop all automated sending' },
-  ];
-  return (
-    <section className="facts">
-      <div className="wrap">
-        <div className="facts-grid">
-          {facts.map((f, i) => (
-            <div className="fact" key={i}>
-              <div className="fv">{f.v}</div>
-              <div className="fk">{f.k}</div>
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
     </section>
   );
 }
 
-/* ============ trust / security ============ */
+/* ============ trust strip (compact, inside features rhythm) ============ */
 function Trust() {
   const rows = [
-    {
-      ic: <Lock size={17} strokeWidth={2.2} />, t: 'Read-only Shopify access',
-      p: 'Resolver requests read scopes only — orders, customers, products, fulfillments, returns, disputes. It cannot modify your store.',
-    },
-    {
-      ic: <Scale size={17} strokeWidth={2.2} />, t: 'Risk never gets automated',
-      p: 'Chargeback and legal language is detected and hard-routed to a human. This is enforced in the pipeline, not left to a prompt.',
-    },
-    {
-      ic: <ShieldAlert size={17} strokeWidth={2.2} />, t: 'Your data stays yours',
-      p: 'Customer data is processed under a signed DPA and never used to train AI models. No data is sold or shared for advertising.',
-    },
-    {
-      ic: <Inbox size={17} strokeWidth={2.2} />, t: 'Gmail stays the source of truth',
-      p: 'Replies send through your own mailbox. Turn Resolver off and your inbox is exactly where you left it — nothing held hostage.',
-    },
+    { ic: <Lock size={19} strokeWidth={2} />, t: 'Read-only Shopify access', p: 'Orders, customers, fulfillments — read scopes only. Resolver can’t modify your store.' },
+    { ic: <Scale size={19} strokeWidth={2} />, t: 'Risk never gets automated', p: 'Chargeback and legal language is hard-routed to a human, enforced in the pipeline.' },
+    { ic: <Inbox size={19} strokeWidth={2} />, t: 'Gmail stays yours', p: 'Replies send through your own mailbox. Turn Resolver off and nothing is held hostage.' },
+    { ic: <Check size={19} strokeWidth={2} />, t: 'No training on your data', p: 'Customer data is processed under a signed DPA and never used to train AI models.' },
   ];
   return (
-    <section className="trust" id="security">
-      <motion.div className="wrap" {...rise}>
-        <Idx n="05" t="Security & data" />
-        <h2 className="sec-h2">Built to be trusted with the inbox.</h2>
-        <p className="sec-sub">
-          Support email is customer PII plus money conversations. The boring parts are
-          load-bearing.
-        </p>
-        <div className="trust-grid">
-          {rows.map((r) => (
-            <div className="trow" key={r.t}>
-              <div className="tic">{r.ic}</div>
-              <div>
-                <h4>{r.t}</h4>
-                <p>{r.p}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+    <section className="feats wrap" id="security">
+      <div className="center">
+        <span className="eyebrow">Security &amp; data</span>
+        <h2 className="sec-h2" style={{ marginTop: 18 }}>Built to be trusted with the inbox.</h2>
+      </div>
+      <div className="feats-grid">
+        {rows.map((c) => (
+          <div className="fcol" key={c.t}>
+            <span className="fic">{c.ic}</span>
+            <h4>{c.t}</h4>
+            <p>{c.p}</p>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
@@ -469,19 +366,19 @@ function Trust() {
 function Pricing() {
   const plans = [
     {
-      name: 'Solo', blurb: 'One store, one seat.', price: '$59', vol: '300 tickets / mo',
+      name: 'Solo', blurb: 'One store, one seat.', price: '$59', vol: 'Up to 300 tickets / mo',
       feats: ['1 store · 1 seat', 'All AI features included', 'Shadow + auto-send lanes'],
-      cta: 'Start setup', href: START, rec: false,
+      cta: 'Start free', href: START, rec: false,
     },
     {
-      name: 'Team', blurb: 'Growing operations.', price: '$249', vol: '2,500 tickets / mo',
+      name: 'Team', blurb: 'Growing operations.', price: '$249', vol: 'Up to 2,500 tickets / mo',
       feats: ['3 stores · 3 seats', 'Per-store voice & policies', 'Lane analytics'],
-      cta: 'Start setup', href: START, rec: true,
+      cta: 'Start free', href: START, rec: true,
     },
     {
-      name: 'Portfolio', blurb: 'Multi-brand operators.', price: '$599', vol: '6,000 tickets / mo',
+      name: 'Portfolio', blurb: 'Multi-brand operators.', price: '$599', vol: 'Up to 6,000 tickets / mo',
       feats: ['Unlimited stores · 10 seats', 'Cross-store insights', 'Priority support'],
-      cta: 'Start setup', href: START, rec: false,
+      cta: 'Start free', href: START, rec: false,
     },
     {
       name: 'Enterprise', blurb: 'Custom contract.', price: 'Custom', vol: 'Unlimited volume',
@@ -490,37 +387,34 @@ function Pricing() {
     },
   ];
   return (
-    <section className="price" id="pricing">
-      <motion.div className="wrap" {...rise}>
-        <Idx n="06" t="Pricing" />
-        <h2 className="sec-h2">Priced by ticket volume.<br />Nothing else.</h2>
-        <p className="sec-sub">
-          Every AI feature is on every plan. Tiers only change stores, seats, and monthly
-          ticket volume.
-        </p>
-        <div className="price-grid">
-          {plans.map((p) => (
-            <div className={p.rec ? 'plan rec' : 'plan'} key={p.name}>
-              <div className="p-cap">
-                <h3>{p.name}</h3>
-                {p.rec && <span className="p-rec">Most chosen</span>}
-              </div>
-              <p className="p-blurb">{p.blurb}</p>
-              <div className="p-price">{p.price}{p.price !== 'Custom' && <span> /mo</span>}</div>
-              <div className="p-vol">{p.vol}</div>
-              <ul>
-                {p.feats.map((f) => (
-                  <li key={f}><Check size={15} strokeWidth={2.4} />{f}</li>
-                ))}
-              </ul>
-              <a className={p.rec ? 'btn pri' : 'btn sec'} href={p.href}>{p.cta}</a>
+    <section className="price wrap" id="pricing">
+      <div className="center">
+        <span className="eyebrow">Pricing</span>
+        <h2 className="sec-h2" style={{ marginTop: 18 }}>Priced by ticket volume. Nothing else.</h2>
+        <p className="sec-sub">Every AI feature is on every plan — tiers only change stores, seats, and volume.</p>
+      </div>
+      <div className="price-grid">
+        {plans.map((p) => (
+          <div className={p.rec ? 'plan rec' : 'plan'} key={p.name}>
+            <div className="p-cap">
+              <h3>{p.name}</h3>
+              {p.rec && <span className="p-rec">Most chosen</span>}
             </div>
-          ))}
-        </div>
-        <p className="price-note">
-          Annual billing takes 20% off. Full plan details at <a href={PRICING_FULL}>resolver.chat/pricing</a>.
-        </p>
-      </motion.div>
+            <p className="p-blurb">{p.blurb}</p>
+            <div className="p-price">{p.price}{p.price !== 'Custom' && <span> /mo</span>}</div>
+            <div className="p-vol">{p.vol}</div>
+            <ul>
+              {p.feats.map((f) => (
+                <li key={f}><Check size={15} strokeWidth={2.4} />{f}</li>
+              ))}
+            </ul>
+            <a className={p.rec ? 'btn' : 'btn soft'} href={p.href} style={p.rec ? undefined : { background: '#fff' }}>{p.cta}</a>
+          </div>
+        ))}
+      </div>
+      <p className="price-note">
+        Annual billing takes 20% off · full details at <a href={PRICING_FULL}>resolver.chat/pricing</a>
+      </p>
     </section>
   );
 }
@@ -533,14 +427,14 @@ const FAQS = [
   },
   {
     q: 'What happens when a customer threatens a chargeback?',
-    a: 'The ticket is flagged, pulled out of every automated lane, and pushed to the top of the human queue. This routing is enforced in the pipeline itself — no prompt or setting can auto-reply to dispute or legal language.',
+    a: 'The ticket is flagged, pulled out of every automated lane, and pushed to the top of the human queue. This routing is enforced in the pipeline itself — no setting can auto-reply to dispute or legal language.',
   },
   {
-    q: 'How does it know what my store’s policies are?',
-    a: 'During setup you provide your support SOP and policies (a document upload or written directly). Every draft is constrained by them — refund windows, reshipment rules, tone. Change the policy and the next draft follows it.',
+    q: 'How does it know my store’s policies?',
+    a: 'During setup you provide your support SOP and policies. Every draft is constrained by them — refund windows, reshipment rules, tone. Change the policy and the next draft follows it.',
   },
   {
-    q: 'What does it do with emails it can’t match to an order?',
+    q: 'What about emails it can’t match to an order?',
     a: 'Unmatched or low-confidence tickets are held for a human with everything Resolver could find attached. It never guesses an order match to force an automated reply.',
   },
   {
@@ -549,33 +443,33 @@ const FAQS = [
   },
   {
     q: 'How long does setup take?',
-    a: 'Installing the Shopify app, connecting Gmail, and uploading your SOP is a ten-minute job. Drafting starts right after — in shadow mode, where it stays until you decide otherwise.',
+    a: 'Installing the Shopify app, connecting Gmail, and uploading your SOP is about ten minutes. Drafting starts right after — in shadow mode, where it stays until you decide otherwise.',
   },
 ];
 
 function Faq() {
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <section className="faq" id="faq">
-      <motion.div className="wrap" {...rise}>
-        <Idx n="07" t="FAQ" />
-        <h2 className="sec-h2">Reasonable questions.</h2>
-        <div className="faq-list">
-          {FAQS.map((f, i) => (
-            <div className={open === i ? 'faq-item open' : 'faq-item'} key={i}>
-              <button
-                className="faq-q"
-                onClick={() => setOpen(open === i ? null : i)}
-                aria-expanded={open === i}
-              >
-                {f.q}
-                <Plus size={18} strokeWidth={2.2} />
-              </button>
-              <div className="faq-a"><p>{f.a}</p></div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+    <section className="faq wrap" id="faq">
+      <div className="center">
+        <span className="eyebrow">FAQ</span>
+        <h2 className="sec-h2" style={{ marginTop: 18 }}>Reasonable questions.</h2>
+      </div>
+      <div className="faq-list">
+        {FAQS.map((f, i) => (
+          <div className={open === i ? 'faq-item open' : 'faq-item'} key={i}>
+            <button
+              className="faq-q"
+              onClick={() => setOpen(open === i ? null : i)}
+              aria-expanded={open === i}
+            >
+              {f.q}
+              <Plus size={18} strokeWidth={2.2} />
+            </button>
+            <div className="faq-a"><p>{f.a}</p></div>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
@@ -583,20 +477,15 @@ function Faq() {
 /* ============ final CTA ============ */
 function Cta() {
   return (
-    <section className="dark cta">
-      <motion.div className="wrap cta-in" {...rise}>
-        <Idx n="08" t="Start" />
-        <h2>Put it in shadow mode tonight.<br />Judge it on its drafts.</h2>
-        <p>
-          Ten minutes of setup. No reply leaves your inbox until you say so — and you can
-          revoke that permission with one switch.
-        </p>
+    <section className="cta">
+      <div className="wrap">
+        <h2>See how Resolver handles your support, on your real tickets.</h2>
+        <p>Ten minutes of setup. Nothing sends until you say so.</p>
         <div className="ctas">
-          <a className="btn onink" href={START}>Start free</a>
-          <a className="btn ghost-onink" href={DEMO}>Book a demo</a>
+          <a className="btn pri" href={START}>Start free</a>
+          <a className="btn soft" href={DEMO} style={{ background: '#fff' }}>Book a demo</a>
         </div>
-        <div className="fine">Shopify app · Gmail · shadow mode by default</div>
-      </motion.div>
+      </div>
     </section>
   );
 }
@@ -605,7 +494,7 @@ function Cta() {
 function Foot() {
   const cols: [string, [string, string][]][] = [
     ['Product', [
-      ['How it works', '#how'], ['Platform', '#platform'], ['Security', '#security'],
+      ['How it works', '#how'], ['Use cases', '#detect'], ['Features', '#features'],
       ['Pricing', '#pricing'], ['FAQ', '#faq'],
     ]],
     ['Company', [
@@ -622,8 +511,8 @@ function Foot() {
       <div className="wrap">
         <div className="foot-grid">
           <div className="fb">
-            <Brand onInk />
-            <p>AI support operations for Shopify merchants with long shipping windows.</p>
+            <Brand />
+            <p>AI customer support for Shopify merchants with long shipping windows.</p>
           </div>
           {cols.map(([h, links]) => (
             <div key={h}>
@@ -638,7 +527,7 @@ function Foot() {
         </div>
         <div className="foot-bar">
           <span>© 2026 Resolver Ventures LLC</span>
-          <span>Built for operators, not call centers.</span>
+          <span>All rights reserved</span>
         </div>
       </div>
     </footer>
@@ -651,12 +540,11 @@ export function Landing() {
       <Nav />
       <main>
         <Hero />
-        <Ticker />
         <How />
-        <Cost />
-        <Split />
-        <Bento />
-        <Facts />
+        <Integrations />
+        <Detect />
+        <Money />
+        <Features />
         <Trust />
         <Pricing />
         <Faq />
