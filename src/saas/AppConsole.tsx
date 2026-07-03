@@ -6,12 +6,12 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
-const LOGO = '/logo/recolor/oct-bluewhite-t.png' // blue mark — light app chrome
+const LOGO = '/logo/recolor/oct-black-t.png' // ink mark — monochrome app chrome
 
 const STORES = [
-  { id: 'aurora', name: 'AURORA', hue: '#2A2FB8', count: 12 },
-  { id: 'harbor', name: 'Harbor Goods', hue: '#4046E3', count: 7 },
-  { id: 'northbound', name: 'Northbound', hue: '#23278F', count: 5 },
+  { id: 'aurora', name: 'AURORA', hue: '#16181C', count: 12 },
+  { id: 'harbor', name: 'Harbor Goods', hue: '#6B6E76', count: 7 },
+  { id: 'northbound', name: 'Northbound', hue: '#9A9DA4', count: 5 },
 ]
 
 const NAV: [LucideIcon, string, number | null][] = [
@@ -71,26 +71,26 @@ const CONVS: Conv[] = [
 const LANE: Record<string, string> = { c1: 'WISMO', c2: 'Disputes', c3: 'Returns', c4: 'Address changes' }
 
 const FLAG_META: Record<Flag, { label: string; cls: string; dot: string }> = {
-  auto: { label: 'Auto-drafted', cls: 'cs-b-auto', dot: '#4046E3' },
+  auto: { label: 'Auto-drafted', cls: 'cs-b-auto', dot: '#2A2FB8' },
   esc: { label: 'Escalated', cls: 'cs-b-esc', dot: '#B4472F' },
   sent: { label: 'Auto-sent', cls: 'cs-b-sent', dot: '#9A9DA4' },
-  wait: { label: 'Needs you', cls: 'cs-b-wait', dot: '#2A2FB8' },
+  wait: { label: 'Needs you', cls: 'cs-b-wait', dot: '#16181C' },
 }
 
 const TABS = ['Needs you', 'Auto-sent', 'Escalated', 'All'] as const
 
 const KPIS: { Ic: LucideIcon; label: string; value: string; delta: string; up: boolean; soft: string; fg: string }[] = [
-  { Ic: CircleCheck, label: 'Tickets resolved', value: '1,284', delta: '+18%', up: true, soft: 'var(--teal-soft)', fg: 'var(--teal)' },
-  { Ic: Zap, label: 'Auto-send rate', value: '72%', delta: '+6 pts', up: true, soft: '#EEEFF9', fg: 'var(--indigo)' },
-  { Ic: Clock, label: 'Avg first reply', value: '0.9s', delta: '−2.1s', up: true, soft: 'var(--teal-soft)', fg: 'var(--teal)' },
-  { Ic: ShieldCheck, label: 'Escalated to human', value: '4.3%', delta: '−0.8 pts', up: true, soft: '#EEEFF9', fg: 'var(--indigo)' },
+  { Ic: CircleCheck, label: 'Tickets resolved', value: '1,284', delta: '+18%', up: true, soft: '#ECECEA', fg: '#16181C' },
+  { Ic: Zap, label: 'Auto-send rate', value: '72%', delta: '+6 pts', up: true, soft: '#ECECEA', fg: '#16181C' },
+  { Ic: Clock, label: 'Avg first reply', value: '0.9s', delta: '−2.1s', up: true, soft: '#ECECEA', fg: '#16181C' },
+  { Ic: ShieldCheck, label: 'Escalated to human', value: '4.3%', delta: '−0.8 pts', up: true, soft: '#ECECEA', fg: '#16181C' },
 ]
 const TREND = [['Mon', 62], ['Tue', 78], ['Wed', 54], ['Thu', 88], ['Fri', 100], ['Sat', 46], ['Sun', 58]] as const
 const LANES: [string, number, boolean][] = [['WISMO', 84, true], ['Returns', 71, true], ['Address changes', 63, true], ['Disputes', 0, false]]
 const STORE_ROWS = [
-  { name: 'AURORA', hue: '#2A2FB8', open: 12, resolved: '612', auto: '74%', resp: '0.8s' },
-  { name: 'Harbor Goods', hue: '#4046E3', open: 7, resolved: '408', auto: '69%', resp: '1.1s' },
-  { name: 'Northbound', hue: '#23278F', open: 5, resolved: '264', auto: '71%', resp: '0.9s' },
+  { name: 'AURORA', hue: '#16181C', open: 12, resolved: '612', auto: '74%', resp: '0.8s' },
+  { name: 'Harbor Goods', hue: '#6B6E76', open: 7, resolved: '408', auto: '69%', resp: '1.1s' },
+  { name: 'Northbound', hue: '#9A9DA4', open: 5, resolved: '264', auto: '71%', resp: '0.9s' },
 ]
 
 function Report() {
@@ -133,7 +133,7 @@ function Report() {
             {LANES.map(([name, pct, auto]) => (
               <div className="cs-lane-row" key={name}>
                 <span className="cs-lane-nm">{name}</span>
-                <span className="cs-lane-bar"><i style={{ width: Math.max(pct, 3) + '%', background: auto ? 'var(--teal)' : 'var(--tx-faint)' }} /></span>
+                <span className="cs-lane-bar"><i style={{ width: Math.max(pct, 3) + '%', background: auto ? '#3D7A50' : 'var(--tx-faint)' }} /></span>
                 <span className="cs-lane-pct">{auto ? pct + '%' : 'human'}</span>
               </div>
             ))}
@@ -219,7 +219,7 @@ export function AppConsole() {
             const f = FLAG_META[x.flag]
             return (
               <button key={x.id} className={'cs-row' + (x.id === sel ? ' sel' : '') + (x.unread ? ' unread' : '')} onClick={() => setSel(x.id)}>
-                <span className="cs-av" style={{ background: x.flag === 'esc' ? '#B4472F' : 'var(--indigo)' }}>{x.initials}</span>
+                <span className="cs-av" style={{ background: x.flag === 'esc' ? '#B4472F' : 'var(--ink)' }}>{x.initials}</span>
                 <span className="cs-row-main">
                   <span className="cs-row-top"><b>{x.name}</b><span className="cs-row-time">{x.time}</span></span>
                   <span className="cs-row-sub">{x.subject}</span>
@@ -239,7 +239,7 @@ export function AppConsole() {
       <main className="cs-conv">
         <header className="cs-c-head">
           <div className="cs-c-who">
-            <span className="cs-av lg" style={{ background: c.flag === 'esc' ? '#B4472F' : 'var(--indigo)' }}>{c.initials}</span>
+            <span className="cs-av lg" style={{ background: c.flag === 'esc' ? '#B4472F' : 'var(--ink)' }}>{c.initials}</span>
             <div>
               <div className="cs-c-nm">{c.name} <span className="cs-lang">{c.lang}</span></div>
               <div className="cs-c-meta"><Mail size={12} /> {c.name.toLowerCase().replace(/[^a-z]/g, '')}@email.com · {c.store}</div>
@@ -256,7 +256,7 @@ export function AppConsole() {
           {c.risk && <div className="cs-risk"><ShieldCheck size={15} /> {c.risk} — pulled from auto-send, routed to a human.</div>}
           {c.msgs.map((m, i) => (
             <div key={i} className={'cs-msg' + (m.me ? ' me' : '')}>
-              {!m.me && <span className="cs-av sm" style={{ background: c.flag === 'esc' ? '#B4472F' : 'var(--indigo)' }}>{c.initials}</span>}
+              {!m.me && <span className="cs-av sm" style={{ background: c.flag === 'esc' ? '#B4472F' : 'var(--ink)' }}>{c.initials}</span>}
               <div className="cs-bubble">{m.t}<span className="cs-at">{m.at}</span></div>
             </div>
           ))}

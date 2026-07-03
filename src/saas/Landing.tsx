@@ -170,7 +170,7 @@ function Hero() {
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
           transition={{ duration: 0.65, ease: [0.2, 0.7, 0.2, 1] }}
         >
-          Your customer emails, answered from the real order.
+          Your customer emails, <span className="hl">answered from the real order.</span>
         </motion.h1>
         <motion.p
           className="lede"
@@ -1034,7 +1034,11 @@ function Foot() {
   );
 }
 
-export function Landing() {
+export function Landing({ accent = false }: { accent?: boolean } = {}) {
+  useEffect(() => {
+    document.body.classList.toggle('v2', accent);
+    return () => document.body.classList.remove('v2');
+  }, [accent]);
   return (
     <div>
       <Nav />
