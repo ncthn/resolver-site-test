@@ -160,7 +160,7 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .mcard .mic{width:40px;height:40px;border-radius:11px;background:#fff;box-shadow:var(--cardsh);display:flex;align-items:center;justify-content:center;color:var(--ink)}
 .mcard h3{font-size:17.5px;letter-spacing:-.02em;margin-top:auto;padding-top:26px}
 .mcard p{color:var(--tx-soft);font-size:14px;line-height:1.6;margin-top:8px}
-.mcard.cta{background:var(--ink);color:#fff}
+.mcard.cta{background:var(--ink);color:#fff;grid-column:1/-1;padding:36px 40px}
 .mcard.cta h3{color:#fff;font-size:21px;margin-top:0;padding-top:0}
 .mcard.cta p{color:rgba(255,255,255,.65)}
 .mcard.cta .btn{margin-top:auto;align-self:flex-start;background:#fff;color:var(--ink)}
@@ -256,6 +256,104 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
   .stage{margin-top:56px}
   .stage .wrap{transform:translateY(-32px);margin-bottom:-32px}
   .nv-cta .login,.nv-cta .demo{display:none}
+}
+
+/* ============================================================
+   Animation layer — looping in-card motion (CSS only) +
+   scroll-reveal utilities (driven by motion/react in Landing).
+   ============================================================ */
+@keyframes fadeup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.fu{animation:fadeup .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--d,0s)}
+
+/* hero mock: blinking caret + pulsing approve pill */
+@keyframes blink{0%,55%{opacity:1}56%,100%{opacity:0}}
+.caret{display:inline-block;width:1.5px;height:13px;background:var(--ink);vertical-align:-2px;margin-left:1px;animation:blink 1.1s steps(1) infinite}
+@keyframes approvepulse{0%,100%{box-shadow:0 0 0 0 rgba(22,24,28,.22)}50%{box-shadow:0 0 0 7px rgba(22,24,28,0)}}
+.cm-draft .a1{animation:approvepulse 2.6s ease-out infinite}
+
+/* how-card 1: cycling row highlight (5 rows × 1.6s) */
+@keyframes rowon{0%,19%{background:var(--card);color:var(--ink);font-weight:500}20%,100%{background:transparent;color:var(--tx-soft);font-weight:400}}
+.cycle .l{animation:rowon 8s infinite;animation-delay:var(--d)}
+
+/* how-card 2: kv rows filling in sequence, then holding */
+@keyframes kvin{0%{opacity:0;transform:translateY(6px)}6%,88%{opacity:1;transform:none}96%,100%{opacity:0}}
+.seq .kv2{animation:kvin 7s infinite;animation-delay:var(--d)}
+
+/* how-card 3: typing dots then reply bubble */
+@keyframes dotsin{0%,8%{opacity:0}12%,38%{opacity:1}44%,100%{opacity:0}}
+@keyframes replyin{0%,42%{opacity:0;transform:translateY(8px)}50%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+.typing{display:inline-flex;gap:4px;padding:10px 13px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-top:8px;animation:dotsin 9s infinite}
+.typing i{width:5px;height:5px;border-radius:50%;background:var(--tx-faint);animation:blink 1s steps(1) infinite}
+.typing i:nth-child(2){animation-delay:.2s}
+.typing i:nth-child(3){animation-delay:.4s}
+.reply-anim{animation:replyin 9s infinite}
+
+@media (prefers-reduced-motion:reduce){
+  .fu,.cycle .l,.seq .kv2,.typing,.reply-anim,.caret,.cm-draft .a1{animation:none !important;opacity:1 !important}
+}
+
+/* ============ accordion set piece (auto-advancing) ============ */
+.acc{padding:0 0 110px}
+.acc-grid{display:grid;grid-template-columns:0.9fr 1.1fr;gap:44px;margin-top:48px;align-items:start}
+.acc-list{display:flex;flex-direction:column}
+.acc-item{border-top:1px solid var(--line);cursor:pointer;padding:4px 0}
+.acc-item:last-child{border-bottom:1px solid var(--line)}
+.acc-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 2px;font-size:16.5px;font-weight:500;letter-spacing:-.015em;color:var(--tx-soft);transition:color .2s}
+.acc-item.on .acc-head{color:var(--ink);font-weight:600}
+.acc-body{overflow:hidden;max-height:0;transition:max-height .35s ease}
+.acc-item.on .acc-body{max-height:150px}
+.acc-body p{padding:0 2px 16px;color:var(--tx-soft);font-size:14.5px;line-height:1.6;max-width:52ch}
+.acc-bar{height:2px;background:var(--line);border-radius:2px;overflow:hidden;margin:0 2px 14px;opacity:0}
+.acc-item.on .acc-bar{opacity:1}
+.acc-bar i{display:block;height:100%;background:var(--ink);width:0}
+.acc-item.on .acc-bar i{animation:fillbar 5s linear both}
+@keyframes fillbar{from{width:0}to{width:100%}}
+@media (prefers-reduced-motion:reduce){.acc-item.on .acc-bar i{animation:none;width:100%}}
+.acc-viz{background:var(--band);border-radius:20px;padding:28px;min-height:380px;display:flex;align-items:center;justify-content:center}
+.acc-shot{background:#fff;border-radius:14px;border:1px solid var(--line);box-shadow:var(--cardsh);padding:20px;width:100%;max-width:440px;font-size:13px;animation:fadeup .45s cubic-bezier(.2,.7,.2,1) both}
+.acc-shot .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);color:var(--tx-soft)}
+.acc-shot .row:last-child{border-bottom:none}
+.acc-shot .row b{color:var(--ink);font-weight:500}
+.acc-shot .st{font-size:11.5px;font-weight:500;border-radius:999px;padding:2.5px 10px}
+.acc-shot .st.live{background:#E8F0EB;color:#3D7A50}
+.acc-shot .st.shadow{background:var(--band);color:var(--tx-soft)}
+.acc-shot .st.human{background:#FBEFEC;color:#B4472F}
+.acc-shot .st.draft{background:var(--tint);color:var(--indigo)}
+
+/* ============ stats stack (gorgias) ============ */
+.stats{padding:0 0 110px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:48px;align-items:stretch}
+.stats-copy{background:var(--band);border-radius:20px;padding:36px;display:flex;flex-direction:column}
+.stats-copy h3{font-size:24px;letter-spacing:-.025em;line-height:1.2}
+.stats-copy p{color:var(--tx-soft);font-size:15px;line-height:1.65;margin-top:12px;max-width:40ch}
+.stats-copy .btn{margin-top:auto;align-self:flex-start}
+.stats-cards{display:flex;flex-direction:column;gap:14px;justify-content:center}
+.stat-card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--cardsh);padding:20px 24px;display:flex;align-items:center;gap:18px}
+.stat-card .v{font-size:30px;font-weight:600;letter-spacing:-.03em;min-width:96px;font-variant-numeric:tabular-nums}
+.stat-card .k{color:var(--tx-soft);font-size:14px;line-height:1.5}
+
+/* ============ setup timeline ============ */
+.setup{padding:0 0 110px}
+.setup-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:56px;position:relative}
+.setup-grid::before{content:"";position:absolute;top:9px;left:calc(12.5% );right:calc(12.5%);height:1.5px;background:var(--line)}
+.scard{position:relative;padding-top:34px;text-align:center}
+.scard .dot{position:absolute;top:0;left:50%;transform:translateX(-50%);width:19px;height:19px;border-radius:50%;background:#fff;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center}
+.scard .dot i{width:7px;height:7px;border-radius:50%;background:var(--ink)}
+.scard .when{font-size:12px;font-weight:600;color:var(--tx-faint);text-transform:uppercase;letter-spacing:.06em}
+.scard h4{font-size:16px;font-weight:600;letter-spacing:-.015em;margin-top:8px}
+.scard p{color:var(--tx-soft);font-size:13.5px;line-height:1.6;margin-top:7px;max-width:24ch;margin-left:auto;margin-right:auto}
+
+/* pricing: included-in-every-plan label */
+.plan .inc{font-size:12px;font-weight:600;color:var(--tx-faint);text-transform:uppercase;letter-spacing:.05em;margin-top:20px}
+.plan ul{margin-top:12px}
+
+@media (max-width:1020px){
+  .acc-grid,.stats-grid{grid-template-columns:1fr}
+  .setup-grid{grid-template-columns:1fr 1fr}
+  .setup-grid::before{display:none}
+}
+@media (max-width:620px){
+  .setup-grid{grid-template-columns:1fr}
 }
 /* ============================================================
    BACKEND CONSOLE (/app) — premium light chrome, indigo accents
