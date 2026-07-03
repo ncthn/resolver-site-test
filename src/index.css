@@ -681,3 +681,19 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 
 @media (max-width:1180px){.c-3pane{grid-template-columns:300px 1fr}.c-ctx2{display:none}.c-kpis{grid-template-columns:1fr 1fr}.c-grid2{grid-template-columns:1fr}}
 @media (max-width:880px){.console2{grid-template-columns:1fr}.c-rail{display:none}.c-3pane{grid-template-columns:1fr}.c-queue{display:none}.c-set{grid-template-columns:1fr}}
+
+/* additions: implementable console */
+.c-status-wrap{position:relative}
+.c-menu{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--cardsh-hover);z-index:30;padding:4px;display:flex;flex-direction:column;min-width:200px}
+.c-menu button{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 11px;border-radius:7px;font-size:12.5px;text-align:left;white-space:nowrap}
+.c-menu button:hover{background:var(--band)}
+.c-menu button.on{font-weight:600}
+.c-msg .bubble .from{display:block;font-size:11px;font-weight:600;color:var(--tx-faint);margin-bottom:5px}
+.c-msg.me{justify-content:flex-end}
+.c-msg.me .bubble{background:#ECECEA}
+.c-drafted-at{font-size:11px;color:var(--tx-faint)}
+.c-edit{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-family:var(--pj);font-size:13.5px;background:var(--band);outline:none;margin-top:10px;resize:vertical;line-height:1.55}
+.c-edit:focus{border-color:var(--ink);background:#fff}
+.c-spin{animation:cspin 1s linear infinite}
+@keyframes cspin{to{transform:rotate(360deg)}}
+.c-act:disabled{opacity:.55;cursor:default}

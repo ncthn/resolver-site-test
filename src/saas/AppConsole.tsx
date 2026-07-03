@@ -1,183 +1,100 @@
-// Resolver app — full redesign preview at /app, modeled on the REAL app's
-// information architecture (repo hF9Z5/rsvlr): nav groups Overview / Inbox
-// (Tickets, Resolved, Bin, Filtered) / Outbound (Compose, Sent) / Operations
-// (Tasks, Customs, Chargebacks) / Automation log / Users / Settings; 3-pane
-// tickets with order-match evidence, EN mirror of native-language drafts,
-// the pending-auto-send cancel window, per-lane off/shadow/live modes and
-// the kill switch. Monochrome brand: ink + band, semantic green/red only.
-// All data is demo-shaped like production data.
-import { useEffect, useState } from 'react'
+// Resolver app — implementable redesign at /app.
+// Consumes ONLY the production-shaped data layer in ./console (types.ts =
+// faithful subset of rsvlr src/types.ts; mockApi.ts = client whose methods
+// map 1:1 to real endpoints — see WIRING.md). Swapping mockApi's internals
+// for fetch calls wires this UI to the live app unchanged.
+// Monochrome brand. No avatars — sender identity is text, not decoration.
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import {
   Inbox, CircleCheck, ListChecks, Settings, Search, Users,
   ChevronsUpDown, Package, Truck, ShieldCheck, Send, Pencil, Trash2,
   RefreshCw, Gavel, Clock, Check, Zap, ArrowUpRight, User, LayoutDashboard,
   Filter, FileText, Landmark, X, Plus, PauseCircle, Languages, ChevronDown,
+  Unlink, Loader2, Factory,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import type { Category, Ticket, TicketStatus } from './console/types'
+import * as api from './console/mockApi'
 
 const LOGO = '/logo/recolor/oct-black-t.png'
 
-/* ------------------------------------------------------------------ data */
+/* ------------------------------------------------------------- constants */
 type View =
   | 'overview' | 'tickets' | 'resolved' | 'bin' | 'filtered'
   | 'compose' | 'sent' | 'tasks' | 'customs' | 'chargebacks'
   | 'ailog' | 'users' | 'settings'
 
-const NAV: { group: string; items: { v: View; Ic: LucideIcon; label: string; n?: number }[] }[] = [
+const NAV: { group: string; items: { v: View; Ic: LucideIcon; label: string }[] }[] = [
   { group: '', items: [{ v: 'overview', Ic: LayoutDashboard, label: 'Overview' }] },
   {
     group: 'Inbox',
     items: [
-      { v: 'tickets', Ic: Inbox, label: 'Tickets', n: 12 },
+      { v: 'tickets', Ic: Inbox, label: 'Tickets' },
       { v: 'resolved', Ic: CircleCheck, label: 'Resolved' },
       { v: 'bin', Ic: Trash2, label: 'Bin' },
       { v: 'filtered', Ic: Filter, label: 'Filtered' },
     ],
   },
-  {
-    group: 'Outbound',
-    items: [
-      { v: 'compose', Ic: Pencil, label: 'Compose' },
-      { v: 'sent', Ic: Send, label: 'Sent' },
-    ],
-  },
+  { group: 'Outbound', items: [{ v: 'compose', Ic: Pencil, label: 'Compose' }, { v: 'sent', Ic: Send, label: 'Sent' }] },
   {
     group: 'Operations',
     items: [
-      { v: 'tasks', Ic: ListChecks, label: 'Tasks', n: 3 },
-      { v: 'customs', Ic: Landmark, label: 'Customs', n: 2 },
-      { v: 'chargebacks', Ic: Gavel, label: 'Chargebacks', n: 1 },
+      { v: 'tasks', Ic: ListChecks, label: 'Tasks' },
+      { v: 'customs', Ic: Landmark, label: 'Customs' },
+      { v: 'chargebacks', Ic: Gavel, label: 'Chargebacks' },
     ],
   },
-  {
-    group: 'Automation',
-    items: [{ v: 'ailog', Ic: Zap, label: 'Automation log' }],
-  },
-  {
-    group: '',
-    items: [
-      { v: 'users', Ic: Users, label: 'Users' },
-      { v: 'settings', Ic: Settings, label: 'Settings' },
-    ],
-  },
+  { group: 'Automation', items: [{ v: 'ailog', Ic: Zap, label: 'Automation log' }] },
+  { group: '', items: [{ v: 'users', Ic: Users, label: 'Users' }, { v: 'settings', Ic: Settings, label: 'Settings' }] },
 ]
 
-const STORES = ['All stores', 'AURORA', 'Harbor Goods', 'Northbound']
+const STATUS_LABEL: Record<TicketStatus, string> = {
+  OPEN: 'Open',
+  WAITING_CUSTOMER: 'Waiting on customer',
+  WAITING_SUPPLIER: 'Waiting on supplier',
+  RESOLVED: 'Resolved',
+  REPLACEMENT_SENT: 'Replacement sent',
+  ESCALATED: 'Escalated',
+}
+const CATEGORY_LABEL: Partial<Record<Category, string>> = {
+  SHIPPING: 'Shipping', REFUND: 'Refund', CANCEL: 'Order change', NOT_RECEIVED: 'Not received',
+  DAMAGED: 'Damaged', PAYMENT: 'Payment', GENERAL: 'General', ANGRY: 'Angry',
+  CHARGEBACK: 'Chargeback', PARTNERSHIP: 'Partnership',
+}
+const FILTERS = ['All', 'Open', 'Escalated', 'Waiting', 'Resolved'] as const
 
-type TStatus = 'needs' | 'draft' | 'queued' | 'escalated' | 'sent'
-const ST: Record<TStatus, { label: string; cls: string }> = {
-  needs: { label: 'Needs you', cls: 'ink' },
-  draft: { label: 'Draft ready', cls: 'ink' },
-  queued: { label: 'Sending soon', cls: 'green' },
-  escalated: { label: 'Escalated', cls: 'red' },
-  sent: { label: 'Auto-sent', cls: 'mut' },
+function statusChip(t: Ticket) {
+  if (t.auto_send_queued_at) return <span className="c-chip green">Sending soon</span>
+  if (t.status === 'ESCALATED') return <span className="c-chip red">Escalated</span>
+  if (t.status === 'RESOLVED') return <span className="c-chip mut">{t.auto_resolved ? 'Auto-resolved' : 'Resolved'}</span>
+  if (t.status === 'WAITING_SUPPLIER') return <span className="c-chip ink">Supplier</span>
+  if (t.status === 'WAITING_CUSTOMER') return <span className="c-chip mut">Waiting</span>
+  if (t.draft_body) return <span className="c-chip ink">Draft ready</span>
+  return <span className="c-chip ink">Needs you</span>
 }
 
-type Ticket = {
-  id: string; name: string; initials: string; store: string; lang: string
-  status: TStatus; subject: string; preview: string; time: string; unread?: boolean
-  msg: string; at: string
-  draftNative: string; draftEN: string; chips: string[]
-  match: { via: string; conf: 'High' | 'Low'; order: string; item: string; oStatus: string; placed: string; total: string; tracking: string; eta: string }
-  customer: string
-  risk?: string
+function useStore() {
+  return useSyncExternalStore(api.subscribe, api.getVersion)
 }
-
-const TICKETS: Ticket[] = [
-  {
-    id: 't1', name: 'Maria Lopez', initials: 'ML', store: 'AURORA', lang: 'EN', status: 'queued',
-    subject: 'Where is my order?', preview: 'I ordered 3 weeks ago and still nothing…', time: '2m', unread: true,
-    msg: 'Hi — I ordered 3 weeks ago and still haven’t received anything. Order #1042. Getting worried.',
-    at: '09:14',
-    draftNative: 'Hi Maria — thanks for your patience! Your order #1042 shipped and is currently in transit: it cleared customs this morning and should arrive within 2–3 days. Here’s your live tracking: CP998341US. I’ll keep an eye on it and follow up the moment it’s delivered.',
-    draftEN: '',
-    chips: ['Order #1042', 'Live tracking', 'Refund policy', 'Tone: warm'],
-    match: { via: 'Order number in email', conf: 'High', order: '#1042', item: 'Aurora Linen Set — Sand', oStatus: 'In transit', placed: '21 days ago', total: '$148.00', tracking: 'CP998341US', eta: '2–3 days' },
-    customer: '3 orders · joined Mar 2025',
-  },
-  {
-    id: 't2', name: 'A. Weber', initials: 'AW', store: 'AURORA', lang: 'DE', status: 'escalated',
-    subject: 'Chargeback threatened', preview: 'Ich melde das meiner Bank und meinem Anwalt.', time: '11m', unread: true,
-    msg: 'Das ist inakzeptabel. Ich melde das meiner Bank und meinem Anwalt, wenn es heute nicht gelöst wird.',
-    at: '08:51', risk: 'Dispute language detected — pulled from every automated lane, routed to a human.',
-    draftNative: 'Hallo — es tut mir sehr leid, dass es so weit gekommen ist. Ich habe Ihren Fall soeben persönlich übernommen und melde mich innerhalb von 24 Stunden mit einer Lösung.',
-    draftEN: 'Hello — I’m very sorry it has come to this. I have just personally taken over your case and will get back to you within 24 hours with a resolution.',
-    chips: ['Held for human', 'Order #1991', 'Dispute risk'],
-    match: { via: 'Customer email', conf: 'High', order: '#1991', item: 'Aurora Throw — Charcoal', oStatus: 'Disputed', placed: '34 days ago', total: '$59.00', tracking: '—', eta: '—' },
-    customer: '1 order · first contact',
-  },
-  {
-    id: 't3', name: 'James Carter', initials: 'JC', store: 'Harbor Goods', lang: 'EN', status: 'draft',
-    subject: 'Return request', preview: 'It didn’t fit — can I return it?', time: '24m',
-    msg: 'Hi, the robe didn’t fit — can I return it for a refund?', at: '08:38',
-    draftNative: 'Hi James — absolutely, you’re within the 30-day window. Here’s your prepaid return label and the 3 quick steps. Your refund posts within 2 days of us receiving the item.',
-    draftEN: '',
-    chips: ['Order #2090', 'Within window', 'Return policy'],
-    match: { via: 'Customer email', conf: 'High', order: '#2090', item: 'Harbor Robe — M', oStatus: 'Delivered', placed: '6 days ago', total: '$72.00', tracking: 'CP771204US', eta: 'delivered' },
-    customer: '2 orders · joined Jan 2026',
-  },
-  {
-    id: 't4', name: 'Sofia Rossi', initials: 'SR', store: 'AURORA', lang: 'IT', status: 'needs',
-    subject: 'Damaged on arrival', preview: 'La scatola è arrivata danneggiata…', time: '38m',
-    msg: 'La scatola è arrivata danneggiata e il set presenta delle macchie. Cosa possiamo fare?', at: '08:24',
-    draftNative: 'Ciao Sofia — mi dispiace tanto! Possiamo inviarti subito una sostituzione oppure rimborsarti completamente. Se puoi, inviaci una foto del danno così sistemiamo tutto oggi stesso.',
-    draftEN: 'Hi Sofia — I’m so sorry! We can send you a replacement right away or refund you in full. If you can, send us a photo of the damage and we’ll sort everything out today.',
-    chips: ['Order #2061', 'Photo requested', 'Replacement policy'],
-    match: { via: 'Order number in email', conf: 'High', order: '#2061', item: 'Aurora Linen Set — Clay', oStatus: 'Delivered', placed: '9 days ago', total: '$148.00', tracking: 'CP663118US', eta: 'delivered' },
-    customer: '4 orders · VIP',
-  },
-  {
-    id: 't5', name: 'Unknown sender', initials: '?', store: 'Northbound', lang: 'EN', status: 'needs',
-    subject: 'Question about sizing', preview: 'Do the jackets run true to size?', time: '1h',
-    msg: 'Hey, do the jackets run true to size? Thinking about the field jacket in M.', at: '07:56',
-    draftNative: 'Hi — good question! The field jacket runs slightly large; most customers take one size down. The M fits like a typical L in high-street brands. Happy to help if you’re between sizes.',
-    draftEN: '',
-    chips: ['No order — pre-sale', 'Size guide'],
-    match: { via: 'No order matched', conf: 'Low', order: '—', item: '—', oStatus: '—', placed: '—', total: '—', tracking: '—', eta: '—' },
-    customer: 'No purchase history',
-  },
-]
-
-const FILTERS = ['All', 'Needs you', 'Draft ready', 'Sending soon', 'Escalated'] as const
-
-const AILOG: { at: string; ev: string; detail: string; kind: 'ok' | 'hold' | 'send' }[] = [
-  { at: '09:15:02', ev: 'Queued for auto-send', detail: 'WISMO lane · #4471 Maria Lopez · 30s cancel window', kind: 'send' },
-  { at: '09:14:22', ev: 'Draft created', detail: 'WISMO lane · grounded on order #1042 + live tracking', kind: 'ok' },
-  { at: '08:52:07', ev: 'Held for human', detail: 'Dispute language detected · #4468 A. Weber · pulled from all lanes', kind: 'hold' },
-  { at: '08:39:44', ev: 'Draft created', detail: 'Returns lane · order #2090 within return window', kind: 'ok' },
-  { at: '08:24:19', ev: 'Draft created (IT)', detail: 'Damage lane · photo request per SOP · EN mirror attached', kind: 'ok' },
-  { at: '07:58:03', ev: 'Auto-sent', detail: 'Address change · #2061 updated before fulfillment · Sofia Rossi', kind: 'send' },
-  { at: '07:31:40', ev: 'Filtered', detail: 'Marketing newsletter suppressed from inbox', kind: 'hold' },
-]
-
-const LANES_INIT = [
-  { name: 'Where is my order?', mode: 'live' as 'off' | 'shadow' | 'live' },
-  { name: 'Returns & refunds', mode: 'shadow' as 'off' | 'shadow' | 'live' },
-  { name: 'Order changes', mode: 'shadow' as 'off' | 'shadow' | 'live' },
-  { name: 'Product questions', mode: 'off' as 'off' | 'shadow' | 'live' },
-]
-
-/* --------------------------------------------------------------- helpers */
-function Chip({ s }: { s: TStatus }) {
-  return <span className={'c-chip ' + ST[s].cls}>{ST[s].label}</span>
-}
-function Av({ t, sm }: { t: Ticket; sm?: boolean }) {
-  return (
-    <span className={'c-av' + (sm ? ' sm' : '')} style={{ background: t.status === 'escalated' ? '#B4472F' : 'var(--ink)' }}>
-      {t.initials}
-    </span>
-  )
+function timeAgo(isoStr: string) {
+  const s = Math.max(1, Math.floor((Date.now() - new Date(isoStr).getTime()) / 1000))
+  if (s < 60) return s + 's'
+  if (s < 3600) return Math.floor(s / 60) + 'm'
+  if (s < 86400) return Math.floor(s / 3600) + 'h'
+  return Math.floor(s / 86400) + 'd'
 }
 
 /* ---------------------------------------------------------------- views */
-function Overview() {
+function Overview({ shopId }: { shopId: string }) {
+  useStore()
+  const counts = api.getCounts(shopId)
   const KPIS = [
-    { label: 'Open tickets', v: '12', sub: 'across 3 stores' },
-    { label: 'Awaiting your approval', v: '5', sub: 'drafts ready' },
-    { label: 'Auto-sent today', v: '23', sub: 'WISMO + address lanes' },
-    { label: 'Escalated', v: '1', sub: 'dispute language' },
+    { label: 'Open tickets', v: String(counts.open), sub: shopId === 'all' ? 'across 3 stores' : 'this store' },
+    { label: 'Queued to auto-send', v: String(counts.queued), sub: '3-min cancel window' },
+    { label: 'Escalated', v: String(counts.escalated), sub: 'dispute language' },
+    { label: 'Avg first reply', v: '38m', sub: 'last 7 days · demo' },
   ]
-  const BACKLOG = [['<4h', 7], ['4–24h', 3], ['1–3d', 2], ['3d+', 0]] as const
+  const BACKLOG = [['<4h', 4], ['4–24h', 1], ['1–3d', 1], ['3d+', 0]] as const
   const VOLUME = [['Mon', 62], ['Tue', 78], ['Wed', 54], ['Thu', 88], ['Fri', 100], ['Sat', 46], ['Sun', 58]] as const
   const HEALTH = [
     ['Gmail connection', 'Connected · support@aurora.com'],
@@ -218,7 +135,7 @@ function Overview() {
             {BACKLOG.map(([b, n]) => (
               <div className="c-lane-row" key={b}>
                 <span className="nm">{b}</span>
-                <span className="bar"><i style={{ width: (n / 12) * 100 + '%' }} /></span>
+                <span className="bar"><i style={{ width: (n / 6) * 100 + '%' }} /></span>
                 <span className="pct">{n}</span>
               </div>
             ))}
@@ -234,11 +151,11 @@ function Overview() {
       <div className="c-card">
         <div className="c-card-h">Recent automation activity</div>
         <div className="c-rows">
-          {AILOG.slice(0, 4).map((e) => (
-            <div className="c-ev" key={e.at}>
+          {api.getLog().slice(0, 5).map((e, i) => (
+            <div className="c-ev" key={i}>
               <span className={'ic ' + e.kind}>{e.kind === 'hold' ? <PauseCircle size={13} /> : e.kind === 'send' ? <Send size={12} /> : <Check size={13} />}</span>
               <span className="t"><b>{e.ev}</b> — {e.detail}</span>
-              <span className="at">{e.at}</span>
+              <span className="at">{timeAgo(e.at)}</span>
             </div>
           ))}
         </div>
@@ -247,39 +164,98 @@ function Overview() {
   )
 }
 
-function Tickets({ killed }: { killed: boolean }) {
-  const [sel, setSel] = useState('t1')
-  const [filter, setFilter] = useState<typeof FILTERS[number]>('All')
-  const [mirror, setMirror] = useState(false)
-  const [countdown, setCountdown] = useState(24)
-  const [cancelled, setCancelled] = useState(false)
-  const t = TICKETS.find((x) => x.id === sel)!
+/* ------------- tickets: the 3-pane, running the real state machine ----- */
+function StatusDropdown({ t }: { t: Ticket }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="c-status-wrap">
+      <button className="c-chip-btn" onClick={() => setOpen(!open)}>
+        <RefreshCw size={13} /> {STATUS_LABEL[t.status]} <ChevronDown size={13} />
+      </button>
+      {open && (
+        <div className="c-menu">
+          {(Object.keys(STATUS_LABEL) as TicketStatus[]).map((s) => (
+            <button key={s} className={s === t.status ? 'on' : ''} onClick={() => { api.patchStatus(t.id, s); setOpen(false) }}>
+              {STATUS_LABEL[s]} {s === t.status && <Check size={13} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
-  useEffect(() => { setMirror(false) }, [sel])
+function AutoSendBar({ t }: { t: Ticket }) {
+  const [, setTick] = useState(0)
   useEffect(() => {
-    if (t.status !== 'queued' || cancelled || killed) return
-    const id = setInterval(() => setCountdown((c) => (c > 0 ? c - 1 : 0)), 1000)
+    const id = setInterval(() => setTick((x) => x + 1), 1000)
     return () => clearInterval(id)
-  }, [t.status, cancelled, killed])
+  }, [])
+  if (!t.auto_send_queued_at) return null
+  const ms = new Date(t.auto_send_queued_at).getTime() - Date.now()
+  if (ms <= 0) return null
+  const mm = Math.floor(ms / 60000)
+  const ss = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')
+  return (
+    <>
+      <span className="c-count"><Clock size={13} /> Auto-sends in {mm}:{ss}</span>
+      <button className="c-act red" onClick={() => api.cancelAutoSend(t.id)}><X size={14} /> Cancel send</button>
+    </>
+  )
+}
 
-  const list = TICKETS.filter((x) => {
-    if (filter === 'All') return true
-    if (filter === 'Needs you') return x.status === 'needs'
-    if (filter === 'Draft ready') return x.status === 'draft'
-    if (filter === 'Sending soon') return x.status === 'queued'
-    return x.status === 'escalated'
-  })
-  const hasNative = t.draftEN !== ''
-  const body = mirror && hasNative ? t.draftEN : t.draftNative
-  const queuedActive = t.status === 'queued' && !cancelled && !killed && countdown > 0
+function TicketsView({ shopId }: { shopId: string }) {
+  useStore()
+  const [sel, setSel] = useState('t-4471')
+  const [filter, setFilter] = useState<typeof FILTERS[number]>('All')
+  const [q, setQ] = useState('')
+  const [mirror, setMirror] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editBody, setEditBody] = useState('')
+  const [busy, setBusy] = useState<'' | 'send' | 'regen'>('')
+  const [cooldownAt, setCooldownAt] = useState<Record<string, number>>({})
+
+  // listTickets is async in production; the mock store is read synchronously.
+  const tickets = ((): Ticket[] => {
+    const base = ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
+      .map((id) => api.getTicket(id)!)
+      .filter((t) => shopId === 'all' || t.shop_id === shopId)
+      .filter((t) => !q || (t.subject + t.customer_email + (t.customer_name ?? '') + (t.order_name ?? '')).toLowerCase().includes(q.toLowerCase()))
+    if (filter === 'All') return base
+    if (filter === 'Open') return base.filter((t) => t.status === 'OPEN')
+    if (filter === 'Escalated') return base.filter((t) => t.status === 'ESCALATED')
+    if (filter === 'Waiting') return base.filter((t) => t.status === 'WAITING_CUSTOMER' || t.status === 'WAITING_SUPPLIER')
+    return base.filter((t) => t.status === 'RESOLVED')
+  })()
+
+  const t = api.getTicket(sel) ?? tickets[0]
+  useEffect(() => { setMirror(false); setEditing(false); setBusy('') }, [sel])
+  if (!t) return <div className="c-page"><p>No tickets.</p></div>
+
+  const isForeign = t.customer_language !== 'en'
+  const draftShown = mirror && t.draft_body_english ? t.draft_body_english : t.draft_body
+  const cooldownLeft = Math.max(0, 180 - Math.floor((Date.now() - (cooldownAt[t.id] ?? -1e12)) / 1000))
+  const onCooldown = cooldownAt[t.id] != null && cooldownLeft > 0
+
+  const doSend = async () => {
+    setBusy('send')
+    await api.postSend(t.id, editing ? editBody : (t.draft_body ?? ''))
+    setCooldownAt((c) => ({ ...c, [t.id]: Date.now() }))
+    setEditing(false)
+    setBusy('')
+  }
+  const doRegen = async () => {
+    setBusy('regen')
+    await api.postRegenerate(t.id)
+    setBusy('')
+  }
 
   return (
     <div className="c-3pane">
-      {/* list */}
       <section className="c-queue">
         <header className="c-q-head">
-          <div className="c-q-title">Tickets <span className="n">12</span></div>
-          <div className="c-search"><Search size={14} /><input placeholder="Search tickets, orders, customers…" /></div>
+          <div className="c-q-title">Tickets <span className="n">{api.getCounts(shopId).open}</span></div>
+          <div className="c-search"><Search size={14} /><input placeholder="Search tickets, orders, customers…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <div className="c-ftabs">
             {FILTERS.map((f) => (
               <button key={f} className={f === filter ? 'on' : ''} onClick={() => setFilter(f)}>{f}</button>
@@ -287,130 +263,198 @@ function Tickets({ killed }: { killed: boolean }) {
           </div>
         </header>
         <div className="c-list">
-          {list.map((x) => (
-            <button key={x.id} className={'c-row' + (x.id === sel ? ' sel' : '') + (x.unread ? ' unread' : '')} onClick={() => setSel(x.id)}>
-              <Av t={x} />
+          {tickets.map((x) => (
+            <button key={x.id} className={'c-row' + (x.id === t.id ? ' sel' : '')} onClick={() => setSel(x.id)}>
               <span className="main">
-                <span className="top"><b>{x.name}</b><span className="time">{x.time}</span></span>
+                <span className="top"><b>{x.customer_name ?? x.customer_email}</b><span className="time">{timeAgo(x.last_customer_message_at)}</span></span>
                 <span className="sub">{x.subject}</span>
-                <span className="prev">{x.preview}</span>
-                <span className="tags"><Chip s={x.status} /><span className="lang">{x.lang}</span><span className="store">{x.store}</span></span>
+                <span className="prev">{x.last_customer_message_english ?? x.last_customer_message}</span>
+                <span className="tags">
+                  {statusChip(x)}
+                  <span className="lang">{CATEGORY_LABEL[x.category]}</span>
+                  <span className="lang">{x.customer_language.toUpperCase()}</span>
+                  {shopId === 'all' && <span className="store">{x.shop_id}</span>}
+                </span>
               </span>
             </button>
           ))}
         </div>
       </section>
 
-      {/* thread */}
       <main className="c-conv">
         <header className="c-c-head">
           <div className="who">
-            <Av t={t} />
             <div>
-              <div className="nm">{t.name} <span className="lang">{t.lang}</span></div>
-              <div className="meta">{t.name.toLowerCase().replace(/[^a-z]/g, '')}@email.com · {t.store}</div>
+              <div className="nm">{t.customer_name ?? t.customer_email} <span className="lang">{t.customer_language.toUpperCase()}</span>{t.chargeback_status === 'warning' && <span className="c-chip red" style={{ marginLeft: 8 }}>Chargeback risk</span>}</div>
+              <div className="meta">{t.customer_email} · {t.shop_id} · {t.message_count} message{t.message_count > 1 ? 's' : ''}</div>
             </div>
           </div>
           <div className="acts">
-            <button className="c-chip-btn"><RefreshCw size={13} /> Status: Open <ChevronDown size={13} /></button>
-            <button className="c-chip-btn red"><Gavel size={13} /> Escalate</button>
+            {isForeign && (
+              <button className={'c-mirror' + (mirror ? ' on' : '')} onClick={() => setMirror(!mirror)}>
+                <Languages size={12} /> {mirror ? 'Showing EN' : `Original · ${t.customer_language.toUpperCase()}`}
+              </button>
+            )}
+            <StatusDropdown t={t} />
+            <button className={'c-chip-btn' + (t.ai_disabled ? ' red' : '')} onClick={() => api.postAiToggle(t.id)} title="Per-ticket AI kill switch">
+              <Zap size={13} /> {t.ai_disabled ? 'AI off' : 'AI on'}
+            </button>
           </div>
         </header>
 
         <div className="c-thread">
-          {t.risk && <div className="c-risk"><ShieldCheck size={14} /> {t.risk}</div>}
-          {killed && <div className="c-risk mut"><PauseCircle size={14} /> Auto-send is paused by the kill switch — all drafts hold for approval.</div>}
-          <div className="c-msg">
-            <Av t={t} sm />
-            <div className="bubble">{t.msg}<span className="at">{t.at}</span></div>
-          </div>
+          {t.status === 'ESCALATED' && <div className="c-risk"><ShieldCheck size={14} /> Dispute language detected — pulled from every automated lane, routed to a human.</div>}
+          {t.ai_disabled && <div className="c-risk mut"><PauseCircle size={14} /> AI is disabled for this ticket — no drafting, no auto-send, until re-enabled.</div>}
+          {t.supplier_status === 'REQUESTED' && (
+            <div className="c-risk mut"><Factory size={14} /> Waiting on supplier — {t.supplier_request_type}. Reminder scheduled if no reply in 48h.</div>
+          )}
+          {t.messages.map((m) => (
+            <div key={m.id} className={'c-msg' + (m.is_customer ? '' : ' me')}>
+              <div className="bubble">
+                <span className="from">{m.from_name ?? m.from}{!m.is_customer && t.auto_sent_at && <span className="c-chip mut" style={{ marginLeft: 8 }}>AI</span>}</span>
+                {mirror && m.body_english ? m.body_english : m.body}
+                <span className="at">{timeAgo(m.date)} ago</span>
+              </div>
+            </div>
+          ))}
 
-          <div className={'c-draft' + (t.status === 'escalated' ? ' esc' : '')}>
-            <div className="h">
-              <span className="tag">{t.status === 'escalated' ? 'Held for a human' : 'Resolver drafted a reply'}</span>
-              {hasNative && (
-                <button className={'c-mirror' + (mirror ? ' on' : '')} onClick={() => setMirror(!mirror)}>
-                  <Languages size={12} /> {mirror ? 'EN mirror' : `Original · ${t.lang}`}
-                </button>
-              )}
-            </div>
-            <p className="body">{body}</p>
-            <div className="chips">{t.chips.map((c) => <span key={c}><Check size={11} /> {c}</span>)}</div>
-            <div className="acts">
-              {t.status === 'escalated' ? (
-                <>
-                  <button className="c-act prim"><Send size={14} /> Send as specialist</button>
-                  <button className="c-act"><Pencil size={14} /> Edit</button>
-                </>
-              ) : queuedActive ? (
-                <>
-                  <span className="c-count"><Clock size={13} /> Auto-sends in {countdown}s</span>
-                  <button className="c-act red" onClick={() => setCancelled(true)}><X size={14} /> Cancel send</button>
-                  <button className="c-act"><Pencil size={14} /> Edit</button>
-                </>
+          {t.draft_body ? (
+            <div className={'c-draft' + (t.status === 'ESCALATED' ? ' esc' : '')}>
+              <div className="h">
+                <span className="tag">{t.status === 'ESCALATED' ? 'Held for a human' : 'Resolver drafted a reply'}</span>
+                <span className="c-drafted-at">drafted {timeAgo(t.draft_generated_at!)} ago</span>
+              </div>
+              {editing ? (
+                <textarea className="c-edit" value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={6} />
               ) : (
-                <>
-                  <button className="c-act prim"><Send size={14} /> Approve &amp; send</button>
-                  <button className="c-act"><Pencil size={14} /> Edit</button>
-                  <button className="c-act ic" title="Regenerate"><RefreshCw size={14} /></button>
-                </>
+                <p className="body">{draftShown}</p>
               )}
-              {t.status === 'queued' && (cancelled || killed) && <span className="c-held"><PauseCircle size={13} /> Held — waiting for your approval</span>}
+              {t.order_name && (
+                <div className="chips">
+                  <span><Check size={11} /> {t.order_name}</span>
+                  {t.order_snapshot?.tracking_numbers[0] && <span><Check size={11} /> Live tracking</span>}
+                  <span><Check size={11} /> SOP policies</span>
+                </div>
+              )}
+              <div className="acts">
+                <AutoSendBar t={t} />
+                {onCooldown ? (
+                  <span className="c-held"><Clock size={13} /> Sent — cooldown {cooldownLeft}s (anti double-send)</span>
+                ) : (
+                  <>
+                    <button className="c-act prim" disabled={busy !== ''} onClick={doSend}>
+                      {busy === 'send' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {editing ? 'Send edited' : 'Approve & send'}
+                    </button>
+                    <button className="c-act" onClick={() => { setEditing(!editing); setEditBody(t.draft_body ?? '') }}>
+                      <Pencil size={14} /> {editing ? 'Discard edit' : 'Edit'}
+                    </button>
+                    <button className="c-act ic" title="Regenerate" disabled={busy !== ''} onClick={doRegen}>
+                      {busy === 'regen' ? <Loader2 size={14} className="c-spin" /> : <RefreshCw size={14} />}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="c-draft">
+              <div className="h"><span className="tag">{t.status === 'RESOLVED' ? 'Resolved — no reply needed' : 'No draft yet'}</span></div>
+              {t.status !== 'RESOLVED' && (
+                <div className="acts">
+                  <button className="c-act" disabled={busy !== ''} onClick={doRegen}>
+                    {busy === 'regen' ? <Loader2 size={14} className="c-spin" /> : <Zap size={14} />} Generate draft
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
 
-      {/* context */}
       <aside className="c-ctx2">
         <div className="sec">
           <div className="h">Order match</div>
           <div className="card">
-            <div className="c-kv"><span>Matched via</span><b>{t.match.via}</b></div>
-            <div className="c-kv"><span>Confidence</span><b className={t.match.conf === 'High' ? 'green' : 'red'}>{t.match.conf}</b></div>
-            <a className="link">Wrong order? Change match</a>
+            <div className="c-kv"><span>Reason</span><b>{t.order_match_reason}</b></div>
+            <div className="c-kv"><span>Confidence</span><b className={t.order_match_confidence >= 0.9 ? 'green' : t.order_match_confidence > 0 ? '' : 'red'}>{t.order_match_confidence > 0 ? Math.round(t.order_match_confidence * 100) + '%' : 'No match'}</b></div>
+            {t.order_id && (
+              <a className="link" onClick={() => api.unlinkOrder(t.id)}><Unlink size={12} /> Wrong order? Unlink</a>
+            )}
           </div>
         </div>
-        {t.match.order !== '—' && (
+        {t.order_snapshot && (
           <>
             <div className="sec">
-              <div className="h">Order {t.match.order}</div>
+              <div className="h">Order {t.order_snapshot.order_name}</div>
               <div className="card">
-                <div className="line"><Package size={13} /><span>{t.match.item}</span></div>
-                <div className="c-kv"><span>Status</span><b className={t.status === 'escalated' ? 'red' : 'green'}>{t.match.oStatus}</b></div>
-                <div className="c-kv"><span>Placed</span><b>{t.match.placed}</b></div>
-                <div className="c-kv"><span>Total</span><b>{t.match.total}</b></div>
+                {t.order_snapshot.line_items.map((li) => (
+                  <div className="line" key={li.title}><Package size={13} /><span>{li.quantity}× {li.title}</span></div>
+                ))}
+                <div className="c-kv"><span>Payment</span><b>{t.order_snapshot.financial_status}</b></div>
+                <div className="c-kv"><span>Fulfillment</span><b>{t.order_snapshot.fulfillment_status}</b></div>
+                <div className="c-kv"><span>Total</span><b>{t.order_snapshot.currency === 'EUR' ? '€' : '$'}{t.order_snapshot.total_price}</b></div>
+                <div className="c-kv"><span>Ships to</span><b>{t.order_snapshot.shipping_country}</b></div>
+                <a className="link">Open in Shopify <ArrowUpRight size={12} /></a>
               </div>
             </div>
-            <div className="sec">
-              <div className="h">Fulfillment</div>
-              <div className="card">
-                <div className="line"><Truck size={13} /><span>{t.match.tracking === '—' ? 'Not yet shipped' : t.match.tracking}</span></div>
-                {t.match.tracking !== '—' && <a className="link">Live tracking <ArrowUpRight size={12} /></a>}
+            {t.order_snapshot.tracking_numbers.length > 0 && (
+              <div className="sec">
+                <div className="h">Fulfillment</div>
+                <div className="card">
+                  <div className="line"><Truck size={13} /><span>{t.order_snapshot.tracking_numbers[0]}</span></div>
+                  <div className="c-kv"><span>Status</span><b className="green">{t.order_snapshot.tracking_status[0]}</b></div>
+                  <a className="link">Live tracking <ArrowUpRight size={12} /></a>
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
         <div className="sec">
           <div className="h">Customer</div>
-          <div className="card"><div className="line"><User size={13} /><span>{t.customer}</span></div></div>
+          <div className="card">
+            <div className="line"><User size={13} /><span>{t.customer_history}</span></div>
+            <div className="c-kv"><span>Sentiment</span><b className={t.sentiment === 'angry' ? 'red' : ''}>{t.sentiment}</b></div>
+            <div className="c-kv"><span>Urgency</span><b>{t.urgency_score}/100</b></div>
+          </div>
         </div>
       </aside>
     </div>
   )
 }
 
-function SimpleList({ title, sub, rows }: { title: string; sub: string; rows: [string, string, string][] }) {
+/* ----------------------------------------------- derived list views ----- */
+function DerivedList({ title, sub, filterFn, empty }: {
+  title: string; sub: string; filterFn: (t: Ticket) => boolean; empty: string
+}) {
+  useStore()
+  const rows = ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
+    .map((id) => api.getTicket(id)!)
+    .filter(filterFn)
+  return (
+    <div className="c-page">
+      <header className="c-page-h"><div><h1>{title}</h1><p>{sub}</p></div></header>
+      <div className="c-card">
+        <div className="c-rows">
+          {rows.length === 0 && <p className="c-note" style={{ marginTop: 0 }}>{empty}</p>}
+          {rows.map((t) => (
+            <div className="c-ev" key={t.id}>
+              <span className="t"><b>{t.subject}</b> — {t.customer_name ?? t.customer_email} · {CATEGORY_LABEL[t.category]}</span>
+              <span className="at">{timeAgo(t.last_customer_message_at)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StaticList({ title, sub, rows }: { title: string; sub: string; rows: [string, string, string][] }) {
   return (
     <div className="c-page">
       <header className="c-page-h"><div><h1>{title}</h1><p>{sub}</p></div></header>
       <div className="c-card">
         <div className="c-rows">
           {rows.map(([a, b, c], i) => (
-            <div className="c-ev" key={i}>
-              <span className="t"><b>{a}</b> — {b}</span>
-              <span className="at">{c}</span>
-            </div>
+            <div className="c-ev" key={i}><span className="t"><b>{a}</b> — {b}</span><span className="at">{c}</span></div>
           ))}
         </div>
       </div>
@@ -426,7 +470,7 @@ function Compose() {
         <label>From<select><option>support@aurora.com (AURORA)</option><option>hello@harborgoods.com</option></select></label>
         <label>To<input placeholder="customer@email.com" /></label>
         <label>Subject<input placeholder="Subject" /></label>
-        <label>Message<textarea rows={8} placeholder="Write your message — or start from an order: type # to attach one." /></label>
+        <label>Message<textarea rows={8} placeholder="Write your message — or type # to attach an order." /></label>
         <div className="row">
           <button className="c-act prim"><Send size={14} /> Send</button>
           <button className="c-act"><FileText size={14} /> Save draft</button>
@@ -436,42 +480,44 @@ function Compose() {
   )
 }
 
-function Chargebacks() {
-  const rows = [
-    { o: '#1991', cust: 'A. Weber', store: 'AURORA', amt: '$59.00', reason: 'Product not received', due: 'Evidence due in 6 days', st: 'Needs response' },
-  ]
+function ChargebacksView() {
+  useStore()
+  const rows = ['t-4468'].map((id) => api.getTicket(id)!)
   return (
     <div className="c-page">
       <header className="c-page-h"><div><h1>Chargebacks</h1><p>Disputes from Shopify Payments · demo data</p></div></header>
       <div className="c-card">
         <table className="c-table">
-          <thead><tr><th>Order</th><th>Customer</th><th>Store</th><th>Amount</th><th>Reason</th><th>Deadline</th><th>Status</th></tr></thead>
+          <thead><tr><th>Order</th><th>Customer</th><th>Store</th><th>Amount</th><th>Signal</th><th>Status</th></tr></thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.o}>
-                <td><b>{r.o}</b></td><td>{r.cust}</td><td>{r.store}</td><td>{r.amt}</td>
-                <td>{r.reason}</td><td>{r.due}</td><td><span className="c-chip red">{r.st}</span></td>
+            {rows.map((t) => (
+              <tr key={t.id}>
+                <td><b>{t.order_name}</b></td><td>{t.customer_name}</td><td>{t.shop_id}</td>
+                <td>${t.order_snapshot?.total_price}</td>
+                <td>Dispute language in email</td>
+                <td><span className="c-chip red">{t.chargeback_status === 'warning' ? 'Warning' : t.chargeback_status}</span></td>
               </tr>
             ))}
           </tbody>
         </table>
-        <p className="c-note">Dispute tickets are never auto-replied. The linked conversation is at the top of your human queue.</p>
+        <p className="c-note">Chargeback tickets are never auto-replied — the linked conversation sits at the top of your queue.</p>
       </div>
     </div>
   )
 }
 
 function AiLog() {
+  useStore()
   return (
     <div className="c-page">
-      <header className="c-page-h"><div><h1>Automation log</h1><p>Every automated action, auditable · demo data</p></div></header>
+      <header className="c-page-h"><div><h1>Automation log</h1><p>Every automated action, auditable · live from this session</p></div></header>
       <div className="c-card">
         <div className="c-rows">
-          {AILOG.map((e) => (
-            <div className="c-ev" key={e.at}>
+          {api.getLog().map((e, i) => (
+            <div className="c-ev" key={i}>
               <span className={'ic ' + e.kind}>{e.kind === 'hold' ? <PauseCircle size={13} /> : e.kind === 'send' ? <Send size={12} /> : <Check size={13} />}</span>
               <span className="t"><b>{e.ev}</b> — {e.detail}</span>
-              <span className="at">{e.at}</span>
+              <span className="at">{timeAgo(e.at)}</span>
             </div>
           ))}
         </div>
@@ -489,26 +535,32 @@ function UsersView() {
       </header>
       <div className="c-card">
         <div className="c-rows">
-          <div className="c-ev"><span className="c-av sm" style={{ background: 'var(--ink)' }}>N</span><span className="t"><b>Nathan</b> — Owner · all stores</span><span className="at">you</span></div>
-          <div className="c-ev"><span className="c-av sm" style={{ background: '#6B6E76' }}>C</span><span className="t"><b>Chandan</b> — Agent · AURORA only</span><span className="at">active</span></div>
+          <div className="c-ev"><span className="t"><b>Nathan</b> — Owner · all stores</span><span className="at">you</span></div>
+          <div className="c-ev"><span className="t"><b>Chandan</b> — Agent · AURORA only</span><span className="at">active</span></div>
         </div>
       </div>
     </div>
   )
 }
 
+const LANES_INIT = [
+  { name: 'Shipping / WISMO', mode: 'live' as 'off' | 'shadow' | 'live' },
+  { name: 'Returns & refunds', mode: 'shadow' as 'off' | 'shadow' | 'live' },
+  { name: 'Order changes', mode: 'live' as 'off' | 'shadow' | 'live' },
+  { name: 'General questions', mode: 'shadow' as 'off' | 'shadow' | 'live' },
+]
 type Lanes = typeof LANES_INIT
+
 function SettingsView({ lanes, setLanes, killed, setKilled }: {
-  lanes: Lanes; setLanes: (l: Lanes) => void
-  killed: boolean; setKilled: (b: boolean) => void
+  lanes: Lanes; setLanes: (l: Lanes) => void; killed: boolean; setKilled: (b: boolean) => void
 }) {
-  const [tab, setTab] = useState<'Lanes' | 'Stores' | 'Policies & SOP' | 'Billing'>('Lanes')
+  const [tab, setTab] = useState<'Lanes' | 'Stores' | 'Policies & SOP' | 'Email' | 'Billing'>('Lanes')
   return (
     <div className="c-page">
       <header className="c-page-h"><div><h1>Settings</h1><p>AURORA · owner access</p></div></header>
       <div className="c-set">
         <nav className="c-set-nav">
-          {(['Lanes', 'Stores', 'Policies & SOP', 'Billing'] as const).map((x) => (
+          {(['Lanes', 'Stores', 'Policies & SOP', 'Email', 'Billing'] as const).map((x) => (
             <button key={x} className={x === tab ? 'on' : ''} onClick={() => setTab(x)}>{x}</button>
           ))}
         </nav>
@@ -527,23 +579,19 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
                   <span className="nm">{l.name}</span>
                   <div className="modes">
                     {(['off', 'shadow', 'live'] as const).map((m) => (
-                      <button
-                        key={m}
-                        className={l.mode === m ? 'on' : ''}
-                        onClick={() => setLanes(lanes.map((x, j) => (j === i ? { ...x, mode: m } : x)))}
-                      >{m}</button>
+                      <button key={m} className={l.mode === m ? 'on' : ''} onClick={() => setLanes(lanes.map((x, j) => (j === i ? { ...x, mode: m } : x)))}>{m}</button>
                     ))}
                   </div>
-                  <span className="note">{l.mode === 'live' ? (killed ? 'paused by kill switch' : 'auto-send · 30s cancel window') : l.mode === 'shadow' ? 'drafts only, nothing sends' : 'no drafting'}</span>
+                  <span className="note">{l.mode === 'live' ? (killed ? 'paused by kill switch' : 'auto-send · 3-min cancel window') : l.mode === 'shadow' ? 'drafts only, nothing sends' : 'no drafting'}</span>
                 </div>
               ))}
-              <p className="c-note">Dispute and legal language always routes to a human, regardless of lane modes.</p>
+              <p className="c-note">Chargeback and legal language always routes to a human, regardless of lane modes.</p>
             </>
           )}
           {tab === 'Stores' && (
             <div className="c-rows">
-              {['AURORA · aurora.com · 12 open', 'Harbor Goods · harborgoods.com · 7 open', 'Northbound · northbound.co · 5 open'].map((s) => (
-                <div className="c-ev" key={s}><span className="t"><b>{s.split(' · ')[0]}</b> — {s.split(' · ').slice(1).join(' · ')}</span><span className="at">connected</span></div>
+              {['AURORA — aurora.com · 4 open', 'Harbor Goods — harborgoods.com · 1 open', 'Northbound — northbound.co · 1 open'].map((s) => (
+                <div className="c-ev" key={s}><span className="t"><b>{s.split(' — ')[0]}</b> — {s.split(' — ')[1]}</span><span className="at">connected</span></div>
               ))}
               <button className="c-act" style={{ marginTop: 14, alignSelf: 'flex-start' }}><Plus size={14} /> Add store</button>
             </div>
@@ -554,6 +602,14 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
               <div className="c-kv"><span>Refund window</span><b>30 days</b></div>
               <div className="c-kv"><span>Reshipment policy</span><b>Free reship on damage w/ photo</b></div>
               <div className="c-kv"><span>Tone</span><b>Warm, plain, no exclamation marks</b></div>
+            </div>
+          )}
+          {tab === 'Email' && (
+            <div className="c-rows">
+              <div className="c-kv"><span>Provider</span><b>Gmail — support@aurora.com</b></div>
+              <div className="c-kv"><span>Send verification</span><b className="green">Verified</b></div>
+              <div className="c-kv"><span>DKIM / SPF</span><b className="green">Verified</b></div>
+              <div className="c-kv"><span>Loop protection</span><b>On — auto-replies filtered</b></div>
             </div>
           )}
           {tab === 'Billing' && (
@@ -572,43 +628,40 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
 
 /* ---------------------------------------------------------------- shell */
 export function AppConsole() {
+  useStore()
   const [view, setView] = useState<View>('tickets')
-  const [store, setStore] = useState(1)
+  const [shopIdx, setShopIdx] = useState(0)
   const [storeOpen, setStoreOpen] = useState(false)
   const [lanes, setLanes] = useState<Lanes>(LANES_INIT)
   const [killed, setKilled] = useState(false)
+  const shopId = api.SHOPS[shopIdx].id
+  const counts = api.getCounts(shopId)
+
+  const badge: Partial<Record<View, number>> = {
+    tickets: counts.open, tasks: 3, customs: 2, chargebacks: counts.escalated,
+  }
 
   const CONTENT: Record<View, () => React.ReactElement> = {
-    overview: () => <Overview />,
-    tickets: () => <Tickets killed={killed} />,
-    resolved: () => <SimpleList title="Resolved" sub="Closed conversations" rows={[
-      ['Where is my order? · Emma Wilson', 'auto-resolved with live tracking', '1h ago'],
-      ['Return request · Lucas Meyer', 'label sent, refund pending item receipt', '3h ago'],
-      ['Address change · Chloé Martin', 'updated before fulfillment, auto-sent (FR)', '5h ago'],
-    ]} />,
-    bin: () => <SimpleList title="Bin" sub="Deleted conversations — recoverable for 30 days" rows={[
-      ['Spam · "Grow your store 10x"', 'deleted manually', 'yesterday'],
-    ]} />,
-    filtered: () => <SimpleList title="Filtered" sub="Suppressed inbound — never reached the inbox" rows={[
-      ['Newsletter · Shopify Weekly', 'marketing filter', '07:31'],
-      ['Auto-reply · Out of office', 'loop protection', '06:12'],
+    overview: () => <Overview shopId={shopId} />,
+    tickets: () => <TicketsView shopId={shopId} />,
+    resolved: () => <DerivedList title="Resolved" sub="Closed conversations" filterFn={(t) => t.status === 'RESOLVED'} empty="Nothing resolved yet today." />,
+    bin: () => <StaticList title="Bin" sub="Deleted conversations — recoverable for 30 days" rows={[['Spam · "Grow your store 10x"', 'deleted manually', 'yesterday']]} />,
+    filtered: () => <StaticList title="Filtered" sub="Suppressed inbound — never reached the inbox" rows={[
+      ['Newsletter · Shopify Weekly', 'marketing filter', '2h'],
+      ['Auto-reply · Out of office', 'loop protection', '3h'],
     ]} />,
     compose: () => <Compose />,
-    sent: () => <SimpleList title="Sent" sub="Outbound mail across stores" rows={[
-      ['Re: Where is my order? · Maria Lopez', 'auto-sent · WISMO lane · EN', '09:15'],
-      ['Re: Cambio indirizzo · Sofia Rossi', 'auto-sent · address lane · IT', '07:58'],
-      ['Re: Return request · James Carter', 'sent by Nathan after edit', 'yesterday'],
-    ]} />,
-    tasks: () => <SimpleList title="Tasks" sub="Follow-ups the AI queued for you" rows={[
-      ['Check reshipment stock · Aurora Linen Set', 'damage claim #2061 awaiting photo', 'due today'],
+    sent: () => <DerivedList title="Sent" sub="Outbound mail across stores" filterFn={(t) => t.messages.some((m) => !m.is_customer)} empty="Nothing sent yet." />,
+    tasks: () => <StaticList title="Tasks" sub="Follow-ups the AI queued for you" rows={[
+      ['Check reshipment stock · Aurora Linen Set', 'damage claim #2061 awaiting supplier', 'due today'],
       ['Confirm supplier ETA · Harbor Robe', 'restock answer promised to 2 customers', 'due tomorrow'],
       ['Review dispute evidence · #1991', 'chargeback deadline in 6 days', 'due in 3 days'],
     ]} />,
-    customs: () => <SimpleList title="Customs" sub="Clearance requests detected in tracking" rows={[
-      ['#1042 · CP998341US', 'cleared this morning — customer notified in draft', '09:02'],
+    customs: () => <StaticList title="Customs" sub="Clearance requests detected in tracking" rows={[
+      ['#1042 · CP998341US', 'cleared this morning — customer notified in draft', '2h'],
       ['#2088 · CP584201US', 'fee requested by carrier — customer asked to pay €4.20', 'yesterday'],
     ]} />,
-    chargebacks: () => <Chargebacks />,
+    chargebacks: () => <ChargebacksView />,
     ailog: () => <AiLog />,
     users: () => <UsersView />,
     settings: () => <SettingsView lanes={lanes} setLanes={setLanes} killed={killed} setKilled={setKilled} />,
@@ -621,15 +674,15 @@ export function AppConsole() {
 
         <div className="c-store-wrap">
           <button className="c-store" onClick={() => setStoreOpen(!storeOpen)}>
-            <span className="dot">{STORES[store][0]}</span>
-            <span className="nm">{STORES[store]}<small>{store === 0 ? '24 open · 3 stores' : '12 open'}</small></span>
+            <span className="dot">{api.SHOPS[shopIdx].name[0]}</span>
+            <span className="nm">{api.SHOPS[shopIdx].name}<small>{counts.open} open{shopId === 'all' ? ' · 3 stores' : ''}</small></span>
             <ChevronsUpDown size={14} className="mut" />
           </button>
           {storeOpen && (
             <div className="c-store-menu">
-              {STORES.map((s, i) => (
-                <button key={s} className={i === store ? 'on' : ''} onClick={() => { setStore(i); setStoreOpen(false) }}>
-                  {s} {i === store && <Check size={13} />}
+              {api.SHOPS.map((s, i) => (
+                <button key={s.id} className={i === shopIdx ? 'on' : ''} onClick={() => { setShopIdx(i); setStoreOpen(false) }}>
+                  {s.name} {i === shopIdx && <Check size={13} />}
                 </button>
               ))}
             </div>
@@ -643,7 +696,7 @@ export function AppConsole() {
               {g.items.map((it) => (
                 <a key={it.v} className={'item' + (view === it.v ? ' on' : '')} onClick={() => setView(it.v)}>
                   <it.Ic size={16} /> <span>{it.label}</span>
-                  {it.n != null && <span className="n">{it.n}</span>}
+                  {badge[it.v] != null && badge[it.v]! > 0 && <span className="n">{badge[it.v]}</span>}
                 </a>
               ))}
             </div>
@@ -653,7 +706,7 @@ export function AppConsole() {
         <div className="c-rail-foot">
           <div className={'c-auto' + (killed ? ' off' : '')}>
             <b>{killed ? 'Auto-send paused' : 'Auto-send active'}</b>
-            <p>{killed ? 'Kill switch is on' : `${lanes.filter((l) => l.mode === 'live').length} lane live · risky tickets always wait`}</p>
+            <p>{killed ? 'Kill switch is on' : `${lanes.filter((l) => l.mode === 'live').length} lanes live · risky tickets always wait`}</p>
           </div>
           <div className="c-me"><span className="av">N</span><span>Nathan<small>Owner</small></span></div>
         </div>
