@@ -1,33 +1,38 @@
 // Resolver — marketing site. Monochrome restraint: ink on white, soft gray
 // bands, borderless rounded cards, pill buttons, one neutral typeface.
-// Animation language (per references): scroll fade-ups on every block,
-// looping in-card motion (cycling rows, sequenced fills, typing dots),
-// an auto-advancing feature accordion with a filling progress bar, and a
-// vertical pill carousel. All loops are CSS; reduced-motion disables them.
+// Animation language (per references): blurred fade-up scroll reveals,
+// looping in-card motion, a live classifier demo, an auto-advancing
+// accordion with staggered visuals, a spinning wireframe globe, a dashed
+// shield, and a draw-in analytics chart with a count-up. All honest:
+// product-UI demos, no invented company metrics.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { motion } from 'motion/react';
+import { motion, useInView } from 'motion/react';
 import {
   ShoppingBag, Mail, Check, Plus, CircleCheck, PenLine, Inbox,
   Undo2, CreditCard, UserX, Timer, ListTree, Megaphone, BarChart3,
-  Languages, Eye, Lock, Scale, GitBranch, FileSearch,
+  Languages, Eye, Lock, Scale, X, ArrowRight, FileSearch, GitBranch,
+  SlidersHorizontal, BellRing,
 } from 'lucide-react';
 
-const LOGO = '/logo/recolor/oct-black-t.png'; // black mark — the brand anchor
+const LOGO = '/logo/recolor/oct-black-t.png';
 
 const START = 'https://resolver.chat/get-started';
 const LOGIN = 'https://resolver.chat/login';
 const DEMO = 'https://resolver.chat/contact';
 const PRICING_FULL = 'https://resolver.chat/pricing';
 
-/* Scroll reveal — one treatment everywhere. */
+const reduced = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Scroll reveal — blurred fade-up, one treatment everywhere. */
 function Reveal({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 22 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 26, filter: 'blur(7px)' }}
+      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.6, delay, ease: [0.2, 0.7, 0.2, 1] }}
+      transition={{ duration: 0.65, delay, ease: [0.2, 0.7, 0.2, 1] }}
     >
       {children}
     </motion.div>
@@ -37,7 +42,7 @@ function Reveal({ children, delay = 0, className }: { children: ReactNode; delay
 function Brand() {
   return (
     <a className="brand" href="#top" aria-label="Resolver home">
-      <img src={LOGO} alt="" style={{ height: 22 }} />
+      <img src={LOGO} alt="" />
       <span className="wm">resolver.chat</span>
     </a>
   );
@@ -53,6 +58,7 @@ function Nav() {
           <a href="#how">How it works</a>
           <a href="#detect">Use cases</a>
           <a href="#platform">Platform</a>
+          <a href="#security">Security</a>
           <a href="#pricing">Pricing</a>
         </nav>
         <div className="nv-cta">
@@ -160,9 +166,9 @@ function Hero() {
     <>
       <section className="hero wrap" id="top">
         <motion.h1
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.2, 0.7, 0.2, 1] }}
+          initial={{ opacity: 0, y: 18, filter: 'blur(7px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 0.65, ease: [0.2, 0.7, 0.2, 1] }}
         >
           Your customer emails, answered from the real order.
         </motion.h1>
@@ -170,7 +176,7 @@ function Hero() {
           className="lede"
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1, ease: [0.2, 0.7, 0.2, 1] }}
+          transition={{ duration: 0.6, delay: 0.12, ease: [0.2, 0.7, 0.2, 1] }}
         >
           Resolver matches every support email to the live Shopify order and drafts the
           reply in the customer&rsquo;s language — ready to approve, or to send on its own
@@ -180,7 +186,7 @@ function Hero() {
           className="ctas"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.22 }}
         >
           <a className="btn pri" href={START}>Start free</a>
           <a className="btn soft" href={DEMO}>Book a demo</a>
@@ -189,9 +195,9 @@ function Hero() {
       <div className="stage">
         <div className="wrap">
           <motion.div
-            initial={{ opacity: 0, y: 44 }}
+            initial={{ opacity: 0, y: 48 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, delay: 0.25, ease: [0.2, 0.7, 0.2, 1] }}
+            transition={{ duration: 0.8, delay: 0.28, ease: [0.2, 0.7, 0.2, 1] }}
           >
             <ConsoleMock />
           </motion.div>
@@ -201,7 +207,47 @@ function Hero() {
   );
 }
 
-/* ============ how it works: 3 soft cards with looping motion ============ */
+/* ============ live classifier (how-card 1) ============ */
+const CLS_CATS: [string, string, number][] = [
+  ['Where is my order?', 'var(--indigo)', 12],
+  ['Returns & refunds', '#8A8D94', 4],
+  ['Order changes', '#8A8D94', 3],
+  ['Chargeback threat', '#B4472F', 1],
+  ['Product questions', '#8A8D94', 6],
+];
+const CLS_MAILS: [string, number][] = [
+  ['“It’s been 9 days, where is my package?”', 0],
+  ['“I’d like to send the coat back.”', 1],
+  ['“Can you ship to my new address instead?”', 2],
+  ['“I’m disputing this charge with my bank.”', 3],
+  ['“Does the jacket run true to size?”', 4],
+];
+function LiveClassifier() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (reduced()) return;
+    const id = setInterval(() => setI((v) => (v + 1) % CLS_MAILS.length), 2600);
+    return () => clearInterval(id);
+  }, []);
+  const hit = CLS_MAILS[i][1];
+  return (
+    <div className="hviz classify">
+      <div className="inmail" key={i}>
+        <span className="env"><Mail size={12} strokeWidth={2.2} /></span>
+        {CLS_MAILS[i][0]}
+      </div>
+      {CLS_CATS.map(([label, color, n], idx) => (
+        <div className={idx === hit ? 'l hit' : 'l'} key={label}>
+          <span className="sw" style={{ background: color }} />{label}
+          {idx === hit && <span className="plus" key={`p${i}`}>+1</span>}
+          <span style={{ marginLeft: 'auto', color: 'var(--tx-faint)' }}>{n}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ============ how it works ============ */
 function How() {
   return (
     <section className="how wrap" id="how">
@@ -211,29 +257,14 @@ function How() {
       </Reveal>
       <div className="how-grid">
         <Reveal>
-          <div className="hcard">
+          <div className="hcard" style={{ height: '100%' }}>
             <h3>Detect &amp; categorize every request</h3>
             <p>Resolver reads each inbound email and identifies what the customer actually needs — no rules to configure.</p>
-            <div className="visual">
-              <div className="hviz cycle">
-                {[
-                  ['Where is my order?', 'var(--indigo)', '12'],
-                  ['Returns & refunds', '#8A8D94', '4'],
-                  ['Order changes', '#8A8D94', '3'],
-                  ['Chargeback threat', '#B4472F', '1'],
-                  ['Product questions', '#8A8D94', '6'],
-                ].map(([label, color, n], i) => (
-                  <div className="l" key={label as string} style={{ ['--d' as string]: `${i * 1.6}s` }}>
-                    <span className="sw" style={{ background: color as string }} />{label}
-                    <span style={{ marginLeft: 'auto', color: 'var(--tx-faint)' }}>{n}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <div className="visual"><LiveClassifier /></div>
           </div>
         </Reveal>
         <Reveal delay={0.1}>
-          <div className="hcard">
+          <div className="hcard" style={{ height: '100%' }}>
             <h3>Pull the order &amp; tracking context automatically</h3>
             <p>Order, fulfillment, customer history, live carrier events — everything needed to resolve the issue, attached to the ticket.</p>
             <div className="visual">
@@ -254,7 +285,7 @@ function How() {
           </div>
         </Reveal>
         <Reveal delay={0.2}>
-          <div className="hcard">
+          <div className="hcard" style={{ height: '100%' }}>
             <h3>Draft a personal reply in their language</h3>
             <p>Written in your store&rsquo;s tone, grounded in the real data, in the customer&rsquo;s own language. You approve — or automate it.</p>
             <div className="visual">
@@ -323,17 +354,31 @@ function Detect() {
   );
 }
 
-/* ============ accordion set piece: control, demonstrated ============ */
+/* ============ accordion set piece ============ */
+function Rows({ rows }: { rows: [ReactNode, ReactNode][] }) {
+  return (
+    <>
+      {rows.map(([l, r], i) => (
+        <div className="row" key={i} style={{ ['--i' as string]: i }}>
+          {typeof l === 'string' ? <b>{l}</b> : l}
+          {r}
+        </div>
+      ))}
+    </>
+  );
+}
 const ACC_ITEMS = [
   {
     t: 'Shadow mode first',
     p: 'Resolver drafts silently alongside your team while you compare its answers to yours. Nothing sends until a lane earns it.',
     viz: (
       <div className="acc-shot" key="a">
-        <div className="row"><b>Where is my order? · #4471</b><span className="st draft">Draft ready</span></div>
-        <div className="row"><b>Refund request · #4468</b><span className="st draft">Draft ready</span></div>
-        <div className="row"><b>Address change · #4465</b><span className="st draft">Draft ready</span></div>
-        <div className="row"><span>Sent automatically</span><b>0 — shadow mode</b></div>
+        <Rows rows={[
+          ['Where is my order? · #4471', <span className="st draft" key="1">Draft ready</span>],
+          ['Refund request · #4468', <span className="st draft" key="2">Draft ready</span>],
+          ['Address change · #4465', <span className="st draft" key="3">Draft ready</span>],
+          [<span key="l">Sent automatically</span>, <b key="4">0 — shadow mode</b>],
+        ]} />
       </div>
     ),
   },
@@ -342,10 +387,12 @@ const ACC_ITEMS = [
     p: 'Turn on sending per category, per store — with a delay and a cancel window on every automated reply.',
     viz: (
       <div className="acc-shot" key="b">
-        <div className="row"><b>WISMO lane</b><span className="st live">Live · 30s window</span></div>
-        <div className="row"><b>Returns lane</b><span className="st shadow">Shadow</span></div>
-        <div className="row"><b>Order changes</b><span className="st shadow">Shadow</span></div>
-        <div className="row"><b>Disputes</b><span className="st human">Human only</span></div>
+        <Rows rows={[
+          ['WISMO lane', <span className="st live" key="1">Live · 30s window</span>],
+          ['Returns lane', <span className="st shadow" key="2">Shadow</span>],
+          ['Order changes', <span className="st shadow" key="3">Shadow</span>],
+          ['Disputes', <span className="st human" key="4">Human only</span>],
+        ]} />
       </div>
     ),
   },
@@ -354,22 +401,26 @@ const ACC_ITEMS = [
     p: 'Chargeback and legal language is detected and hard-routed to a human — enforced in the pipeline, not left to a prompt.',
     viz: (
       <div className="acc-shot" key="c">
-        <div className="row"><b>&ldquo;I&rsquo;m disputing this with my bank&rdquo;</b><span className="st human">Flagged</span></div>
-        <div className="row"><span>Pulled from auto-send</span><b>✓</b></div>
-        <div className="row"><span>Pushed to top of human queue</span><b>✓</b></div>
-        <div className="row"><span>Auto-replies to this ticket</span><b>Blocked</b></div>
+        <Rows rows={[
+          ['“I’m disputing this with my bank”', <span className="st human" key="1">Flagged</span>],
+          [<span key="l1">Pulled from auto-send</span>, <b key="2">✓</b>],
+          [<span key="l2">Pushed to top of human queue</span>, <b key="3">✓</b>],
+          [<span key="l3">Auto-replies to this ticket</span>, <b key="4">Blocked</b>],
+        ]} />
       </div>
     ),
   },
   {
     t: 'Every action logged',
-    p: 'What sent, when, on which lane, and why — audit the machine like you&rsquo;d audit an employee.',
+    p: 'What sent, when, on which lane, and why — audit the machine like you’d audit an employee.',
     viz: (
       <div className="acc-shot" key="d">
-        <div className="row"><span>9:14:03</span><b>Customer matched</b></div>
-        <div className="row"><span>9:14:10</span><b>Order #1042 attached</b></div>
-        <div className="row"><span>9:14:22</span><b>Draft created · WISMO lane</b></div>
-        <div className="row"><span>9:15:02</span><b>Sent after cancel window</b></div>
+        <Rows rows={[
+          [<span key="l1">9:14:03</span>, <b key="1">Customer matched</b>],
+          [<span key="l2">9:14:10</span>, <b key="2">Order #1042 attached</b>],
+          [<span key="l3">9:14:22</span>, <b key="3">Draft created · WISMO lane</b>],
+          [<span key="l4">9:15:02</span>, <b key="4">Sent after cancel window</b>],
+        ]} />
       </div>
     ),
   },
@@ -377,17 +428,16 @@ const ACC_ITEMS = [
 
 function Accordion() {
   const [on, setOn] = useState(0);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const paused = useRef(false);
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    timer.current = setInterval(() => {
+    if (reduced()) return;
+    const id = setInterval(() => {
       if (!paused.current) setOn((v) => (v + 1) % ACC_ITEMS.length);
     }, 5000);
-    return () => { if (timer.current) clearInterval(timer.current); };
+    return () => clearInterval(id);
   }, []);
   return (
-    <section className="acc wrap" id="platform">
+    <section className="acc wrap">
       <Reveal className="center">
         <span className="eyebrow">Control</span>
         <h2 className="sec-h2" style={{ marginTop: 18 }}>Automation you can<br />actually supervise.</h2>
@@ -437,7 +487,7 @@ function Money() {
             </div>
           </Reveal>
         ))}
-        <Reveal delay={0.2} className="mcard cta" >
+        <Reveal delay={0.2} className="mcard cta">
           <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap', width: '100%' }}>
             <div style={{ flex: 1, minWidth: 240 }}>
               <h3>Ready to stop losing money to slow support?</h3>
@@ -451,7 +501,55 @@ function Money() {
   );
 }
 
-/* ============ stats stack (product facts, no invented ROI) ============ */
+/* ============ before / with resolver ============ */
+function BeforeAfter() {
+  const before: string[] = [
+    'Open the inbox to 40 unread tickets, triage by hand',
+    'Tab between Gmail, Shopify, and the carrier site for every reply',
+    'Copy-paste half-personalized templates, hope the tone lands',
+    'Miss the one email that quietly threatens a chargeback',
+    'Answer German customers through a translator tab',
+  ];
+  const after: string[] = [
+    'Every ticket already categorized, matched, and drafted',
+    'Order, tracking, and history attached to the conversation',
+    'Replies in your store’s voice, grounded in the real order',
+    'Dispute language flagged and routed to you first',
+    'Customers answered in their own language, mirrored in English',
+  ];
+  return (
+    <section className="ba wrap">
+      <Reveal className="center">
+        <span className="eyebrow">The difference</span>
+        <h2 className="sec-h2" style={{ marginTop: 18 }}>The same inbox.<br />A different morning.</h2>
+      </Reveal>
+      <div className="ba-grid">
+        <Reveal>
+          <div className="ba-card before" style={{ height: '100%' }}>
+            <span className="cap">Without Resolver</span>
+            <ul>
+              {before.map((t) => (
+                <li key={t}><span className="m"><X size={12} strokeWidth={2.6} /></span>{t}</li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
+        <Reveal delay={0.12}>
+          <div className="ba-card after" style={{ height: '100%' }}>
+            <span className="cap">With Resolver</span>
+            <ul>
+              {after.map((t) => (
+                <li key={t}><span className="m"><Check size={12} strokeWidth={2.6} /></span>{t}</li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ============ stats stack ============ */
 function Stats() {
   const stats = [
     { v: '40+', k: 'languages detected — replies drafted directly in the customer’s own language' },
@@ -487,6 +585,68 @@ function Stats() {
   );
 }
 
+/* ============ platform: gorgias-style split cards ============ */
+function Platform() {
+  const engine = [
+    { ic: <FileSearch size={17} strokeWidth={2} />, t: 'Order matching', p: 'Order number first, customer email second — with the evidence shown.' },
+    { ic: <Languages size={17} strokeWidth={2} />, t: 'Language detection', p: 'Drafted in the customer’s language, mirrored in English for review.' },
+    { ic: <Timer size={17} strokeWidth={2} />, t: 'Tracking enrichment', p: 'Live carrier events folded into the reply, customs status included.' },
+    { ic: <ListTree size={17} strokeWidth={2} />, t: 'Policy grounding', p: 'Your SOP constrains every draft — refund windows, reshipment rules.' },
+    { ic: <Megaphone size={17} strokeWidth={2} />, t: 'Brand voice', p: 'Tone configured per store, from plain to formal.' },
+    { ic: <BarChart3 size={17} strokeWidth={2} />, t: 'Support analytics', p: 'Recurring issues, delivery problems, and refund patterns, surfaced.' },
+  ];
+  const control = [
+    { ic: <Eye size={17} strokeWidth={2} />, t: 'Approval queue', p: 'Every draft reviewable before anything leaves the building.' },
+    { ic: <GitBranch size={17} strokeWidth={2} />, t: 'Send lanes', p: 'Off, shadow, live — switched per category, per store.' },
+    { ic: <Undo2 size={17} strokeWidth={2} />, t: 'Cancel window', p: 'Auto-sends wait out a delay you set; one click pulls them back.' },
+    { ic: <BellRing size={17} strokeWidth={2} />, t: 'Escalation rules', p: 'Chargeback and legal language always routes to a human.' },
+    { ic: <SlidersHorizontal size={17} strokeWidth={2} />, t: 'Kill switch', p: 'One setting stops all automated sending, immediately.' },
+    { ic: <Inbox size={17} strokeWidth={2} />, t: 'Automation log', p: 'What sent, when, on which lane, and why — fully auditable.' },
+  ];
+  return (
+    <section className="gsplit wrap" id="platform">
+      <Reveal className="center">
+        <span className="eyebrow">Platform</span>
+        <h2 className="sec-h2" style={{ marginTop: 18 }}>A drafting engine and a control plane.<br />Built as one.</h2>
+      </Reveal>
+      <Reveal>
+        <div className="gs-card">
+          <div className="gs-l">
+            <h3>One drafting engine. Grounded in the order.</h3>
+            <p>Everything the AI writes is anchored to data it can cite — never a template, never a guess.</p>
+            <a href="#how">See how it works <ArrowRight size={15} strokeWidth={2.2} /></a>
+          </div>
+          <div className="gs-grid">
+            {engine.map((f) => (
+              <div className="gs-it" key={f.t}>
+                <span className="gic">{f.ic}</span>
+                <div><h5>{f.t}</h5><p>{f.p}</p></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Reveal>
+      <Reveal delay={0.08}>
+        <div className="gs-card">
+          <div className="gs-l">
+            <h3>One control plane. Nothing sends without your rules.</h3>
+            <p>Autonomy is granted lane by lane — and revocable in one click.</p>
+            <a href={START}>Start in shadow mode <ArrowRight size={15} strokeWidth={2.2} /></a>
+          </div>
+          <div className="gs-grid">
+            {control.map((f) => (
+              <div className="gs-it" key={f.t}>
+                <span className="gic">{f.ic}</span>
+                <div><h5>{f.t}</h5><p>{f.p}</p></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
 /* ============ setup timeline ============ */
 function Setup() {
   const steps = [
@@ -518,59 +678,137 @@ function Setup() {
   );
 }
 
-/* ============ features: quiet 4-col ============ */
-function Features() {
-  const cols = [
-    { ic: <ListTree size={19} strokeWidth={2} />, t: 'Approval & auto-send controls', p: 'Review replies manually, or automate specific lanes with a delay and a cancel window.' },
-    { ic: <Eye size={19} strokeWidth={2} />, t: 'Action & conversation timelines', p: 'Every AI action is recorded — what was matched, drafted, and sent, and why.' },
-    { ic: <Megaphone size={19} strokeWidth={2} />, t: 'Brand voice personalization', p: 'Replies aligned with your store’s tone, policies, and support SOP — per store.' },
-    { ic: <BarChart3 size={19} strokeWidth={2} />, t: 'Support analytics', p: 'Identify recurring issues, delivery problems, and refund patterns across your inbox.' },
-  ];
+/* ============ security: shield + globe + analytics demo ============ */
+function Shield() {
   return (
-    <section className="feats wrap" id="features">
-      <Reveal className="center">
-        <span className="eyebrow">Features</span>
-        <h2 className="sec-h2" style={{ marginTop: 18 }}>All the tools to scale support<br />without scaling your team.</h2>
-      </Reveal>
-      <div className="feats-grid">
-        {cols.map((c, i) => (
-          <Reveal delay={i * 0.08} key={c.t}>
-            <div className="fcol">
-              <span className="fic">{c.ic}</span>
-              <h4>{c.t}</h4>
-              <p>{c.p}</p>
-            </div>
-          </Reveal>
-        ))}
-      </div>
-    </section>
+    <div className="shield-wrap" aria-hidden="true">
+      <span className="shield-ring" />
+      <svg viewBox="0 0 170 190" fill="none">
+        <path
+          className="shield-dash"
+          d="M85 8 L152 34 V96 C152 140 122 168 85 182 C48 168 18 140 18 96 V34 Z"
+          stroke="var(--ink)" strokeWidth="1.6"
+        />
+        <path d="M62 92 L79 110 L112 72" stroke="var(--ink)" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
   );
 }
-
-/* ============ trust ============ */
-function Trust() {
-  const rows = [
-    { ic: <Lock size={19} strokeWidth={2} />, t: 'Read-only Shopify access', p: 'Orders, customers, fulfillments — read scopes only. Resolver can’t modify your store.' },
-    { ic: <Scale size={19} strokeWidth={2} />, t: 'Risk never gets automated', p: 'Chargeback and legal language is hard-routed to a human, enforced in the pipeline.' },
-    { ic: <Inbox size={19} strokeWidth={2} />, t: 'Gmail stays yours', p: 'Replies send through your own mailbox. Turn Resolver off and nothing is held hostage.' },
-    { ic: <Check size={19} strokeWidth={2} />, t: 'No training on your data', p: 'Customer data is processed under a signed DPA and never used to train AI models.' },
+function Globe() {
+  // CSS-3D wireframe sphere: dashed meridians spinning around Y + fixed latitudes.
+  const R = 95;
+  const lats = [
+    { z: 0, r: R },
+    { z: 58, r: Math.sqrt(R * R - 58 * 58) },
+    { z: -58, r: Math.sqrt(R * R - 58 * 58) },
   ];
   return (
-    <section className="feats wrap" id="security">
+    <div className="globe" aria-hidden="true">
+      <div className="globe-in">
+        {[0, 36, 72, 108, 144].map((deg) => (
+          <div className="mer" key={deg} style={{ transform: `rotateY(${deg}deg)` }} />
+        ))}
+        {lats.map((l, i) => (
+          <div
+            className="lat"
+            key={i}
+            style={{
+              width: l.r * 2,
+              height: l.r * 2,
+              transform: `translate(-50%,-50%) rotateX(90deg) translateZ(${l.z}px)`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+function CountUp({ to, duration = 1400 }: { to: number; duration?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    if (reduced()) { setV(to); return; }
+    const t0 = performance.now();
+    const id = setInterval(() => {
+      const p = Math.min(1, (performance.now() - t0) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setV(Math.round(to * eased));
+      if (p >= 1) clearInterval(id);
+    }, 24);
+    return () => clearInterval(id);
+  }, [inView, to, duration]);
+  return <span ref={ref}>{v.toLocaleString('en-US')}</span>;
+}
+function Security() {
+  return (
+    <section className="sec2 wrap" id="security">
       <Reveal className="center">
         <span className="eyebrow">Security &amp; data</span>
         <h2 className="sec-h2" style={{ marginTop: 18 }}>Built to be trusted with the inbox.</h2>
+        <p className="sec-sub">Support email is customer PII plus money conversations. The boring parts are load-bearing.</p>
       </Reveal>
-      <div className="feats-grid">
-        {rows.map((c, i) => (
-          <Reveal delay={i * 0.08} key={c.t}>
-            <div className="fcol">
-              <span className="fic">{c.ic}</span>
-              <h4>{c.t}</h4>
-              <p>{c.p}</p>
+      <div className="sec2-grid">
+        <Reveal>
+          <div className="g-card" style={{ height: '100%' }}>
+            <h3>Guardrails, enforced in the pipeline</h3>
+            <p>Not policies in a prompt — hard routing in the code path every ticket takes.</p>
+            <div className="art"><Shield /></div>
+            <div className="g-list">
+              <div className="gl"><Lock size={15} strokeWidth={2.2} />Read-only Shopify scopes — Resolver can&rsquo;t modify your store</div>
+              <div className="gl"><Scale size={15} strokeWidth={2.2} />Chargeback &amp; legal language hard-routed to a human</div>
+              <div className="gl"><Check size={15} strokeWidth={2.2} />Signed DPA — your data never trains AI models</div>
             </div>
-          </Reveal>
-        ))}
+          </div>
+        </Reveal>
+        <Reveal delay={0.12}>
+          <div className="g-card" style={{ height: '100%' }}>
+            <h3>Built for stores that ship worldwide</h3>
+            <p>Long shipping windows, customs questions, and customers in forty languages are the normal case, not the edge case.</p>
+            <div className="art"><Globe /></div>
+            <div className="g-list">
+              <div className="gl"><Languages size={15} strokeWidth={2.2} />Replies drafted in the customer&rsquo;s language, mirrored in English</div>
+              <div className="gl"><Timer size={15} strokeWidth={2.2} />Live tracking from international carriers, customs status included</div>
+              <div className="gl"><Inbox size={15} strokeWidth={2.2} />Multi-store: per-store voice, policies, and lanes</div>
+            </div>
+          </div>
+        </Reveal>
+        <Reveal delay={0.1} className="ana-card">
+          <div>
+            <h3>Watch the work happen without doing it.</h3>
+            <p>
+              The analytics view shows what Resolver handled, what it held for you, and
+              why — per lane, per store, per week.
+            </p>
+          </div>
+          <div className="ana-shot" role="img" aria-label="Analytics demo: tickets resolved without a human, trending up">
+            <div className="ana-top">
+              <span className="num"><CountUp to={1284} /></span>
+              <span className="lbl">tickets resolved without a human · demo data</span>
+            </div>
+            <svg viewBox="0 0 520 150" fill="none">
+              <line x1="0" y1="130" x2="520" y2="130" stroke="var(--line)" />
+              <line x1="0" y1="85" x2="520" y2="85" stroke="var(--line)" strokeDasharray="3 5" />
+              <line x1="0" y1="40" x2="520" y2="40" stroke="var(--line)" strokeDasharray="3 5" />
+              <motion.path
+                d="M8 122 C60 118 90 108 130 102 C180 94 210 96 250 84 C300 69 330 74 380 55 C430 37 470 30 512 22"
+                stroke="var(--ink)" strokeWidth="2.2" strokeLinecap="round"
+                initial={{ pathLength: 0 }}
+                whileInView={{ pathLength: 1 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 1.6, ease: 'easeOut' }}
+              />
+              <motion.circle
+                cx="512" cy="22" r="4.5" fill="var(--ink)"
+                initial={{ opacity: 0, scale: 0 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ delay: 1.5, duration: 0.3 }}
+              />
+            </svg>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -716,7 +954,7 @@ function Foot() {
   const cols: [string, [string, string][]][] = [
     ['Product', [
       ['How it works', '#how'], ['Use cases', '#detect'], ['Platform', '#platform'],
-      ['Pricing', '#pricing'], ['FAQ', '#faq'],
+      ['Security', '#security'], ['Pricing', '#pricing'], ['FAQ', '#faq'],
     ]],
     ['Company', [
       ['About', 'https://resolver.chat/about'], ['Contact', 'https://resolver.chat/contact'],
@@ -766,10 +1004,11 @@ export function Landing() {
         <Detect />
         <Accordion />
         <Money />
+        <BeforeAfter />
         <Stats />
+        <Platform />
         <Setup />
-        <Features />
-        <Trust />
+        <Security />
         <Pricing />
         <Faq />
         <Cta />
