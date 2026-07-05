@@ -438,3 +438,19 @@ export async function composeDraft(intent: string, lang: string, orderName: stri
   const orderBit = orderName ? `Regarding your order ${orderName}: ` : ''
   return (langLine[lang] ?? 'Hi! ') + orderBit + intent.trim().replace(/\.?$/, '.') + (lang === 'English' ? ' Please reply to this email if there is anything else we can help with.' : ' N’hésitez pas à répondre à cet e-mail si nous pouvons vous aider davantage.')
 }
+
+/* ---- automation graduation (best practice: shadow -> clean-rate -> live).
+   A lane is "ready" when enough drafts were reviewed AND the operator sent
+   most of them without edits. Mirrors the replay-stats concept in
+   autoSendPolicy; production would compute this from draft_corrections. */
+export interface LaneStats { lane: string; reviewed: number; cleanRate: number; needed: number }
+export const LANE_STATS: LaneStats[] = [
+  { lane: 'Shipping / WISMO', reviewed: 214, cleanRate: 0.94, needed: 25 },   // already live
+  { lane: 'Returns & refunds', reviewed: 41, cleanRate: 0.87, needed: 25 },   // READY
+  { lane: 'Order changes', reviewed: 66, cleanRate: 0.92, needed: 25 },       // already live
+  { lane: 'General questions', reviewed: 12, cleanRate: 0.71, needed: 25 },   // not yet
+]
+export function laneReadiness(st: LaneStats): 'live-ok' | 'ready' | 'watching' {
+  if (st.reviewed >= st.needed && st.cleanRate >= 0.85) return 'ready'
+  return 'watching'
+}

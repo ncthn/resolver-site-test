@@ -222,6 +222,25 @@ function Overview({ shopId }: { shopId: string }) {
         </div>
       </div>
       <div className="c-card">
+        <div className="c-card-h">Automation readiness</div>
+        <div className="c-rows">
+          {api.LANE_STATS.map((st) => {
+            const ready = api.laneReadiness(st) === 'ready'
+            const live = st.lane === 'Shipping / WISMO' || st.lane === 'Order changes'
+            return (
+              <div className="c-ev" key={st.lane}>
+                <span className={'ic ' + (live ? 'send' : ready ? 'ok' : '')}>{live ? <Zap size={12} /> : ready ? <Check size={13} /> : <Clock size={12} />}</span>
+                <span className="t">
+                  <b>{st.lane}</b>, {st.reviewed} drafts reviewed, {Math.round(st.cleanRate * 100)}% sent unedited
+                </span>
+                <span className={'c-chip ' + (live ? 'green' : ready ? 'ink' : 'mut')}>{live ? 'Live' : ready ? 'Ready to go live' : `${Math.max(0, st.needed - st.reviewed)} more to qualify`}</span>
+              </div>
+            )
+          })}
+        </div>
+        <p className="c-note">Best practice: keep a lane in shadow until 25+ drafts were reviewed and 85%+ shipped unedited, then flip it live. Highest-volume lanes first.</p>
+      </div>
+      <div className="c-card">
         <div className="c-card-h">By store</div>
         <table className="c-table">
           <thead><tr><th>Store</th><th>Open</th><th>Resolved</th><th>Auto-send</th><th>Avg first reply</th></tr></thead>
@@ -1173,18 +1192,38 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
                 </div>
                 <button className={'c-switch' + (killed ? ' on' : '')} onClick={() => setKilled(!killed)} aria-label="Kill switch"><span className="k" /></button>
               </div>
-              {lanes.map((l, i) => (
-                <div className="c-lane-set" key={l.name}>
-                  <span className="nm">{l.name}</span>
-                  <div className="modes">
-                    {(['off', 'shadow', 'live'] as const).map((m) => (
-                      <button key={m} className={l.mode === m ? 'on' : ''} onClick={() => setLanes(lanes.map((x, j) => (j === i ? { ...x, mode: m } : x)))}>{m}</button>
-                    ))}
+              {lanes.map((l, i) => {
+                const st = api.LANE_STATS.find((x) => x.lane === l.name)
+                const ready = st && l.mode !== 'live' && api.laneReadiness(st) === 'ready'
+                return (
+                  <div className="c-lane-set grad" key={l.name}>
+                    <div className="nmwrap">
+                      <span className="nm">{l.name}</span>
+                      {st && (
+                        <span className="gradline">
+                          <span className="gbar"><i style={{ width: Math.min(100, (st.reviewed / st.needed) * 100) + '%', background: st.cleanRate >= 0.85 ? '#3D7A50' : 'var(--tx-faint)' }} /></span>
+                          <span className="gtxt">{st.reviewed} reviewed · {Math.round(st.cleanRate * 100)}% sent unedited</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="modes">
+                      {(['off', 'shadow', 'live'] as const).map((m) => (
+                        <button key={m} className={l.mode === m ? 'on' : ''} onClick={() => setLanes(lanes.map((x, j) => (j === i ? { ...x, mode: m } : x)))}>{m}</button>
+                      ))}
+                    </div>
+                    <span className="note">
+                      {ready ? (
+                        <button className="c-gradbtn" onClick={() => setLanes(lanes.map((x, j) => (j === i ? { ...x, mode: 'live' } : x)))}>
+                          <Check size={11} strokeWidth={2.6} /> Ready, flip live
+                        </button>
+                      ) : l.mode === 'live' ? (killed ? 'paused by kill switch' : 'auto-send · 3-min cancel window')
+                        : l.mode === 'shadow' ? (st && st.reviewed < st.needed ? `watching · ${st.needed - st.reviewed} more reviews to qualify` : 'drafts only, nothing sends')
+                        : 'no drafting'}
+                    </span>
                   </div>
-                  <span className="note">{l.mode === 'live' ? (killed ? 'paused by kill switch' : 'auto-send · 3-min cancel window') : l.mode === 'shadow' ? 'drafts only, nothing sends' : 'no drafting'}</span>
-                </div>
-              ))}
-              <p className="c-note">Chargeback and legal language always routes to a human, regardless of lane modes.</p>
+                )
+              })}
+              <p className="c-note">A lane qualifies for live after {api.LANE_STATS[0].needed}+ reviewed drafts with 85%+ sent unedited. Chargeback and legal language always routes to a human, regardless of modes.</p>
             </>
           )}
           {tab === 'Stores' && (
