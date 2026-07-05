@@ -393,3 +393,23 @@ export async function exportPdf(id: string) {
   log('Exported PDF', t.subject, 'ok')
   notify()
 }
+
+/* ---- mail filters (production: per-company filter_keywords / filter_senders / always_allow) */
+export const MAIL_FILTERS: { keywords: string[]; senders: string[]; allow: string[] } = {
+  keywords: ['unsubscribe', 'newsletter', 'partnership opportunity', 'SEO services'],
+  senders: ['no-reply@', 'notifications@shopify.com', 'mailer-daemon@'],
+  allow: ['@aurora.com', '@harborgoods.com'],
+}
+export async function addFilter(kind: 'keywords' | 'senders' | 'allow', v: string) {
+  await delay(60)
+  if (v.trim() && !MAIL_FILTERS[kind].includes(v.trim())) MAIL_FILTERS[kind].push(v.trim())
+  log('Filter updated', `${kind}: added "${v.trim()}"`, 'ok')
+  notify()
+}
+export async function removeFilter(kind: 'keywords' | 'senders' | 'allow', v: string) {
+  await delay(60)
+  const i = MAIL_FILTERS[kind].indexOf(v)
+  if (i >= 0) MAIL_FILTERS[kind].splice(i, 1)
+  log('Filter updated', `${kind}: removed "${v}"`, 'ok')
+  notify()
+}

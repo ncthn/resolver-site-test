@@ -11,6 +11,7 @@ import {
   RefreshCw, Gavel, Clock, Check, Zap, ArrowUpRight, User, LayoutDashboard,
   Filter, FileText, X, Plus, PauseCircle, Languages, ChevronDown,
   Unlink, Loader2, Factory, RotateCcw, Tag, Paperclip, Download, Route,
+  PanelLeft, MoreHorizontal,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { Category, Ticket, TicketStatus, ThreadMessage, TraceStep } from './console/types'
@@ -41,10 +42,9 @@ const NAV: { group: string; items: { v: View; Ic: LucideIcon; label: string }[] 
     items: [
       { v: 'tasks', Ic: ListChecks, label: 'Tasks' },
       { v: 'chargebacks', Ic: Gavel, label: 'Chargebacks' },
+      { v: 'ailog', Ic: Zap, label: 'Automation log' },
     ],
   },
-  { group: 'Automation', items: [{ v: 'ailog', Ic: Zap, label: 'Automation log' }] },
-  { group: '', items: [{ v: 'settings', Ic: Settings, label: 'Settings' }] },
 ]
 
 const STATUS_LABEL: Record<TicketStatus, string> = {
@@ -84,30 +84,71 @@ function timeAgo(isoStr: string) {
 }
 
 /* ---------------------------------------------------------------- views */
+const RANGES = ['7d', '30d', '90d'] as const
+type Range = typeof RANGES[number]
+const OV: Record<Range, {
+  volume: [string, number][]; resolved: string; autoRate: string; avgReply: string
+  lanes: [string, number][]; cats: [string, number][]; langs: [string, number][]
+  stores: [string, number, string, string, string][]
+}> = {
+  '7d': {
+    volume: [['Mon', 62], ['Tue', 78], ['Wed', 54], ['Thu', 88], ['Fri', 100], ['Sat', 46], ['Sun', 58]],
+    resolved: '148', autoRate: '64%', avgReply: '38m',
+    lanes: [['Shipping / WISMO', 84], ['Order changes', 71], ['Returns & refunds', 0], ['General', 0]],
+    cats: [['Shipping', 61], ['Returns & refunds', 24], ['Order changes', 18], ['Product questions', 15], ['Damaged', 9], ['Payment', 4]],
+    langs: [['EN', 58], ['DE', 16], ['FR', 12], ['IT', 8], ['ES', 6]],
+    stores: [['AURORA', 4, '86', '71%', '31m'], ['Harbor Goods', 1, '39', '58%', '44m'], ['Northbound', 1, '23', '52%', '52m']],
+  },
+  '30d': {
+    volume: [['W1', 68], ['W2', 82], ['W3', 74], ['W4', 100], ['W5', 61], ['W6', 70], ['W7', 77]],
+    resolved: '612', autoRate: '61%', avgReply: '42m',
+    lanes: [['Shipping / WISMO', 81], ['Order changes', 66], ['Returns & refunds', 0], ['General', 0]],
+    cats: [['Shipping', 244], ['Returns & refunds', 108], ['Order changes', 84], ['Product questions', 66], ['Damaged', 41], ['Payment', 22]],
+    langs: [['EN', 55], ['DE', 17], ['FR', 13], ['IT', 9], ['ES', 6]],
+    stores: [['AURORA', 4, '358', '68%', '35m'], ['Harbor Goods', 1, '160', '55%', '48m'], ['Northbound', 1, '94', '49%', '58m']],
+  },
+  '90d': {
+    volume: [['Apr', 71], ['May', 88], ['Jun', 100], ['Jul', 42], ['', 0], ['', 0], ['', 0]].filter(x => x[0] !== '') as [string, number][],
+    resolved: '1,742', autoRate: '57%', avgReply: '47m',
+    lanes: [['Shipping / WISMO', 76], ['Order changes', 58], ['Returns & refunds', 0], ['General', 0]],
+    cats: [['Shipping', 689], ['Returns & refunds', 312], ['Order changes', 240], ['Product questions', 198], ['Damaged', 119], ['Payment', 66]],
+    langs: [['EN', 54], ['DE', 18], ['FR', 13], ['IT', 9], ['ES', 6]],
+    stores: [['AURORA', 4, '1,014', '63%', '39m'], ['Harbor Goods', 1, '455', '51%', '53m'], ['Northbound', 1, '273', '46%', '64m']],
+  },
+}
+
 function Overview({ shopId }: { shopId: string }) {
   useStore()
+  const [range, setRange] = useState<Range>('7d')
+  const d = OV[range]
   const counts = api.getCounts(shopId)
   const KPIS = [
     { label: 'Open tickets', v: String(counts.open), sub: shopId === 'all' ? 'across 3 stores' : 'this store' },
+    { label: 'Resolved', v: d.resolved, sub: 'in range · demo' },
+    { label: 'Auto-send rate', v: d.autoRate, sub: 'of resolved, no human touch' },
+    { label: 'Avg first reply', v: d.avgReply, sub: 'inbound to first response' },
     { label: 'Queued to auto-send', v: String(counts.queued), sub: '3-min cancel window' },
-    { label: 'Escalated', v: String(counts.escalated), sub: 'dispute language' },
-    { label: 'Avg first reply', v: '38m', sub: 'last 7 days · demo' },
+    { label: 'Escalated', v: String(counts.escalated), sub: 'dispute or legal language' },
   ]
-  const BACKLOG = [['<4h', 4], ['4 to 24h', 1], ['1 to 3d', 1], ['3d+', 0]] as const
-  const VOLUME = [['Mon', 62], ['Tue', 78], ['Wed', 54], ['Thu', 88], ['Fri', 100], ['Sat', 46], ['Sun', 58]] as const
+  const BACKLOG = [['<4h', 4], ['4-24h', 1], ['1-3d', 1], ['3d+', 0]] as const
   const HEALTH = [
     ['Gmail connection', 'Connected · support@aurora.com'],
     ['Shopify sync', '3 stores · read-only scopes'],
     ['Tracking provider', 'Live · 14 carriers'],
     ['Drafting queue', 'Idle · 0 waiting'],
   ]
+  const maxCat = d.cats[0][1]
   return (
     <div className="c-page">
       <header className="c-page-h">
-        <div><h1>Overview</h1><p>Today at a glance · demo data</p></div>
-        <span className="c-pill-mut"><Clock size={13} /> Last 7 days</span>
+        <div><h1>Overview</h1><p>Demo data</p></div>
+        <div className="c-seg">
+          {RANGES.map((r) => (
+            <button key={r} className={range === r ? 'on' : ''} onClick={() => setRange(r)}>{r === '7d' ? 'Last 7 days' : r === '30d' ? '30 days' : '90 days'}</button>
+          ))}
+        </div>
       </header>
-      <div className="c-kpis">
+      <div className="c-kpis six">
         {KPIS.map((k) => (
           <div className="c-kpi" key={k.label}>
             <div className="n">{k.v}</div>
@@ -118,18 +159,28 @@ function Overview({ shopId }: { shopId: string }) {
       </div>
       <div className="c-grid2">
         <div className="c-card">
-          <div className="c-card-h">Daily ticket volume</div>
+          <div className="c-card-h">Ticket volume</div>
           <div className="c-bars">
-            {VOLUME.map(([d, pct]) => (
-              <div className="col" key={d}>
+            {d.volume.map(([lb, pct]) => (
+              <div className="col" key={lb}>
                 <div className="wrap"><i style={{ height: pct + '%' }} /></div>
-                <span>{d}</span>
+                <span>{lb}</span>
               </div>
             ))}
           </div>
         </div>
         <div className="c-card">
-          <div className="c-card-h">Backlog by age</div>
+          <div className="c-card-h">Auto-send rate by lane</div>
+          <div className="c-rows">
+            {d.lanes.map(([name, pct]) => (
+              <div className="c-lane-row wide" key={name}>
+                <span className="nm">{name}</span>
+                <span className="bar"><i style={{ width: Math.max(pct, 2) + '%', background: pct > 0 ? '#3D7A50' : 'var(--tx-faint)' }} /></span>
+                <span className="pct">{pct > 0 ? pct + '%' : 'human'}</span>
+              </div>
+            ))}
+          </div>
+          <div className="c-card-h" style={{ marginTop: 24 }}>Backlog by age</div>
           <div className="c-rows">
             {BACKLOG.map(([b, n]) => (
               <div className="c-lane-row" key={b}>
@@ -139,13 +190,47 @@ function Overview({ shopId }: { shopId: string }) {
               </div>
             ))}
           </div>
-          <div className="c-card-h" style={{ marginTop: 26 }}>System health</div>
+        </div>
+      </div>
+      <div className="c-grid2">
+        <div className="c-card">
+          <div className="c-card-h">Top categories</div>
+          <div className="c-rows">
+            {d.cats.map(([name, n]) => (
+              <div className="c-lane-row wide" key={name}>
+                <span className="nm">{name}</span>
+                <span className="bar"><i style={{ width: (n / maxCat) * 100 + '%' }} /></span>
+                <span className="pct">{n}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="c-card">
+          <div className="c-card-h">Customer languages</div>
+          <div className="c-langs">
+            {d.langs.map(([lg, pct]) => (
+              <div className="c-lang" key={lg}><b>{lg}</b><span>{pct}%</span></div>
+            ))}
+          </div>
+          <p className="c-note">Every non-English conversation is mirrored in English for review.</p>
+          <div className="c-card-h" style={{ marginTop: 22 }}>System health</div>
           <div className="c-rows">
             {HEALTH.map(([k, v]) => (
               <div className="c-kv" key={k}><span>{k}</span><b><Check size={13} /> {v}</b></div>
             ))}
           </div>
         </div>
+      </div>
+      <div className="c-card">
+        <div className="c-card-h">By store</div>
+        <table className="c-table">
+          <thead><tr><th>Store</th><th>Open</th><th>Resolved</th><th>Auto-send</th><th>Avg first reply</th></tr></thead>
+          <tbody>
+            {d.stores.map(([nm, open, res, auto, fr]) => (
+              <tr key={nm}><td><b>{nm}</b></td><td>{open}</td><td>{res}</td><td>{auto}</td><td>{fr}</td></tr>
+            ))}
+          </tbody>
+        </table>
       </div>
       <div className="c-card">
         <div className="c-card-h">Recent automation activity</div>
@@ -287,6 +372,34 @@ function NativeDraft({ t }: { t: Ticket }) {
   )
 }
 
+function MoreMenu({ t }: { t: Ticket }) {
+  const [open, setOpen] = useState(false)
+  useOutsideClose(open, () => setOpen(false))
+  return (
+    <div className="c-status-wrap" onClick={(e) => e.stopPropagation()}>
+      <button className="c-chip-btn ic" onClick={() => setOpen(!open)} title="More actions">
+        <MoreHorizontal size={15} />
+      </button>
+      {open && (
+        <div className="c-menu">
+          {!t.supplier_status && (
+            <button onClick={() => { api.postSupplier(t.id, 'Stock / reshipment check'); setOpen(false) }}>
+              <span className="mi"><Factory size={13} /> Ask supplier</span>
+            </button>
+          )}
+          <button onClick={() => { api.exportPdf(t.id); setOpen(false) }}>
+            <span className="mi"><Download size={13} /> Export PDF</span>
+          </button>
+          <button onClick={() => { api.deleteTicket(t.id); setOpen(false) }}>
+            <span className="mi"><Trash2 size={13} /> Move to Bin</span>
+            <small>restorable</small>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AutoSendBar({ t }: { t: Ticket }) {
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -306,9 +419,12 @@ function AutoSendBar({ t }: { t: Ticket }) {
   )
 }
 
+let PENDING_OPEN: string | null = null
+function openTicketById(id: string) { PENDING_OPEN = id }
+
 function TicketsView({ shopId }: { shopId: string }) {
   useStore()
-  const [sel, setSel] = useState('t-4471')
+  const [sel, setSel] = useState(() => { const pnd = PENDING_OPEN; PENDING_OPEN = null; return pnd ?? 't-4471' })
   const [filter, setFilter] = useState<typeof FILTERS[number]>('All')
   const [q, setQ] = useState('')
   const [editing, setEditing] = useState(false)
@@ -393,24 +509,19 @@ function TicketsView({ shopId }: { shopId: string }) {
           <div className="acts">
             <CategoryDropdown t={t} />
             <StatusDropdown t={t} />
-            {!t.supplier_status && (
-              <button className="c-chip-btn" title="Open a supplier request" onClick={() => api.postSupplier(t.id, 'Stock / reshipment check')}>
-                <Factory size={13} /> Ask supplier
-              </button>
-            )}
-            <button className={'c-chip-btn' + (t.ai_disabled ? ' red' : '')} onClick={() => api.postAiToggle(t.id)} title="Per-ticket AI kill switch">
-              <Zap size={13} /> {t.ai_disabled ? 'AI off' : 'AI on'}
+            <button className={'c-aiswitch' + (t.ai_disabled ? ' off' : '')} onClick={() => api.postAiToggle(t.id)} title={t.ai_disabled ? 'AI is off for this ticket: no drafting, no auto-send. Click to re-enable.' : 'AI is drafting on this ticket. Click to take over by hand.'}>
+              <Zap size={12} /> AI <span className="sw"><i /></span>
             </button>
-            <button className="c-chip-btn" title="Export conversation as PDF" onClick={() => api.exportPdf(t.id)}>
-              <Download size={13} />
-            </button>
-            <button className="c-chip-btn" title="Move to bin" onClick={() => api.deleteTicket(t.id)}>
-              <Trash2 size={13} />
-            </button>
+            <MoreMenu t={t} />
           </div>
         </header>
 
         <div className="c-thread">
+          {t.is_deleted && (
+            <div className="c-risk mut"><Trash2 size={14} /> This conversation is in the Bin. It will be permanently removed after 30 days.
+              <button className="c-act" style={{ marginLeft: 'auto', padding: '5px 12px', fontSize: 11.5 }} onClick={() => api.restoreTicket(t.id)}><RotateCcw size={12} /> Restore</button>
+            </div>
+          )}
           {t.status === 'ESCALATED' && <div className="c-risk"><ShieldCheck size={14} /> Dispute language detected, pulled from every automated lane, routed to a human.</div>}
           {t.ai_disabled && <div className="c-risk mut"><PauseCircle size={14} /> AI is disabled for this ticket, no drafting, no auto-send, until re-enabled.</div>}
           {t.supplier_status === 'REQUESTED' && (
@@ -421,7 +532,7 @@ function TicketsView({ shopId }: { shopId: string }) {
           {t.draft_body ? (
             <div className={'c-draft' + (t.status === 'ESCALATED' ? ' esc' : '')}>
               <div className="h">
-                <span className="tag">{t.status === 'ESCALATED' ? 'Held for a human' : 'Resolver drafted a reply'}</span>
+                <span className="tag">{t.status === 'ESCALATED' ? 'Suggested opener, held for you' : 'Resolver drafted a reply'}</span>
                 <span className="c-drafted-at">drafted {timeAgo(t.draft_generated_at!)} ago</span>
               </div>
               {editing ? (
@@ -444,12 +555,13 @@ function TicketsView({ shopId }: { shopId: string }) {
               {t.trace && <Trace steps={t.trace} />}
               <div className="acts">
                 <AutoSendBar t={t} />
+                {t.status === 'ESCALATED' && <span className="c-held esc"><ShieldCheck size={13} /> Never auto-sent, held for you</span>}
                 {onCooldown && <span className="c-held"><Clock size={13} /> Sent, cooldown {cooldownLeft}s (anti double-send)</span>}
                 <span className="sp" />
                 {editing && <button className="c-act" onClick={() => setEditing(false)}>Discard edits</button>}
                 {!onCooldown && (
                   <button className="c-act prim" disabled={busy !== ''} onClick={doSend}>
-                    {busy === 'send' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {editing ? 'Send edited' : 'Approve & send'}
+                    {busy === 'send' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {editing ? 'Send edited' : t.status === 'ESCALATED' ? 'Send reply' : 'Approve & send'}
                   </button>
                 )}
               </div>
@@ -476,7 +588,9 @@ function TicketsView({ shopId }: { shopId: string }) {
             <div className="c-kv"><span>Reason</span><b>{t.order_match_reason}</b></div>
             <div className="c-kv"><span>Confidence</span><b className={t.order_match_confidence >= 0.9 ? 'green' : t.order_match_confidence > 0 ? '' : 'red'}>{t.order_match_confidence > 0 ? Math.round(t.order_match_confidence * 100) + '%' : 'No match'}</b></div>
             {t.order_id && (
-              <a className="link" onClick={() => api.unlinkOrder(t.id)}><Unlink size={12} /> Wrong order? Unlink</a>
+              <div className="links">
+                <a className="link" onClick={() => api.unlinkOrder(t.id)}><Unlink size={12} /> Wrong order? Unlink</a>
+              </div>
             )}
           </div>
         </div>
@@ -492,8 +606,10 @@ function TicketsView({ shopId }: { shopId: string }) {
                 <div className="c-kv"><span>Fulfillment</span><b>{t.order_snapshot.fulfillment_status}</b></div>
                 <div className="c-kv"><span>Total</span><b>{t.order_snapshot.currency === 'EUR' ? '€' : '$'}{t.order_snapshot.total_price}</b></div>
                 <div className="c-kv"><span>Ships to</span><b>{t.order_snapshot.shipping_country}</b></div>
-                <a className="link">Open in Shopify <ArrowUpRight size={12} /></a>
-                <a className="link" onClick={() => api.refreshOrder(t.id)}><RotateCcw size={12} /> Refresh snapshot</a>
+                <div className="links">
+                  <a className="link"><ArrowUpRight size={12} /> Open in Shopify</a>
+                  <a className="link" onClick={() => api.refreshOrder(t.id)}><RotateCcw size={12} /> Refresh snapshot</a>
+                </div>
               </div>
             </div>
             <div className="sec">
@@ -654,22 +770,22 @@ function AiLog() {
   )
 }
 
-function BinView() {
+function BinView({ onOpen }: { onOpen: (id: string) => void }) {
   useStore()
   const rows = ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
     .map((id) => api.getTicket(id))
     .filter((t): t is Ticket => !!t && !!t.is_deleted)
   return (
     <div className="c-page">
-      <header className="c-page-h"><div><h1>Bin</h1><p>Deleted conversations, recoverable for 30 days</p></div></header>
+      <header className="c-page-h"><div><h1>Bin</h1><p>Nothing here is deleted yet. Open or restore any conversation; items are removed for good after 30 days.</p></div></header>
       <div className="c-card">
         <div className="c-rows">
           {rows.length === 0 && <p className="c-note" style={{ marginTop: 0 }}>Bin is empty.</p>}
           {rows.map((t) => (
-            <div className="c-ev" key={t.id}>
+            <div className="c-ev c-ev-click" key={t.id} onClick={() => onOpen(t.id)} role="button">
               <span className="t"><b>{t.subject}</b>, {t.customer_name ?? t.customer_email}</span>
-              <button className="c-act" onClick={() => api.restoreTicket(t.id)}><RotateCcw size={13} /> Restore</button>
-              <button className="c-act red" onClick={() => api.permanentDelete(t.id)}><Trash2 size={13} /> Delete forever</button>
+              <button className="c-act" onClick={(e) => { e.stopPropagation(); api.restoreTicket(t.id) }}><RotateCcw size={13} /> Restore</button>
+              <button className="c-act red" onClick={(e) => { e.stopPropagation(); api.permanentDelete(t.id) }}><Trash2 size={13} /> Delete forever</button>
             </div>
           ))}
         </div>
@@ -817,18 +933,113 @@ const LANES_INIT = [
   { name: 'Order changes', mode: 'live' as 'off' | 'shadow' | 'live' },
   { name: 'General questions', mode: 'shadow' as 'off' | 'shadow' | 'live' },
 ]
+function TeamSettings() {
+  const [users, setUsers] = useState([
+    { name: 'Nathan', role: 'Owner', stores: ['All stores'], perms: { approve: true, lanes: true, billing: true, exports: true } },
+    { name: 'Chandan', role: 'Agent', stores: ['AURORA'], perms: { approve: true, lanes: false, billing: false, exports: false } },
+  ])
+  const PERMS: [keyof typeof users[0]['perms'], string][] = [
+    ['approve', 'Approve & send replies'], ['lanes', 'Change lane modes & kill switch'],
+    ['billing', 'Manage billing & plan'], ['exports', 'Export conversations & data'],
+  ]
+  return (
+    <div className="c-rows">
+      {users.map((u, ui) => (
+        <div className="c-teamrow" key={u.name}>
+          <div className="hd">
+            <b>{u.name}</b>
+            <select value={u.role} onChange={(e) => setUsers(users.map((x, i) => i === ui ? { ...x, role: e.target.value } : x))}>
+              <option>Owner</option><option>Admin</option><option>Agent</option>
+            </select>
+            <span className="stores">{u.stores.join(', ')}</span>
+            {ui === 0 && <span className="at" style={{ marginLeft: 'auto' }}>you</span>}
+          </div>
+          <div className="perms">
+            {PERMS.map(([k, label]) => (
+              <label key={k} className={u.role === 'Owner' ? 'lock' : ''}>
+                <input
+                  type="checkbox" checked={u.role === 'Owner' ? true : u.perms[k]}
+                  disabled={u.role === 'Owner'}
+                  onChange={() => setUsers(users.map((x, i) => i === ui ? { ...x, perms: { ...x.perms, [k]: !x.perms[k] } } : x))}
+                /> {label}
+              </label>
+            ))}
+          </div>
+        </div>
+      ))}
+      <button className="c-act" style={{ marginTop: 14, alignSelf: 'flex-start' }}><Plus size={14} /> Invite teammate</button>
+      <p className="c-note">Owners always hold every permission. Agents see only their assigned stores.</p>
+    </div>
+  )
+}
+
+function FilterList({ kind, title, hint }: { kind: 'keywords' | 'senders' | 'allow'; title: string; hint: string }) {
+  useStore()
+  const [v, setV] = useState('')
+  const items = api.MAIL_FILTERS[kind]
+  return (
+    <div className="c-filterblock">
+      <div className="hd">{title}</div>
+      <p className="c-note" style={{ margin: '2px 0 10px' }}>{hint}</p>
+      <div className="chips">
+        {items.map((x) => (
+          <span className="fchip" key={x}>{x}<button onClick={() => api.removeFilter(kind, x)} aria-label={'remove ' + x}><X size={11} /></button></span>
+        ))}
+      </div>
+      <div className="add">
+        <input
+          className="c-input" placeholder={'Add to ' + title.toLowerCase() + '…'} value={v}
+          onChange={(e) => setV(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && v.trim()) { api.addFilter(kind, v); setV('') } }}
+        />
+        <button className="c-act" onClick={() => { if (v.trim()) { api.addFilter(kind, v); setV('') } }}>Add</button>
+      </div>
+    </div>
+  )
+}
+function FilterSettings() {
+  return (
+    <div className="c-rows" style={{ gap: 22 }}>
+      <FilterList kind="keywords" title="Blocked keywords" hint="Inbound mail containing these goes to Filtered instead of the inbox." />
+      <FilterList kind="senders" title="Blocked senders" hint="Matched against the from address. Prefixes and domains both work." />
+      <FilterList kind="allow" title="Always allow" hint="These senders always reach the inbox, whatever the rules above say." />
+      <p className="c-note">Filters are per company. Everything filtered stays visible under Inbox, Filtered.</p>
+    </div>
+  )
+}
+
+function NotifSettings() {
+  const [n, setN] = useState({ esc: true, fail: true, digest: false, supplier: true })
+  const ROWS: [keyof typeof n, string, string][] = [
+    ['esc', 'Escalations', 'Email me the moment dispute or legal language is detected'],
+    ['fail', 'Auto-send failures', 'Email me when a queued send fails or is cancelled by the system'],
+    ['supplier', 'Supplier replies', 'Email me when a supplier answers a request'],
+    ['digest', 'Daily digest', 'One morning email: volume, backlog, and anything waiting on you'],
+  ]
+  return (
+    <div className="c-rows">
+      {ROWS.map(([k, title, sub]) => (
+        <div className="c-notifrow" key={k}>
+          <div><b>{title}</b><p>{sub}</p></div>
+          <button className={'c-switch green' + (n[k] ? ' on' : '')} onClick={() => setN({ ...n, [k]: !n[k] })} aria-label={title}><span className="k" /></button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 type Lanes = typeof LANES_INIT
 
 function SettingsView({ lanes, setLanes, killed, setKilled }: {
   lanes: Lanes; setLanes: (l: Lanes) => void; killed: boolean; setKilled: (b: boolean) => void
 }) {
-  const [tab, setTab] = useState<'Lanes' | 'Stores' | 'Policies & SOP' | 'Email' | 'Team' | 'Billing'>('Lanes')
+  const [tab, setTab] = useState<'Lanes' | 'Filters' | 'Stores' | 'Policies & SOP' | 'Email' | 'Team' | 'Notifications' | 'Billing'>('Lanes')
   return (
     <div className="c-page">
       <header className="c-page-h"><div><h1>Settings</h1><p>AURORA · owner access</p></div></header>
       <div className="c-set">
         <nav className="c-set-nav">
-          {(['Lanes', 'Stores', 'Policies & SOP', 'Email', 'Team', 'Billing'] as const).map((x) => (
+          {(['Lanes', 'Filters', 'Stores', 'Policies & SOP', 'Email', 'Team', 'Notifications', 'Billing'] as const).map((x) => (
             <button key={x} className={x === tab ? 'on' : ''} onClick={() => setTab(x)}>{x}</button>
           ))}
         </nav>
@@ -880,13 +1091,9 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
               <div className="c-kv"><span>Loop protection</span><b>On, auto-replies filtered</b></div>
             </div>
           )}
-          {tab === 'Team' && (
-            <div className="c-rows">
-              <div className="c-ev"><span className="t"><b>Nathan</b>, owner, all stores</span><span className="at">you</span></div>
-              <div className="c-ev"><span className="t"><b>Chandan</b>, agent, AURORA only</span><span className="at">active</span></div>
-              <button className="c-act" style={{ marginTop: 14, alignSelf: 'flex-start' }}><Plus size={14} /> Invite teammate</button>
-            </div>
-          )}
+          {tab === 'Team' && <TeamSettings />}
+          {tab === 'Filters' && <FilterSettings />}
+          {tab === 'Notifications' && <NotifSettings />}
           {tab === 'Billing' && (
             <div className="c-rows">
               <div className="c-kv"><span>Plan</span><b>Team, $249/mo</b></div>
@@ -905,6 +1112,7 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
 export function AppConsole() {
   useStore()
   const [view, setView] = useState<View>('tickets')
+  const [collapsed, setCollapsed] = useState(false)
   const [shopIdx, setShopIdx] = useState(0)
   const [storeOpen, setStoreOpen] = useState(false)
   useOutsideClose(storeOpen, () => setStoreOpen(false))
@@ -921,7 +1129,7 @@ export function AppConsole() {
     overview: () => <Overview shopId={shopId} />,
     tickets: () => <TicketsView shopId={shopId} />,
     resolved: () => <DerivedList title="Resolved" sub="Closed conversations" filterFn={(t) => t.status === 'RESOLVED'} empty="Nothing resolved yet today." />,
-    bin: () => <BinView />,
+    bin: () => <BinView onOpen={(id) => { openTicketById(id); setView('tickets') }} />,
     filtered: () => <StaticList title="Filtered" sub="Suppressed inbound, never reached the inbox" rows={[
       ['Newsletter · Shopify Weekly', 'marketing filter', '2h'],
       ['Auto-reply · Out of office', 'loop protection', '3h'],
@@ -940,9 +1148,14 @@ export function AppConsole() {
   }
 
   return (
-    <div className="console2">
+    <div className={'console2' + (collapsed ? ' collapsed' : '')}>
       <aside className="c-rail">
-        <div className="c-brand"><img src={LOGO} alt="" /><span>resolver.chat</span></div>
+        <div className="c-brand">
+          <img src={LOGO} alt="" /><span className="bw">resolver.chat</span>
+          <button className="c-collapse" onClick={() => setCollapsed(!collapsed)} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            <PanelLeft size={15} />
+          </button>
+        </div>
 
         <div className="c-store-wrap" onClick={(e) => e.stopPropagation()}>
           <button className="c-store" onClick={() => setStoreOpen(!storeOpen)}>
@@ -976,6 +1189,9 @@ export function AppConsole() {
         </nav>
 
         <div className="c-rail-foot">
+          <a className={'item c-set-link' + (view === 'settings' ? ' on' : '')} onClick={() => setView('settings')}>
+            <Settings size={16} /> <span>Settings</span>
+          </a>
           <div className={'c-auto' + (killed ? ' off' : '')}>
             <b>{killed ? 'Auto-send paused' : 'Auto-send active'}</b>
             <p>{killed ? 'Kill switch is on' : `${lanes.filter((l) => l.mode === 'live').length} lanes live · risky tickets always wait`}</p>
