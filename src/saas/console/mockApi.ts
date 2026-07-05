@@ -3,7 +3,7 @@
 // in-memory store. Wiring the redesign to the live app = replacing this
 // module's internals with fetch calls to those endpoints, the UI does not
 // change. Subscribe/notify gives components live re-renders on mutation.
-import type { ActivityEvent, Category, Shop, Ticket, TicketStatus } from './types'
+import type { ActivityEvent, Category, Shop, Ticket, TicketStatus, TraceStep } from './types'
 
 const now = Date.now()
 const iso = (msAgo: number) => new Date(now - msAgo).toISOString()
@@ -41,6 +41,15 @@ const TICKETS: Ticket[] = [
     messages: [
       { id: 'm1', from: 'maria.lopez@email.com', from_name: 'Maria Lopez', date: iso(2 * 60_000), body: 'Hi, I ordered 3 weeks ago and still haven’t received anything. Order #1042. Getting worried.', is_customer: true },
     ],
+    trace: [
+      { step: 'Language detected', detail: 'English (email body)', ok: true, ms: 12 },
+      { step: 'Classified', detail: 'SHIPPING · WISMO, urgency 62/100', ok: true, ms: 380 },
+      { step: 'Order matched', detail: '#1042 · order number found in email body · 100%', ok: true, ms: 95 },
+      { step: 'Tracking read', detail: 'CP998341US · in transit, customs cleared, ETA 2 to 3 days', ok: true, ms: 310 },
+      { step: 'Policy applied', detail: 'SOP: honest delivery estimate, live tracking link, warm tone', ok: true, ms: 8 },
+      { step: 'Risk scan', detail: 'No dispute or legal language', ok: true, ms: 45 },
+      { step: 'Lane decision', detail: 'SHIPPING lane is live: queued with 3-minute cancel window', ok: true, ms: 6 },
+    ],
     created_at: iso(2 * 60_000),
   },
   {
@@ -70,6 +79,14 @@ const TICKETS: Ticket[] = [
       { id: 'm1', from: 'a.weber@email.de', from_name: 'A. Weber', date: iso(4 * 3_600_000), body: 'Wo ist meine Bestellung #1991? Die Zustellung ist fehlgeschlagen.', is_customer: true, body_english: 'Where is my order #1991? The delivery failed.' },
       { id: 'm2', from: 'support@aurora.com', from_name: 'AURORA Support', date: iso(3 * 3_600_000), body: 'Hallo, die Zustellung wird morgen erneut versucht. Hier ist Ihr Tracking-Link.', is_customer: false, body_english: 'Hello, delivery will be attempted again tomorrow. Here is your tracking link.' },
       { id: 'm3', from: 'a.weber@email.de', from_name: 'A. Weber', date: iso(11 * 60_000), body: 'Das ist inakzeptabel. Ich melde das meiner Bank und meinem Anwalt, wenn es heute nicht gelöst wird.', is_customer: true, body_english: 'This is unacceptable. I am reporting this to my bank and my lawyer if it is not resolved today.' },
+    ],
+    trace: [
+      { step: 'Language detected', detail: 'German (email body)', ok: true, ms: 11 },
+      { step: 'Classified', detail: 'CHARGEBACK · dispute language, urgency 96/100', ok: true, ms: 402 },
+      { step: 'Order matched', detail: '#1991 · customer email matches order · 94%', ok: true, ms: 88 },
+      { step: 'Tracking read', detail: 'CP771222US · delivery attempt failed', ok: true, ms: 295 },
+      { step: 'Risk scan', detail: 'DISPUTE + LEGAL detected: pulled from every automated lane', ok: false, ms: 51 },
+      { step: 'Lane decision', detail: 'Held for a human · suggested opener drafted with EN mirror', ok: true, ms: 5 },
     ],
     created_at: iso(4 * 3_600_000),
   },
@@ -123,7 +140,15 @@ const TICKETS: Ticket[] = [
     supplier_status: 'REQUESTED', supplier_request_type: 'Replacement stock check', is_stuck: false,
     customer_history: '4 orders · VIP',
     messages: [
-      { id: 'm1', from: 'sofia.rossi@email.it', from_name: 'Sofia Rossi', date: iso(38 * 60_000), body: 'La scatola è arrivata danneggiata e il set presenta delle macchie. Cosa possiamo fare?', is_customer: true, body_english: 'The box arrived damaged and the set has stains. What can we do?' },
+      { id: 'm1', from: 'sofia.rossi@email.it', from_name: 'Sofia Rossi', date: iso(38 * 60_000), body: 'La scatola è arrivata danneggiata e il set presenta delle macchie. Cosa possiamo fare?', is_customer: true, body_english: 'The box arrived damaged and the set has stains. What can we do?', attachments: [{ filename: 'IMG_2041.jpg', size: '2.1 MB' }, { filename: 'IMG_2042.jpg', size: '1.8 MB' }] },
+    ],
+    trace: [
+      { step: 'Language detected', detail: 'Italian (email body)', ok: true, ms: 10 },
+      { step: 'Classified', detail: 'DAMAGED · photos attached, urgency 55/100', ok: true, ms: 371 },
+      { step: 'Order matched', detail: '#2061 · order number found in email body · 100%', ok: true, ms: 92 },
+      { step: 'Policy applied', detail: 'SOP: free reshipment on damage with photo, offer refund alternative', ok: true, ms: 7 },
+      { step: 'Supplier requested', detail: 'Replacement stock check sent by email', ok: true, ms: 130 },
+      { step: 'Lane decision', detail: 'DAMAGED lane is shadow: draft holds for approval, EN mirror attached', ok: true, ms: 4 },
     ],
     created_at: iso(38 * 60_000),
   },
@@ -170,7 +195,7 @@ const TICKETS: Ticket[] = [
     customer_history: '2 orders',
     messages: [
       { id: 'm1', from: 'chloe.martin@email.fr', from_name: 'Chloé Martin', date: iso(6 * 3_600_000), body: 'Bonjour, pouvez-vous livrer au bureau plutôt qu’à la maison ?', is_customer: true, body_english: 'Hello, can you deliver to my office instead of my home?' },
-      { id: 'm2', from: 'support@aurora.com', from_name: 'AURORA Support', date: iso(5.5 * 3_600_000), body: 'Bonjour Chloé, c’est fait ! L’adresse a été mise à jour avant l’expédition de la commande #2103.', is_customer: false, body_english: 'Hello Chloé, done! The address was updated before order #2103 shipped.' },
+      { id: 'm2', from: 'support@aurora.com', from_name: 'AURORA Support', date: iso(5.5 * 3_600_000), body: 'Bonjour Chloé, c’est fait ! L’adresse a été mise à jour avant l’expédition de la commande #2103.', is_customer: false, body_english: 'Hello Chloé, done! The address was updated before order #2103 shipped.', auto_sent: true },
       { id: 'm3', from: 'chloe.martin@email.fr', from_name: 'Chloé Martin', date: iso(5 * 3_600_000), body: 'Merci beaucoup, c’est parfait !', is_customer: true, body_english: 'Thank you very much, that’s perfect!' },
     ],
     created_at: iso(6 * 3_600_000),
@@ -359,4 +384,12 @@ export async function createTask(t: string, d: string) {
 export async function toggleTask(id: string) {
   const k = TASKS.find((x) => x.id === id)!
   return moveTask(id, k.col === 'done' ? 'todo' : 'done')
+}
+
+/** Client-side PDF export in production (exportTicketPdf.ts); demo logs it. */
+export async function exportPdf(id: string) {
+  await delay(200)
+  const t = TICKETS.find((x) => x.id === id)!
+  log('Exported PDF', t.subject, 'ok')
+  notify()
 }

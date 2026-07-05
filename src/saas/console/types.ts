@@ -39,6 +39,16 @@ export interface ThreadMessage {
   body: string
   is_customer: boolean
   body_english?: string
+  auto_sent?: boolean
+  attachments?: { filename: string; size: string }[]
+}
+
+/** One step of the drafting pipeline, surfaced as the decision trace. */
+export interface TraceStep {
+  step: string
+  detail: string
+  ok: boolean
+  ms?: number
 }
 
 export interface Ticket {
@@ -77,6 +87,7 @@ export interface Ticket {
   is_stuck: boolean
   customer_history?: string
   messages: ThreadMessage[]
+  trace?: TraceStep[]
   created_at: string
 }
 

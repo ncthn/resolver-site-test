@@ -10,10 +10,10 @@ import {
   ChevronsUpDown, Package, Truck, ShieldCheck, Send, Pencil, Trash2,
   RefreshCw, Gavel, Clock, Check, Zap, ArrowUpRight, User, LayoutDashboard,
   Filter, FileText, X, Plus, PauseCircle, Languages, ChevronDown,
-  Unlink, Loader2, Factory, RotateCcw, Tag,
+  Unlink, Loader2, Factory, RotateCcw, Tag, Paperclip, Download, Route,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import type { Category, Ticket, TicketStatus } from './console/types'
+import type { Category, Ticket, TicketStatus, ThreadMessage, TraceStep } from './console/types'
 import * as api from './console/mockApi'
 
 const LOGO = '/logo/recolor/oct-black-t.png'
@@ -213,6 +213,80 @@ function StatusDropdown({ t }: { t: Ticket }) {
   )
 }
 
+/* Message bubble: ENGLISH-FIRST (like production TicketThread) — the English
+   translation is the primary text; the native original expands on demand. */
+function Bubble({ m, lang }: { m: ThreadMessage; lang: string }) {
+  const [showOrig, setShowOrig] = useState(false)
+  const en = m.body_english ?? m.body
+  const bilingual = !!m.body_english && m.body_english !== m.body
+  return (
+    <div className={'c-msg' + (m.is_customer ? '' : ' me')}>
+      <div className={'bubble' + (!m.is_customer && m.auto_sent ? ' ai' : '')}>
+        <span className="from">
+          {m.is_customer ? (m.from_name ?? m.from) : m.auto_sent ? 'AI auto-reply' : 'You'}
+          {!m.is_customer && m.auto_sent && <span className="aichip">AI</span>}
+        </span>
+        {en}
+        {m.attachments && m.attachments.length > 0 && (
+          <div className="atts">
+            {m.attachments.map((a) => (
+              <span className="att" key={a.filename}><Paperclip size={11} /> {a.filename}<i>{a.size}</i></span>
+            ))}
+          </div>
+        )}
+        <span className="bfoot">
+          <span className="at">{timeAgo(m.date)} ago</span>
+          {bilingual && (
+            <button className="orig" onClick={() => setShowOrig(!showOrig)} aria-expanded={showOrig}>
+              <Languages size={10} /> {showOrig ? 'Hide original' : `${m.is_customer ? 'Original' : 'Sent'} · ${lang.toUpperCase()}`}
+            </button>
+          )}
+        </span>
+        {showOrig && <span className="native">{m.body}</span>}
+      </div>
+    </div>
+  )
+}
+
+/* Decision trace: every check the pipeline ran before this draft existed. */
+function Trace({ steps }: { steps: TraceStep[] }) {
+  const [open, setOpen] = useState(false)
+  const fails = steps.filter((x) => !x.ok).length
+  return (
+    <div className="c-trace">
+      <button className="tr-head" onClick={() => setOpen(!open)} aria-expanded={open}>
+        <Route size={12} /> How Resolver decided · {steps.length} checks{fails > 0 ? ` · ${fails} flag` : ''}
+        <ChevronDown size={12} className={open ? 'r' : ''} />
+      </button>
+      {open && (
+        <div className="tr-list">
+          {steps.map((x) => (
+            <div className={'tr-step' + (x.ok ? '' : ' flag')} key={x.step}>
+              <span className="ic">{x.ok ? <Check size={11} strokeWidth={2.6} /> : <ShieldCheck size={11} strokeWidth={2.4} />}</span>
+              <span className="tx"><b>{x.step}</b> — {x.detail}</span>
+              {x.ms != null && <span className="ms">{x.ms}ms</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* The native-language version that will actually send (English is the mirror). */
+function NativeDraft({ t }: { t: Ticket }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="c-nativedraft">
+      <button onClick={() => setOpen(!open)} aria-expanded={open}>
+        <Languages size={11} /> {open ? 'Hide' : 'Sends in'} {t.customer_language.toUpperCase()}
+        <ChevronDown size={11} className={open ? 'r' : ''} />
+      </button>
+      {open && <p>{t.draft_body}</p>}
+    </div>
+  )
+}
+
 function AutoSendBar({ t }: { t: Ticket }) {
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -237,7 +311,6 @@ function TicketsView({ shopId }: { shopId: string }) {
   const [sel, setSel] = useState('t-4471')
   const [filter, setFilter] = useState<typeof FILTERS[number]>('All')
   const [q, setQ] = useState('')
-  const [mirror, setMirror] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editBody, setEditBody] = useState('')
   const [busy, setBusy] = useState<'' | 'send' | 'regen'>('')
@@ -258,11 +331,10 @@ function TicketsView({ shopId }: { shopId: string }) {
   })()
 
   const t = api.getTicket(sel) ?? tickets[0]
-  useEffect(() => { setMirror(false); setEditing(false); setBusy('') }, [sel])
+  useEffect(() => { setEditing(false); setBusy('') }, [sel])
   if (!t) return <div className="c-page"><p>No tickets.</p></div>
 
-  const isForeign = t.customer_language !== 'en'
-  const draftShown = mirror && t.draft_body_english ? t.draft_body_english : t.draft_body
+  const draftEN = t.draft_body_english ?? t.draft_body
   const cooldownLeft = Math.max(0, 180 - Math.floor((Date.now() - (cooldownAt[t.id] ?? -1e12)) / 1000))
   const onCooldown = cooldownAt[t.id] != null && cooldownLeft > 0
 
@@ -319,11 +391,6 @@ function TicketsView({ shopId }: { shopId: string }) {
             </div>
           </div>
           <div className="acts">
-            {isForeign && (
-              <button className={'c-mirror' + (mirror ? ' on' : '')} onClick={() => setMirror(!mirror)} title={mirror ? 'Showing English translation' : 'Showing original language'}>
-                <Languages size={12} /> {mirror ? 'EN' : t.customer_language.toUpperCase()}
-              </button>
-            )}
             <CategoryDropdown t={t} />
             <StatusDropdown t={t} />
             {!t.supplier_status && (
@@ -333,6 +400,9 @@ function TicketsView({ shopId }: { shopId: string }) {
             )}
             <button className={'c-chip-btn' + (t.ai_disabled ? ' red' : '')} onClick={() => api.postAiToggle(t.id)} title="Per-ticket AI kill switch">
               <Zap size={13} /> {t.ai_disabled ? 'AI off' : 'AI on'}
+            </button>
+            <button className="c-chip-btn" title="Export conversation as PDF" onClick={() => api.exportPdf(t.id)}>
+              <Download size={13} />
             </button>
             <button className="c-chip-btn" title="Move to bin" onClick={() => api.deleteTicket(t.id)}>
               <Trash2 size={13} />
@@ -346,15 +416,7 @@ function TicketsView({ shopId }: { shopId: string }) {
           {t.supplier_status === 'REQUESTED' && (
             <div className="c-risk mut"><Factory size={14} /> Waiting on supplier, {t.supplier_request_type} · sent by email. Auto-reminder if no reply in 48h.</div>
           )}
-          {t.messages.map((m) => (
-            <div key={m.id} className={'c-msg' + (m.is_customer ? '' : ' me')}>
-              <div className="bubble">
-                <span className="from">{m.from_name ?? m.from}{!m.is_customer && t.auto_sent_at && <span className="c-chip mut" style={{ marginLeft: 8 }}>AI</span>}</span>
-                {mirror && m.body_english ? m.body_english : m.body}
-                <span className="at">{timeAgo(m.date)} ago</span>
-              </div>
-            </div>
-          ))}
+          {t.messages.map((m) => <Bubble m={m} lang={t.customer_language} key={m.id} />)}
 
           {t.draft_body ? (
             <div className={'c-draft' + (t.status === 'ESCALATED' ? ' esc' : '')}>
@@ -365,8 +427,9 @@ function TicketsView({ shopId }: { shopId: string }) {
               {editing ? (
                 <textarea className="c-edit" value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={6} />
               ) : (
-                <p className="body">{draftShown}</p>
+                <p className="body">{draftEN}</p>
               )}
+              {t.draft_body_english && !editing && <NativeDraft t={t} />}
               {t.order_name && (
                 <div className="chips">
                   <span><Check size={11} /> {t.order_name}</span>
@@ -374,6 +437,7 @@ function TicketsView({ shopId }: { shopId: string }) {
                   <span><Check size={11} /> SOP policies</span>
                 </div>
               )}
+              {t.trace && <Trace steps={t.trace} />}
               <div className="acts">
                 <AutoSendBar t={t} />
                 {onCooldown ? (
@@ -383,7 +447,7 @@ function TicketsView({ shopId }: { shopId: string }) {
                     <button className="c-act prim" disabled={busy !== ''} onClick={doSend}>
                       {busy === 'send' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {editing ? 'Send edited' : 'Approve & send'}
                     </button>
-                    <button className="c-act" onClick={() => { setEditing(!editing); setEditBody(t.draft_body ?? '') }}>
+                    <button className="c-act" onClick={() => { setEditing(!editing); setEditBody(draftEN ?? '') }}>
                       <Pencil size={14} /> {editing ? 'Discard edit' : 'Edit'}
                     </button>
                     <button className="c-act ic" title="Regenerate" disabled={busy !== ''} onClick={doRegen}>

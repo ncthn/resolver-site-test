@@ -811,3 +811,31 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .ob-extract .ok{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:#3D7A50;padding-bottom:10px}
 .ob-extract .row{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-top:1px solid var(--line);font-size:13px;color:var(--tx-soft)}
 .ob-extract .row b{color:var(--ink);font-weight:500;text-align:right}
+
+/* english-first bubbles: original expander, AI chip, attachments, trace */
+.c-msg .bubble .bfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px}
+.c-msg .bubble .at{margin-top:0}
+.c-msg .bubble .orig{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tx-faint);white-space:nowrap}
+.c-msg .bubble .orig:hover{color:var(--ink)}
+.c-msg .bubble .orig svg.r,.c-nativedraft button svg.r,.c-trace .tr-head svg.r{transform:rotate(180deg)}
+.c-msg .bubble .native{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--tx-soft);font-style:italic}
+.c-msg .bubble .aichip{display:inline-block;margin-left:7px;font-size:9px;font-weight:700;letter-spacing:.06em;background:var(--ink);color:#fff;border-radius:5px;padding:1.5px 6px;vertical-align:1px}
+.c-msg.me .bubble.ai{background:#E9E9E7;border:1px solid var(--line)}
+.c-msg .bubble .atts{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.c-msg .bubble .att{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:500;cursor:pointer}
+.c-msg .bubble .att:hover{border-color:var(--ink)}
+.c-msg .bubble .att i{font-style:normal;color:var(--tx-faint);font-size:10.5px}
+.c-nativedraft{margin-top:10px}
+.c-nativedraft button{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tx-faint)}
+.c-nativedraft button:hover{color:var(--ink)}
+.c-nativedraft p{margin-top:8px;padding:10px 13px;background:var(--band);border-radius:9px;font-size:12.5px;color:var(--tx-soft);font-style:italic;line-height:1.6}
+.c-trace{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.c-trace .tr-head{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--tx-soft)}
+.c-trace .tr-head:hover{color:var(--ink)}
+.c-trace .tr-list{margin-top:10px;display:flex;flex-direction:column;gap:2px}
+.c-trace .tr-step{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:12px;color:var(--tx-soft)}
+.c-trace .tr-step .ic{width:18px;height:18px;border-radius:50%;background:#E8F0EB;color:#3D7A50;display:flex;align-items:center;justify-content:center;flex:none}
+.c-trace .tr-step.flag .ic{background:#FBEFEC;color:#B4472F}
+.c-trace .tr-step .tx{flex:1}
+.c-trace .tr-step .tx b{color:var(--ink);font-weight:600}
+.c-trace .tr-step .ms{font-size:10.5px;color:var(--tx-faint);font-variant-numeric:tabular-nums}
