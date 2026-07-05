@@ -11,7 +11,7 @@ import {
   RefreshCw, Gavel, Clock, Check, Zap, ArrowUpRight, User, LayoutDashboard,
   Filter, FileText, X, Plus, PauseCircle, Languages, ChevronDown,
   Unlink, Loader2, Factory, RotateCcw, Tag, Paperclip, Download, Route,
-  PanelLeft, MoreHorizontal,
+  PanelLeft, MoreHorizontal, StickyNote, Sparkles,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { Category, Ticket, TicketStatus, ThreadMessage, TraceStep } from './console/types'
@@ -277,24 +277,18 @@ function CategoryDropdown({ t }: { t: Ticket }) {
     </div>
   )
 }
-function StatusDropdown({ t }: { t: Ticket }) {
-  const [open, setOpen] = useState(false)
-  useOutsideClose(open, () => setOpen(false))
+function StatusSelect({ t }: { t: Ticket }) {
   return (
-    <div className="c-status-wrap" onClick={(e) => e.stopPropagation()}>
-      <button className="c-chip-btn" onClick={() => setOpen(!open)}>
-        <RefreshCw size={13} /> {STATUS_LABEL[t.status]} <ChevronDown size={13} />
-      </button>
-      {open && (
-        <div className="c-menu">
-          {(Object.keys(STATUS_LABEL) as TicketStatus[]).map((s) => (
-            <button key={s} className={s === t.status ? 'on' : ''} onClick={() => { api.patchStatus(t.id, s); setOpen(false) }}>
-              {STATUS_LABEL[s]} {s === t.status && <Check size={13} />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <select
+      className="c-statusselect"
+      value={t.status}
+      onChange={(e) => api.patchStatus(t.id, e.target.value as TicketStatus)}
+      aria-label="Ticket status"
+    >
+      {(Object.keys(STATUS_LABEL) as TicketStatus[]).map((st) => (
+        <option key={st} value={st}>{STATUS_LABEL[st]}</option>
+      ))}
+    </select>
   )
 }
 
@@ -368,6 +362,35 @@ function NativeDraft({ t }: { t: Ticket }) {
         <ChevronDown size={11} className={open ? 'r' : ''} />
       </button>
       {open && <p>{t.draft_body}</p>}
+    </div>
+  )
+}
+
+function NoteComposer({ t }: { t: Ticket }) {
+  const [open, setOpen] = useState(false)
+  const [v, setV] = useState('')
+  if (!open) {
+    return (
+      <button className="c-addnote" onClick={() => setOpen(true)}>
+        <StickyNote size={12} /> Add internal note
+      </button>
+    )
+  }
+  return (
+    <div className="c-note editing">
+      <span className="nh"><StickyNote size={12} /> Internal note · never sent to the customer</span>
+      <textarea
+        autoFocus rows={2} value={v} placeholder="Context for your team…"
+        onChange={(e) => setV(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey && v.trim()) { e.preventDefault(); api.addNote(t.id, v.trim()); setV(''); setOpen(false) }
+          if (e.key === 'Escape') setOpen(false)
+        }}
+      />
+      <div className="row">
+        <button className="c-act" onClick={() => setOpen(false)}>Cancel</button>
+        <button className="c-act prim" disabled={!v.trim()} onClick={() => { api.addNote(t.id, v.trim()); setV(''); setOpen(false) }}>Save note</button>
+      </div>
     </div>
   )
 }
@@ -508,7 +531,6 @@ function TicketsView({ shopId }: { shopId: string }) {
           </div>
           <div className="acts">
             <CategoryDropdown t={t} />
-            <StatusDropdown t={t} />
             <button className={'c-aiswitch' + (t.ai_disabled ? ' off' : '')} onClick={() => api.postAiToggle(t.id)} title={t.ai_disabled ? 'AI is off for this ticket: no drafting, no auto-send. Click to re-enable.' : 'AI is drafting on this ticket. Click to take over by hand.'}>
               <Zap size={12} /> AI <span className="sw"><i /></span>
             </button>
@@ -528,6 +550,13 @@ function TicketsView({ shopId }: { shopId: string }) {
             <div className="c-risk mut"><Factory size={14} /> Waiting on supplier, {t.supplier_request_type} · sent by email. Auto-reminder if no reply in 48h.</div>
           )}
           {t.messages.map((m) => <Bubble m={m} lang={t.customer_language} key={m.id} />)}
+          {(t.notes ?? []).map((n) => (
+            <div className="c-note" key={n.id}>
+              <span className="nh"><StickyNote size={12} /> Internal note · {n.ai ? 'AI summary' : n.author} · {timeAgo(n.at)} ago</span>
+              {n.body}
+            </div>
+          ))}
+          <NoteComposer t={t} />
 
           {t.draft_body ? (
             <div className={'c-draft' + (t.status === 'ESCALATED' ? ' esc' : '')}>
@@ -583,6 +612,10 @@ function TicketsView({ shopId }: { shopId: string }) {
 
       <aside className="c-ctx2">
         <div className="sec">
+          <div className="h">Status</div>
+          <div className="card"><StatusSelect t={t} /></div>
+        </div>
+        <div className="sec">
           <div className="h">Order match</div>
           <div className="card">
             <div className="c-kv"><span>Reason</span><b>{t.order_match_reason}</b></div>
@@ -608,7 +641,6 @@ function TicketsView({ shopId }: { shopId: string }) {
                 <div className="c-kv"><span>Ships to</span><b>{t.order_snapshot.shipping_country}</b></div>
                 <div className="links">
                   <a className="link"><ArrowUpRight size={12} /> Open in Shopify</a>
-                  <a className="link" onClick={() => api.refreshOrder(t.id)}><RotateCcw size={12} /> Refresh snapshot</a>
                 </div>
               </div>
             </div>
@@ -691,33 +723,96 @@ function StaticList({ title, sub, rows }: { title: string; sub: string; rows: [s
   )
 }
 
+const COMPOSE_ORDERS = [
+  { name: '#1042', who: 'Maria Lopez', item: 'Aurora Linen Set, Sand' },
+  { name: '#2090', who: 'James Carter', item: 'Harbor Robe, M' },
+  { name: '#2061', who: 'Sofia Rossi', item: 'Aurora Linen Set, Clay' },
+  { name: '#2103', who: 'Chloé Martin', item: 'Aurora Linen Set, Sand x2' },
+]
 function Compose() {
   const [from, setFrom] = useState('support@aurora.com')
-  const [to, setTo] = useState('')
-  const [subject, setSubject] = useState('')
-  const [body, setBody] = useState('')
-  const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const [orderQ, setOrderQ] = useState('')
+  const [order, setOrder] = useState<typeof COMPOSE_ORDERS[0] | null>(null)
+  const [intent, setIntent] = useState('')
+  const [lang, setLang] = useState('English')
+  const [draft, setDraft] = useState('')
+  const [state, setState] = useState<'idle' | 'drafting' | 'review' | 'sending' | 'sent'>('idle')
+  const matches = orderQ.trim() && !order
+    ? COMPOSE_ORDERS.filter((o) => (o.name + o.who + o.item).toLowerCase().includes(orderQ.toLowerCase()))
+    : []
+  const doDraft = async () => {
+    setState('drafting')
+    const d = await api.composeDraft(intent, lang, order?.name ?? null)
+    setDraft(d)
+    setState('review')
+  }
   const doSend = async () => {
-    if (!to || !subject) return
     setState('sending')
-    await api.sendCompose(from, to, subject)
+    await api.sendCompose(from, order ? order.who.toLowerCase().replace(' ', '.') + '@email.com' : 'customer@email.com', order ? 'About your order ' + order.name : 'From ' + from)
     setState('sent')
-    setTo(''); setSubject(''); setBody('')
-    setTimeout(() => setState('idle'), 2500)
+    setTimeout(() => { setState('idle'); setDraft(''); setIntent(''); setOrder(null); setOrderQ('') }, 2200)
   }
   return (
     <div className="c-page">
-      <header className="c-page-h"><div><h1>Compose</h1><p>New outbound email</p></div></header>
-      <div className="c-card c-compose">
-        <label>From<select value={from} onChange={(e) => setFrom(e.target.value)}><option>support@aurora.com</option><option>hello@harborgoods.com</option><option>care@northbound.co</option></select></label>
-        <label>To<input placeholder="customer@email.com" value={to} onChange={(e) => setTo(e.target.value)} /></label>
-        <label>Subject<input placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} /></label>
-        <label>Message<textarea rows={8} placeholder="Write your message, or type # to attach an order." value={body} onChange={(e) => setBody(e.target.value)} /></label>
-        <div className="row">
-          <button className="c-act prim" disabled={state !== 'idle' || !to || !subject} onClick={doSend}>
-            {state === 'sending' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {state === 'sent' ? 'Sent ✓' : 'Send'}
-          </button>
-          <button className="c-act"><FileText size={14} /> Save draft</button>
+      <header className="c-page-h"><div><h1>Compose</h1><p>Tell Resolver what to say. It writes the email, you review it.</p></div></header>
+      <div className="c-grid2" style={{ alignItems: 'start' }}>
+        <div className="c-card c-compose">
+          <label>Sending from
+            <select value={from} onChange={(e) => setFrom(e.target.value)}>
+              <option>support@aurora.com</option><option>hello@harborgoods.com</option><option>care@northbound.co</option>
+            </select>
+          </label>
+          <label>Find the order <span className="opt">optional</span>
+            {order ? (
+              <span className="c-orderchip">
+                <Package size={13} /> {order.name} · {order.who} · {order.item}
+                <button onClick={() => { setOrder(null); setOrderQ('') }} aria-label="detach order"><X size={12} /></button>
+              </span>
+            ) : (
+              <input placeholder="Order number, customer name…" value={orderQ} onChange={(e) => setOrderQ(e.target.value)} />
+            )}
+            {matches.length > 0 && (
+              <div className="c-ordermatches">
+                {matches.map((o) => (
+                  <button key={o.name} onClick={() => setOrder(o)}><b>{o.name}</b> {o.who} · {o.item}</button>
+                ))}
+              </div>
+            )}
+          </label>
+          <label>What do you need to say?
+            <textarea rows={4} placeholder="e.g. the replacement ships Monday and we added a 10% discount code SORRY10" value={intent} onChange={(e) => setIntent(e.target.value)} />
+          </label>
+          <label>Resolver will write it in
+            <select value={lang} onChange={(e) => setLang(e.target.value)}>
+              <option>English</option><option>French</option><option>German</option><option>Italian</option><option>Spanish</option>
+            </select>
+          </label>
+          <div className="row">
+            <button className="c-act prim" disabled={!intent.trim() || state === 'drafting'} onClick={doDraft}>
+              {state === 'drafting' ? <Loader2 size={14} className="c-spin" /> : <Sparkles size={14} />} {draft ? 'Regenerate' : 'Draft with AI'}
+            </button>
+          </div>
+        </div>
+        <div className="c-card">
+          <div className="c-card-h">Draft</div>
+          {state === 'idle' && !draft && <p className="c-note" style={{ marginTop: 0 }}>The drafted email appears here for review before anything sends.</p>}
+          {state === 'drafting' && <p className="c-note" style={{ marginTop: 0 }}><Loader2 size={13} className="c-spin" /> Writing…</p>}
+          {draft && state !== 'drafting' && (
+            <>
+              <p className="body editable" title="Click to edit" style={{ fontSize: 13.5, lineHeight: 1.65, cursor: 'text' }}
+                contentEditable suppressContentEditableWarning
+                onBlur={(e) => setDraft(e.currentTarget.textContent ?? draft)}
+              >{draft}</p>
+              <div className="c-draft-footrow">
+                {order && <span className="c-chip ink">{order.name} attached</span>}
+                <span className="c-chip mut">{lang}</span>
+                <span className="sp" />
+                <button className="c-act prim" disabled={state === 'sending'} onClick={doSend}>
+                  {state === 'sending' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {state === 'sent' ? 'Sent ✓' : 'Review and send'}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -933,34 +1028,59 @@ const LANES_INIT = [
   { name: 'Order changes', mode: 'live' as 'off' | 'shadow' | 'live' },
   { name: 'General questions', mode: 'shadow' as 'off' | 'shadow' | 'live' },
 ]
+const ROLE_PRESETS: Record<string, Record<string, boolean>> = {
+  Owner: { approve: true, lanes: true, billing: true, exports: true, del: true, filters: true, invite: true, analytics: true },
+  Admin: { approve: true, lanes: true, billing: false, exports: true, del: true, filters: true, invite: true, analytics: true },
+  Agent: { approve: true, lanes: false, billing: false, exports: false, del: false, filters: false, invite: false, analytics: false },
+}
+const PERM_LABELS: [string, string][] = [
+  ['approve', 'Approve & send replies'], ['lanes', 'Lane modes & kill switch'],
+  ['del', 'Delete tickets to Bin'], ['filters', 'Manage mail filters'],
+  ['exports', 'Export conversations'], ['analytics', 'View analytics'],
+  ['invite', 'Invite teammates'], ['billing', 'Billing & plan'],
+]
+const ALL_STORES = ['AURORA', 'Harbor Goods', 'Northbound']
 function TeamSettings() {
   const [users, setUsers] = useState([
-    { name: 'Nathan', role: 'Owner', stores: ['All stores'], perms: { approve: true, lanes: true, billing: true, exports: true } },
-    { name: 'Chandan', role: 'Agent', stores: ['AURORA'], perms: { approve: true, lanes: false, billing: false, exports: false } },
+    { name: 'Nathan', role: 'Owner', stores: [...ALL_STORES], perms: { ...ROLE_PRESETS.Owner } },
+    { name: 'Chandan', role: 'Agent', stores: ['AURORA'], perms: { ...ROLE_PRESETS.Agent } },
   ])
-  const PERMS: [keyof typeof users[0]['perms'], string][] = [
-    ['approve', 'Approve & send replies'], ['lanes', 'Change lane modes & kill switch'],
-    ['billing', 'Manage billing & plan'], ['exports', 'Export conversations & data'],
-  ]
+  const set = (ui: number, patch: Partial<typeof users[0]>) =>
+    setUsers(users.map((x, i) => (i === ui ? { ...x, ...patch } : x)))
   return (
     <div className="c-rows">
       {users.map((u, ui) => (
         <div className="c-teamrow" key={u.name}>
           <div className="hd">
             <b>{u.name}</b>
-            <select value={u.role} onChange={(e) => setUsers(users.map((x, i) => i === ui ? { ...x, role: e.target.value } : x))}>
-              <option>Owner</option><option>Admin</option><option>Agent</option>
-            </select>
-            <span className="stores">{u.stores.join(', ')}</span>
+            <div className="c-seg sm">
+              {(['Owner', 'Admin', 'Agent'] as const).map((r) => (
+                <button key={r} className={u.role === r ? 'on' : ''} onClick={() => set(ui, { role: r, perms: { ...ROLE_PRESETS[r] } })}>{r}</button>
+              ))}
+            </div>
             {ui === 0 && <span className="at" style={{ marginLeft: 'auto' }}>you</span>}
           </div>
+          <div className="storesel">
+            <span className="lbl">Stores</span>
+            {ALL_STORES.map((st) => {
+              const on = u.stores.includes(st)
+              return (
+                <button
+                  key={st} className={'stchip' + (on ? ' on' : '')}
+                  onClick={() => set(ui, { stores: on ? u.stores.filter((x) => x !== st) : [...u.stores, st] })}
+                  disabled={u.role === 'Owner'}
+                >{on && <Check size={11} strokeWidth={2.6} />}{st}</button>
+              )
+            })}
+            {u.role === 'Owner' && <span className="c-note" style={{ margin: 0 }}>owners see every store</span>}
+          </div>
           <div className="perms">
-            {PERMS.map(([k, label]) => (
+            {PERM_LABELS.map(([k, label]) => (
               <label key={k} className={u.role === 'Owner' ? 'lock' : ''}>
                 <input
-                  type="checkbox" checked={u.role === 'Owner' ? true : u.perms[k]}
+                  type="checkbox" checked={u.role === 'Owner' ? true : !!u.perms[k]}
                   disabled={u.role === 'Owner'}
-                  onChange={() => setUsers(users.map((x, i) => i === ui ? { ...x, perms: { ...x.perms, [k]: !x.perms[k] } } : x))}
+                  onChange={() => set(ui, { perms: { ...u.perms, [k]: !u.perms[k] } })}
                 /> {label}
               </label>
             ))}
@@ -968,7 +1088,7 @@ function TeamSettings() {
         </div>
       ))}
       <button className="c-act" style={{ marginTop: 14, alignSelf: 'flex-start' }}><Plus size={14} /> Invite teammate</button>
-      <p className="c-note">Owners always hold every permission. Agents see only their assigned stores.</p>
+      <p className="c-note">Picking a role applies its preset; fine-tune any permission per person. Owners always hold everything.</p>
     </div>
   )
 }

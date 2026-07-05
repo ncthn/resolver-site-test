@@ -75,6 +75,9 @@ const TICKETS: Ticket[] = [
     chargeback_status: 'warning', auto_resolved: false,
     supplier_status: null, supplier_request_type: null, is_stuck: false,
     customer_history: '1 order · first contact',
+    notes: [
+      { id: 'n1', author: 'Nathan', at: iso(8 * 60_000), body: 'Called the payment provider, dispute not yet filed. If we resolve today it never becomes a chargeback. Offering reship + partial.' },
+    ],
     messages: [
       { id: 'm1', from: 'a.weber@email.de', from_name: 'A. Weber', date: iso(4 * 3_600_000), body: 'Wo ist meine Bestellung #1991? Die Zustellung ist fehlgeschlagen.', is_customer: true, body_english: 'Where is my order #1991? The delivery failed.' },
       { id: 'm2', from: 'support@aurora.com', from_name: 'AURORA Support', date: iso(3 * 3_600_000), body: 'Hallo, die Zustellung wird morgen erneut versucht. Hier ist Ihr Tracking-Link.', is_customer: false, body_english: 'Hello, delivery will be attempted again tomorrow. Here is your tracking link.' },
@@ -193,6 +196,9 @@ const TICKETS: Ticket[] = [
     chargeback_status: 'none', auto_resolved: true, auto_sent_at: iso(5.5 * 3_600_000),
     supplier_status: null, supplier_request_type: null, is_stuck: false,
     customer_history: '2 orders',
+    notes: [
+      { id: 'n1', author: 'Resolver', ai: true, at: iso(5.4 * 3_600_000), body: 'AI summary: customer asked to redirect delivery to her office before fulfillment. Address updated in Shopify, confirmation auto-sent in French, customer thanked us. No follow-up needed.' },
+    ],
     messages: [
       { id: 'm1', from: 'chloe.martin@email.fr', from_name: 'Chloé Martin', date: iso(6 * 3_600_000), body: 'Bonjour, pouvez-vous livrer au bureau plutôt qu’à la maison ?', is_customer: true, body_english: 'Hello, can you deliver to my office instead of my home?' },
       { id: 'm2', from: 'support@aurora.com', from_name: 'AURORA Support', date: iso(5.5 * 3_600_000), body: 'Bonjour Chloé, c’est fait ! L’adresse a été mise à jour avant l’expédition de la commande #2103.', is_customer: false, body_english: 'Hello Chloé, done! The address was updated before order #2103 shipped.', auto_sent: true },
@@ -412,4 +418,23 @@ export async function removeFilter(kind: 'keywords' | 'senders' | 'allow', v: st
   if (i >= 0) MAIL_FILTERS[kind].splice(i, 1)
   log('Filter updated', `${kind}: removed "${v}"`, 'ok')
   notify()
+}
+
+/** POST /api/tickets/:id/notes (internal notes, never sent to the customer) */
+export async function addNote(id: string, body: string) {
+  await delay(100)
+  const t = TICKETS.find((x) => x.id === id)!
+  t.notes = t.notes ?? []
+  t.notes.push({ id: 'n' + Date.now(), author: 'Nathan', body, at: new Date().toISOString() })
+  log('Internal note added', t.subject, 'ok')
+  notify()
+}
+/** AI-first compose: drafts from an intent, an optional order, and a language. */
+export async function composeDraft(intent: string, lang: string, orderName: string | null) {
+  await delay(1100)
+  const langLine: Record<string, string> = {
+    English: 'Hi! ', French: 'Bonjour ! ', German: 'Hallo! ', Italian: 'Ciao! ', Spanish: '¡Hola! ',
+  }
+  const orderBit = orderName ? `Regarding your order ${orderName}: ` : ''
+  return (langLine[lang] ?? 'Hi! ') + orderBit + intent.trim().replace(/\.?$/, '.') + (lang === 'English' ? ' Please reply to this email if there is anything else we can help with.' : ' N’hésitez pas à répondre à cet e-mail si nous pouvons vous aider davantage.')
 }

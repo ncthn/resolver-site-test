@@ -88,6 +88,7 @@ export interface Ticket {
   customer_history?: string
   messages: ThreadMessage[]
   trace?: TraceStep[]
+  notes?: { id: string; author: string; body: string; at: string; ai?: boolean }[]
   created_at: string
 }
 
