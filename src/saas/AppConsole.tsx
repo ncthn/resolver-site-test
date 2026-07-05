@@ -163,7 +163,7 @@ function Overview({ shopId }: { shopId: string }) {
           <div className="c-bars">
             {d.volume.map(([lb, pct]) => (
               <div className="col" key={lb}>
-                <div className="wrap"><i style={{ height: pct + '%' }} /></div>
+                <div className="vwrap"><i style={{ height: pct + '%' }} /></div>
                 <span>{lb}</span>
               </div>
             ))}

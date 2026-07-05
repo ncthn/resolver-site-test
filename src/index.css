@@ -554,8 +554,8 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-kpi .s{font-size:11.5px;color:var(--tx-faint);margin-top:1px}
 .c-bars{display:flex;gap:10px;align-items:flex-end;height:150px}
 .c-bars .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%}
-.c-bars .wrap{height:118px;width:100%;display:flex;align-items:flex-end}
-.c-bars .wrap i{display:block;width:100%;border-radius:6px 6px 2px 2px;background:var(--ink);opacity:.85}
+.c-bars .vwrap{height:118px;width:100%;display:flex;align-items:flex-end}
+.c-bars .vwrap i{display:block;width:100%;border-radius:6px 6px 2px 2px;background:var(--ink);opacity:.85}
 .c-bars .col span{font-size:10.5px;color:var(--tx-faint)}
 .c-rows{display:flex;flex-direction:column}
 .c-lane-row{display:grid;grid-template-columns:70px 1fr 34px;gap:12px;align-items:center;padding:7px 0}
