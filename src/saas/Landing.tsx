@@ -1,4 +1,4 @@
-// Resolver — marketing site. Monochrome restraint: ink on white, soft gray
+// Resolver, marketing site. Monochrome restraint: ink on white, soft gray
 // bands, borderless rounded cards, pill buttons, one neutral typeface.
 // Animation language (per references): blurred fade-up scroll reveals,
 // looping in-card motion, a live classifier demo, an auto-advancing
@@ -24,7 +24,7 @@ const PRICING_FULL = '/pricing';
 const reduced = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* Scroll reveal — blurred fade-up, one treatment everywhere. */
+/* Scroll reveal, blurred fade-up, one treatment everywhere. */
 export function Reveal({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
   return (
     <motion.div
@@ -122,7 +122,7 @@ function ConsoleMock() {
           <div className="cm-draft">
             Hi Sarah,<br /><br />
             Thanks for reaching out! Your order has been shipped and is currently in
-            transit — it cleared customs this morning and should arrive within 2–3 days.
+            transit, it cleared customs this morning and should arrive within 2 to 3 days.
             You can track it live here: ups.com/track<br /><br />
             Best regards,<br />Diana<span className="caret" aria-hidden="true" />
             <div className="acts"><span className="a1">Approve &amp; send</span><span className="a2">Edit</span></div>
@@ -152,7 +152,7 @@ function ConsoleMock() {
             <div className="cm-kv" style={{ marginTop: 10 }}>
               <span className="k">Status</span><span className="v"><span className="pill-tr">In transit</span></span>
               <span className="k">Carrier</span><span className="v">UPS</span>
-              <span className="k">ETA</span><span className="v">2–3 days</span>
+              <span className="k">ETA</span><span className="v">2 to 3 days</span>
             </div>
           </div>
         </aside>
@@ -179,7 +179,7 @@ function Hero() {
           transition={{ duration: 0.6, delay: 0.12, ease: [0.2, 0.7, 0.2, 1] }}
         >
           Resolver matches every support email to the live Shopify order and drafts the
-          reply in the customer&rsquo;s language — ready to approve, or to send on its own
+          reply in the customer&rsquo;s language, ready to approve, or to send on its own
           once you trust it.
         </motion.p>
         <motion.div
@@ -259,14 +259,14 @@ function How() {
         <Reveal>
           <div className="hcard" style={{ height: '100%' }}>
             <h3>Detect &amp; categorize every request</h3>
-            <p>Resolver reads each inbound email and identifies what the customer actually needs — no rules to configure.</p>
+            <p>Resolver reads each inbound email and identifies what the customer actually needs, no rules to configure.</p>
             <div className="visual"><LiveClassifier /></div>
           </div>
         </Reveal>
         <Reveal delay={0.1}>
           <div className="hcard" style={{ height: '100%' }}>
             <h3>Pull the order &amp; tracking context automatically</h3>
-            <p>Order, fulfillment, customer history, live carrier events — everything needed to resolve the issue, attached to the ticket.</p>
+            <p>Order, fulfillment, customer history, live carrier events, everything needed to resolve the issue, attached to the ticket.</p>
             <div className="visual">
               <div className="hviz seq">
                 {[
@@ -274,7 +274,7 @@ function How() {
                   ['Status', 'Fulfilled'],
                   ['Carrier', 'UPS · In transit'],
                   ['Customs', 'Cleared'],
-                  ['ETA', '2–3 days'],
+                  ['ETA', '2 to 3 days'],
                 ].map(([k, v], i) => (
                   <div className="kv2" key={k} style={{ ['--d' as string]: `${0.4 + i * 0.55}s` }}>
                     {k} <b>{v}</b>
@@ -287,13 +287,13 @@ function How() {
         <Reveal delay={0.2}>
           <div className="hcard" style={{ height: '100%' }}>
             <h3>Draft a personal reply in their language</h3>
-            <p>Written in your store&rsquo;s tone, grounded in the real data, in the customer&rsquo;s own language. You approve — or automate it.</p>
+            <p>Written in your store&rsquo;s tone, grounded in the real data, in the customer&rsquo;s own language. You approve, or automate it.</p>
             <div className="visual">
               <div className="hviz">
                 <div className="l" style={{ paddingLeft: 4, color: 'var(--tx-faint)', fontSize: 11 }}>DE · inbound</div>
                 <div className="bubble">Wo ist meine Bestellung? Es sind schon 9 Tage…</div>
                 <div className="typing" aria-hidden="true"><i /><i /><i /></div>
-                <div className="bubble reply-anim">Hallo Lena — deine Bestellung #2087 ist unterwegs und kommt in 2–3 Tagen an. Hier ist dein Live-Tracking…</div>
+                <div className="bubble reply-anim">Hallo Lena, deine Bestellung #2087 ist unterwegs und kommt in 2 to 3 Tagen an. Hier ist dein Live-Tracking…</div>
               </div>
             </div>
           </div>
@@ -311,7 +311,7 @@ function Integrations() {
         <div className="ints-card">
           <div className="tx">
             <h3>Connected to the tools already running your store</h3>
-            <p>Customer, order, and delivery data pulled automatically — so every reply is grounded in what actually happened.</p>
+            <p>Customer, order, and delivery data pulled automatically, so every reply is grounded in what actually happened.</p>
           </div>
           <div className="apps">
             <div className="appic"><span className="tile"><ShoppingBag size={24} strokeWidth={1.8} /></span>Shopify</div>
@@ -350,7 +350,7 @@ function Detect() {
             </div>
             <span className="side">before they escalate.</span>
           </div>
-          <p className="detect-sub">Chargeback and legal language is never auto-replied — it goes straight to a human.</p>
+          <p className="detect-sub">Chargeback and legal language is never auto-replied, it goes straight to a human.</p>
         </Reveal>
       </div>
     </section>
@@ -380,14 +380,14 @@ const ACC_ITEMS = [
           ['Where is my order? · #4471', <span className="st draft" key="1">Draft ready</span>],
           ['Refund request · #4468', <span className="st draft" key="2">Draft ready</span>],
           ['Address change · #4465', <span className="st draft" key="3">Draft ready</span>],
-          [<span key="l">Sent automatically</span>, <b key="4">0 — shadow mode</b>],
+          [<span key="l">Sent automatically</span>, <b key="4">0, shadow mode</b>],
         ]} />
       </div>
     ),
   },
   {
     t: 'Auto-send, one lane at a time',
-    p: 'Turn on sending per category, per store — with a delay and a cancel window on every automated reply.',
+    p: 'Turn on sending per category, per store, with a delay and a cancel window on every automated reply.',
     viz: (
       <div className="acc-shot" key="b">
         <Rows rows={[
@@ -401,7 +401,7 @@ const ACC_ITEMS = [
   },
   {
     t: 'Risk always escalates',
-    p: 'Chargeback and legal language is detected and hard-routed to a human — enforced in the pipeline, not left to a prompt.',
+    p: 'Chargeback and legal language is detected and hard-routed to a human, enforced in the pipeline, not left to a prompt.',
     viz: (
       <div className="acc-shot" key="c">
         <Rows rows={[
@@ -415,7 +415,7 @@ const ACC_ITEMS = [
   },
   {
     t: 'Every action logged',
-    p: 'What sent, when, on which lane, and why — audit the machine like you’d audit an employee.',
+    p: 'What sent, when, on which lane, and why, audit the machine like you’d audit an employee.',
     viz: (
       <div className="acc-shot" key="d">
         <Rows rows={[
@@ -555,9 +555,9 @@ function BeforeAfter() {
 /* ============ stats stack ============ */
 function Stats() {
   const stats = [
-    { v: '40+', k: 'languages detected — replies drafted directly in the customer’s own language' },
-    { v: '3', k: 'send lanes per store: off, shadow, live — switched per request category' },
-    { v: '30s', k: 'cancel window on every automated send — one click pulls it back' },
+    { v: '40+', k: 'languages detected, replies drafted directly in the customer’s own language' },
+    { v: '3', k: 'send lanes per store: off, shadow, live, switched per request category' },
+    { v: '30s', k: 'cancel window on every automated send, one click pulls it back' },
   ];
   return (
     <section className="stats wrap">
@@ -571,7 +571,7 @@ function Stats() {
             <h3>Real controls.<br />Not a black box.</h3>
             <p>
               Every number on the right is a product guarantee, not a benchmark. The lanes,
-              the windows, the languages — they&rsquo;re how you keep the machine on a leash
+              the windows, the languages, they&rsquo;re how you keep the machine on a leash
               while it does the work.
             </p>
             <a className="btn pri" href={DEMO}>See it on your tickets</a>
@@ -595,20 +595,20 @@ function Stats() {
 /* ============ platform: gorgias-style split cards ============ */
 function Platform() {
   const engine = [
-    { ic: <FileSearch size={17} strokeWidth={2} />, t: 'Order matching', p: 'Order number first, customer email second — with the evidence shown.' },
+    { ic: <FileSearch size={17} strokeWidth={2} />, t: 'Order matching', p: 'Order number first, customer email second, with the evidence shown.' },
     { ic: <Languages size={17} strokeWidth={2} />, t: 'Language detection', p: 'Drafted in the customer’s language, mirrored in English for review.' },
     { ic: <Timer size={17} strokeWidth={2} />, t: 'Tracking enrichment', p: 'Live carrier events folded into the reply, customs status included.' },
-    { ic: <ListTree size={17} strokeWidth={2} />, t: 'Policy grounding', p: 'Your SOP constrains every draft — refund windows, reshipment rules.' },
+    { ic: <ListTree size={17} strokeWidth={2} />, t: 'Policy grounding', p: 'Your SOP constrains every draft, refund windows, reshipment rules.' },
     { ic: <Megaphone size={17} strokeWidth={2} />, t: 'Brand voice', p: 'Tone configured per store, from plain to formal.' },
     { ic: <BarChart3 size={17} strokeWidth={2} />, t: 'Support analytics', p: 'Recurring issues, delivery problems, and refund patterns, surfaced.' },
   ];
   const control = [
     { ic: <Eye size={17} strokeWidth={2} />, t: 'Approval queue', p: 'Every draft reviewable before anything leaves the building.' },
-    { ic: <GitBranch size={17} strokeWidth={2} />, t: 'Send lanes', p: 'Off, shadow, live — switched per category, per store.' },
+    { ic: <GitBranch size={17} strokeWidth={2} />, t: 'Send lanes', p: 'Off, shadow, live, switched per category, per store.' },
     { ic: <Undo2 size={17} strokeWidth={2} />, t: 'Cancel window', p: 'Auto-sends wait out a delay you set; one click pulls them back.' },
     { ic: <BellRing size={17} strokeWidth={2} />, t: 'Escalation rules', p: 'Chargeback and legal language always routes to a human.' },
     { ic: <SlidersHorizontal size={17} strokeWidth={2} />, t: 'Kill switch', p: 'One setting stops all automated sending, immediately.' },
-    { ic: <Inbox size={17} strokeWidth={2} />, t: 'Automation log', p: 'What sent, when, on which lane, and why — fully auditable.' },
+    { ic: <Inbox size={17} strokeWidth={2} />, t: 'Automation log', p: 'What sent, when, on which lane, and why, fully auditable.' },
   ];
   return (
     <section className="gsplit wrap" id="platform">
@@ -620,7 +620,7 @@ function Platform() {
         <div className="gs-card">
           <div className="gs-l">
             <h3>One drafting engine. Grounded in the order.</h3>
-            <p>Everything the AI writes is anchored to data it can cite — never a template, never a guess.</p>
+            <p>Everything the AI writes is anchored to data it can cite, never a template, never a guess.</p>
             <a href="#how">See how it works <ArrowRight size={15} strokeWidth={2.2} /></a>
           </div>
           <div className="gs-grid">
@@ -637,7 +637,7 @@ function Platform() {
         <div className="gs-card">
           <div className="gs-l">
             <h3>One control plane. Nothing sends without your rules.</h3>
-            <p>Autonomy is granted lane by lane — and revocable in one click.</p>
+            <p>Autonomy is granted lane by lane, and revocable in one click.</p>
             <a href={START}>Start in shadow mode <ArrowRight size={15} strokeWidth={2.2} /></a>
           </div>
           <div className="gs-grid">
@@ -658,7 +658,7 @@ function Platform() {
 function Setup() {
   const steps = [
     { when: 'Today', t: 'Install the Shopify app', p: 'One-click install from the App Store. Read-only scopes.' },
-    { when: '+5 min', t: 'Connect Gmail', p: 'Your existing support mailbox — replies send as you.' },
+    { when: '+5 min', t: 'Connect Gmail', p: 'Your existing support mailbox, replies send as you.' },
     { when: '+10 min', t: 'Upload your SOP', p: 'Policies, refund windows, tone. Every draft follows it.' },
     { when: 'Week 1', t: 'Flip your first lane live', p: 'After watching drafts in shadow mode, turn on WISMO.' },
   ];
@@ -794,12 +794,12 @@ function Security() {
         <Reveal>
           <div className="g-card" style={{ height: '100%' }}>
             <h3>Guardrails, enforced in the pipeline</h3>
-            <p>Not policies in a prompt — hard routing in the code path every ticket takes.</p>
+            <p>Not policies in a prompt, hard routing in the code path every ticket takes.</p>
             <div className="art"><Shield /></div>
             <div className="g-list">
-              <div className="gl"><Lock size={15} strokeWidth={2.2} />Read-only Shopify scopes — Resolver can&rsquo;t modify your store</div>
+              <div className="gl"><Lock size={15} strokeWidth={2.2} />Read-only Shopify scopes, Resolver can&rsquo;t modify your store</div>
               <div className="gl"><Scale size={15} strokeWidth={2.2} />Chargeback &amp; legal language hard-routed to a human</div>
-              <div className="gl"><Check size={15} strokeWidth={2.2} />Signed DPA — your data never trains AI models</div>
+              <div className="gl"><Check size={15} strokeWidth={2.2} />Signed DPA, your data never trains AI models</div>
             </div>
           </div>
         </Reveal>
@@ -820,7 +820,7 @@ function Security() {
             <h3>Watch the work happen without doing it.</h3>
             <p>
               The analytics view shows what Resolver handled, what it held for you, and
-              why — per lane, per store, per week.
+              why, per lane, per store, per week.
             </p>
           </div>
           <div className="ana-shot" role="img" aria-label="Analytics demo: tickets resolved without a human, trending up">
@@ -884,7 +884,7 @@ function Pricing() {
       <Reveal className="center">
         <span className="eyebrow">Pricing</span>
         <h2 className="sec-h2" style={{ marginTop: 18 }}>Pay for tickets, not features.</h2>
-        <p className="sec-sub">Every AI feature is on every plan — you only choose ticket volume.</p>
+        <p className="sec-sub">Every AI feature is on every plan, you only choose ticket volume.</p>
       </Reveal>
       <div className="price-grid">
         {plans.map((p, i) => (
@@ -923,11 +923,11 @@ const FAQS = [
   },
   {
     q: 'What happens when a customer threatens a chargeback?',
-    a: 'The ticket is flagged, pulled out of every automated lane, and pushed to the top of the human queue. This routing is enforced in the pipeline itself — no setting can auto-reply to dispute or legal language.',
+    a: 'The ticket is flagged, pulled out of every automated lane, and pushed to the top of the human queue. This routing is enforced in the pipeline itself, no setting can auto-reply to dispute or legal language.',
   },
   {
     q: 'How does it know my store’s policies?',
-    a: 'During setup you provide your support SOP and policies. Every draft is constrained by them — refund windows, reshipment rules, tone. Change the policy and the next draft follows it.',
+    a: 'During setup you provide your support SOP and policies. Every draft is constrained by them, refund windows, reshipment rules, tone. Change the policy and the next draft follows it.',
   },
   {
     q: 'What about emails it can’t match to an order?',
@@ -939,7 +939,7 @@ const FAQS = [
   },
   {
     q: 'How long does setup take?',
-    a: 'Installing the Shopify app, connecting Gmail, and uploading your SOP is about ten minutes. Drafting starts right after — in shadow mode, where it stays until you decide otherwise.',
+    a: 'Installing the Shopify app, connecting Gmail, and uploading your SOP is about ten minutes. Drafting starts right after, in shadow mode, where it stays until you decide otherwise.',
   },
 ];
 

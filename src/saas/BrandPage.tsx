@@ -1,4 +1,4 @@
-// Resolver brand package — /brand (also #brand on the static test env).
+// Resolver brand package, /brand (also #brand on the static test env).
 // The single source of truth for the identity: logo, color, type, components,
 // motion, voice, plus three accent-direction variants side by side for review,
 // and the engineering notes another session needs to continue the work.
@@ -9,8 +9,8 @@ const LOGO_WHITE = '/logo/recolor/oct-whiteblue-t.png';
 const COLORS = [
   { name: 'Ink', hex: '#16181C', use: 'Text, primary buttons, dark cards. The brand carries in black.' },
   { name: 'Paper', hex: '#FFFFFF', use: 'Page ground. Sections alternate paper and band.' },
-  { name: 'Band', hex: '#F5F5F4', use: 'Soft section bands and card fills. Never pure gray — warm bias.' },
-  { name: 'Indigo (heritage)', hex: '#2A2FB8', use: 'The original mark’s blue. NOT used in UI — kept only as the app-icon variant.' },
+  { name: 'Band', hex: '#F5F5F4', use: 'Soft section bands and card fills. Never pure gray, warm bias.' },
+  { name: 'Indigo (heritage)', hex: '#2A2FB8', use: 'The original mark’s blue. NOT used in UI, kept only as the app-icon variant.' },
   { name: 'Success', hex: '#3D7A50', use: 'Live / fulfilled / sent states. On #E8F0EB chips.' },
   { name: 'Risk', hex: '#B4472F', use: 'Chargeback, legal, escalation. On #FBEFEC chips.' },
   { name: 'Text soft', hex: '#6B6E76', use: 'Body copy and secondary text.' },
@@ -61,7 +61,7 @@ export function BrandPage() {
   return (
     <div className="bp wrap">
       <div className="bp-head">
-        <h1>Resolver — brand package</h1>
+        <h1>Resolver, brand package</h1>
         <span className="v">v1 · July 2026 · resolver.chat</span>
       </div>
 
@@ -70,7 +70,7 @@ export function BrandPage() {
         <span className="n">01 · Logo</span>
         <h2>The octagon carries the brand.</h2>
         <p className="d">
-          A checkmark inside an octagon — a resolution, stamped. The primary mark is ink
+          A checkmark inside an octagon, a resolution, stamped. The primary mark is ink
           black; the indigo original survives as the color source for the palette. The
           lockup is the mark at cap-height beside &ldquo;resolver.chat&rdquo; set in Inter
           Tight 600, gap 7px. Never letterspace the wordmark, never recolor the mark
@@ -84,15 +84,15 @@ export function BrandPage() {
                 <span style={{ fontWeight: 600, fontSize: 21, letterSpacing: '-.022em' }}>resolver.chat</span>
               </span>
             </div>
-            <div className="cap">Primary — ink on paper. Nav, footer, documents.</div>
+            <div className="cap">Primary, ink on paper. Nav, footer, documents.</div>
           </div>
           <div className="bp-card">
             <div className="bp-logo-row"><img src={LOGO_BLUE} alt="" style={{ height: 64 }} /></div>
-            <div className="cap">Indigo mark — app icon, favicon, small square contexts.</div>
+            <div className="cap">Indigo mark, app icon, favicon, small square contexts.</div>
           </div>
           <div className="bp-card oninkbg">
             <div className="bp-logo-row"><img src={LOGO_WHITE} alt="" style={{ height: 64 }} /></div>
-            <div className="cap" style={{ color: 'rgba(255,255,255,.55)' }}>Reversed — dark surfaces only.</div>
+            <div className="cap" style={{ color: 'rgba(255,255,255,.55)' }}>Reversed, dark surfaces only.</div>
           </div>
         </div>
       </section>
@@ -102,7 +102,7 @@ export function BrandPage() {
         <span className="n">02 · Color</span>
         <h2>Monochrome. Full stop.</h2>
         <p className="d">
-          Ink on paper with warm-gray bands — no accent color in the UI at all. The decision
+          Ink on paper with warm-gray bands, no accent color in the UI at all. The decision
           is final: V1 monochrome, indigo dropped. Semantic green/red exist only inside
           product UI status chips.
         </p>
@@ -124,8 +124,8 @@ export function BrandPage() {
         <h2>One family: Inter Tight.</h2>
         <p className="d">
           Weights 400/500/600 only. Headlines 600 with −0.03em tracking and text-wrap
-          balance; body 400 at 15–16.5px, line-height 1.55–1.65; UI labels 500. No second
-          typeface, no mono, no all-caps except tiny 11–13px labels with +0.06em.
+          balance; body 400 at 15 to 16.5px, line-height 1.55 to 1.65; UI labels 500. No second
+          typeface, no mono, no all-caps except tiny 11 to 13px labels with +0.06em.
         </p>
         <div style={{ marginTop: 8 }}>
           <div className="type-row"><span className="tag">Display · 600 · −.035em</span><span style={{ fontSize: 44, fontWeight: 600, letterSpacing: '-.035em', lineHeight: 1.05 }}>Answered from the real order.</span></div>
@@ -146,7 +146,7 @@ export function BrandPage() {
               <span className="btn pri sm">Start free</span>
               <span className="btn soft sm" style={{ background: '#fff' }}>Book a demo</span>
             </div>
-            <div className="cap">Buttons are full pills, 500 weight. Primary is ink (V1) — one primary per view.</div>
+            <div className="cap">Buttons are full pills, 500 weight. Primary is ink (V1), one primary per view.</div>
           </div>
           <div className="bp-card">
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -159,7 +159,7 @@ export function BrandPage() {
           </div>
           <div className="bp-card" style={{ background: '#fff', border: '1px solid var(--line)', boxShadow: 'var(--cardsh)' }}>
             <b style={{ fontSize: 14 }}>Soft card</b>
-            <div className="cap">Cards: 16–20px radius, band fill OR white + hairline + soft shadow. Never hard borders, never both fills at once.</div>
+            <div className="cap">Cards: 16 to 20px radius, band fill OR white + hairline + soft shadow. Never hard borders, never both fills at once.</div>
           </div>
         </div>
       </section>
@@ -169,7 +169,7 @@ export function BrandPage() {
         <span className="n">05 · Motion</span>
         <h2>Calm loops, one set piece per page.</h2>
         <div className="bp-list">
-          <div className="li"><b>Arrival</b><span>blurred fade-up: opacity 0→1, y 26→0, blur 7→0, 0.65s, cubic-bezier(.2,.7,.2,1), once, −80px margin. Grids stagger children by 80–120ms.</span></div>
+          <div className="li"><b>Arrival</b><span>blurred fade-up: opacity 0→1, y 26→0, blur 7→0, 0.65s, cubic-bezier(.2,.7,.2,1), once, −80px margin. Grids stagger children by 80 to 120ms.</span></div>
           <div className="li"><b>Loops</b><span>in-card demos loop on CSS keyframes (cycling highlights, sequenced fills, typing dots). Subtle, ≥2.4s periods, never two loops fighting in one viewport.</span></div>
           <div className="li"><b>Set pieces</b><span>one theatrical moment per page (pill carousel, dot globe, auto-advancing accordion at 5s with filling progress bar). JS-driven pieces pause on hover.</span></div>
           <div className="li"><b>Respect</b><span>every animation is disabled under prefers-reduced-motion; content must be complete and readable with all animation off.</span></div>
@@ -194,7 +194,7 @@ export function BrandPage() {
 
       {/* 07 variants */}
       <section className="bp-sec">
-        <span className="n">07 · Accent direction — DECIDED: V1</span>
+        <span className="n">07 · Accent direction, DECIDED: V1</span>
         <h2>Three treatments, same system.</h2>
         <p className="d">
           Decision made July 2026: V1 monochrome ships, and even the &ldquo;slight indigo&rdquo;
@@ -210,12 +210,12 @@ export function BrandPage() {
       {/* 08 engineering */}
       <section className="bp-sec">
         <span className="n">08 · Engineering notes</span>
-        <h2>How this is built — for the next session.</h2>
+        <h2>How this is built, for the next session.</h2>
         <div className="bp-list">
           <div className="li"><b>Stack</b><span>Vite + React 19 + TypeScript. Marketing site is src/saas/Landing.tsx (single file, one function per section); this page is src/saas/BrandPage.tsx; the app demo is src/saas/AppConsole.tsx at /app.</span></div>
-          <div className="li"><b>Styling</b><span>plain CSS in src/index.css — design tokens as CSS custom properties in :root, purpose-named classes per section. Tailwind is imported for preflight only; don&rsquo;t add utility soup.</span></div>
+          <div className="li"><b>Styling</b><span>plain CSS in src/index.css, design tokens as CSS custom properties in :root, purpose-named classes per section. Tailwind is imported for preflight only; don&rsquo;t add utility soup.</span></div>
           <div className="li"><b>Animation</b><span>motion/react for scroll reveals (the Reveal component) and SVG path draws; CSS keyframes for loops; rAF only for the dot globe. Everything guarded by prefers-reduced-motion.</span></div>
-          <div className="li"><b>Assets</b><span>logo PNGs in public/logo/recolor (oct-black-t is primary). Fonts: Google Fonts, Inter Tight 400/500/600 — the only family.</span></div>
+          <div className="li"><b>Assets</b><span>logo PNGs in public/logo/recolor (oct-black-t is primary). Fonts: Google Fonts, Inter Tight 400/500/600, the only family.</span></div>
           <div className="li"><b>Honesty rule</b><span>no fabricated metrics, customers, or testimonials anywhere. Product facts and clearly-labeled demo data only. This is a hard constraint, not a preference.</span></div>
           <div className="li"><b>Deploy</b><span>repo ncthn/resolver-site-test → Render (Docker). The GitHub webhook does NOT fire: after pushing, trigger via Render API POST /v1/services/&#123;id&#125;/deploys. Full details in BRAND.md at the repo root.</span></div>
         </div>

@@ -1,4 +1,4 @@
-// Resolver — onboarding welcome flow (/get-started), the new-brand version of
+// Resolver, onboarding welcome flow (/get-started), the new-brand version of
 // the production wizard (rsvlr src/saas/Onboarding.tsx): Install the Shopify
 // app → create your login → SOP upload + policy extraction → connect Gmail →
 // shadow mode. Demo-functional: each step advances with realistic states; the
@@ -54,17 +54,16 @@ export function GetStarted() {
             <span className="ob-ic"><ShoppingBag size={22} strokeWidth={1.9} /></span>
             <h1>Install the Shopify app</h1>
             <p>
-              Setup starts in your Shopify admin — one click from the App Store, read-only
-              scopes. No account needed first; your login comes right after the install.
+              Setup starts in your Shopify admin: one click from the App Store, read-only scopes. No account needed first; your login comes right after the install.
             </p>
             <div className="ob-perm">
-              <div><Lock size={13} /> Orders, customers, fulfillments — <b>read-only</b></div>
+              <div><Lock size={13} /> Orders, customers, fulfillments, <b>read-only</b></div>
               <div><Lock size={13} /> Resolver cannot modify your store</div>
             </div>
             <button className="btn pri" disabled={busy} onClick={() => fake(900)}>
               {busy ? <Loader2 size={15} className="c-spin" /> : <ShoppingBag size={15} />} Install from the App Store
             </button>
-            <span className="ob-fine">Demo flow — no real install happens on this preview.</span>
+            <span className="ob-fine">Demo flow, no real install happens on this preview.</span>
           </section>
         )}
 
@@ -72,7 +71,7 @@ export function GetStarted() {
           <section className="ob-card">
             <span className="ob-ic"><Check size={22} strokeWidth={2} /></span>
             <h1>Store connected. Create your login.</h1>
-            <p>Your Resolver account manages every store you connect — this is the email you&rsquo;ll sign in with.</p>
+            <p>Your Resolver account manages every store you connect. This is the email you&rsquo;ll sign in with.</p>
             <div className="ob-form">
               <label>Email<input type="email" placeholder="you@store.com" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
               <label>Password<input type="password" placeholder="At least 8 characters" value={pw} onChange={(e) => setPw(e.target.value)} /></label>
@@ -88,7 +87,7 @@ export function GetStarted() {
             <span className="ob-ic"><FileText size={22} strokeWidth={1.9} /></span>
             <h1>Teach it your policies.</h1>
             <p>
-              Upload your support SOP — a PDF, a doc, or notes. Resolver distills it into
+              Upload your support SOP as a PDF, a doc, or plain notes. Resolver distills it into
               structured policies that constrain every draft. You can edit any of them later.
             </p>
             {!sopDone ? (
@@ -97,7 +96,7 @@ export function GetStarted() {
               </button>
             ) : (
               <div className="ob-extract">
-                <div className="ok"><Check size={13} strokeWidth={2.6} /> support-sop.pdf read — here&rsquo;s what we extracted:</div>
+                <div className="ok"><Check size={13} strokeWidth={2.6} /> support-sop.pdf read. Here&rsquo;s what we extracted:</div>
                 {[
                   ['Refund window', '30 days from delivery'],
                   ['Reshipment', 'Free reship on damage, photo required'],
@@ -122,12 +121,12 @@ export function GetStarted() {
             <h1>Connect your support inbox.</h1>
             <p>
               Replies send from your own Gmail address. Turn Resolver off at any time and
-              your inbox is exactly where you left it — nothing held hostage.
+              your inbox is exactly where you left it. Nothing is held hostage.
             </p>
             <button className="btn pri" disabled={busy} onClick={() => fake(1100)}>
               {busy ? <Loader2 size={15} className="c-spin" /> : <Mail size={15} />} Connect Gmail
             </button>
-            <span className="ob-fine">Demo flow — no real OAuth happens on this preview.</span>
+            <span className="ob-fine">Demo flow, no real OAuth happens on this preview.</span>
           </section>
         )}
 
@@ -136,13 +135,12 @@ export function GetStarted() {
             <span className="ob-ic" style={{ background: '#E8F0EB', color: '#3D7A50' }}><Eye size={22} strokeWidth={1.9} /></span>
             <h1>You&rsquo;re in shadow mode.</h1>
             <p>
-              Resolver is now reading new tickets and drafting silently. Nothing sends —
-              compare its drafts to what you would have written, then turn on your first
+              Resolver is now reading new tickets and drafting silently. Nothing sends. Compare its drafts to what you would have written, then turn on your first
               lane when they&rsquo;ve earned it.
             </p>
             <div className="ob-extract" style={{ marginTop: 4 }}>
               {[
-                ['Every lane', 'Shadow — drafts only'],
+                ['Every lane', 'Shadow, drafts only'],
                 ['Chargebacks & legal', 'Human only, always'],
                 ['Your next step', 'Review drafts for a few days, then flip WISMO live'],
               ].map(([k, v]) => (

@@ -1,15 +1,15 @@
-// Resolver app — implementable redesign at /app.
+// Resolver app, implementable redesign at /app.
 // Consumes ONLY the production-shaped data layer in ./console (types.ts =
 // faithful subset of rsvlr src/types.ts; mockApi.ts = client whose methods
-// map 1:1 to real endpoints — see WIRING.md). Swapping mockApi's internals
+// map 1:1 to real endpoints, see WIRING.md). Swapping mockApi's internals
 // for fetch calls wires this UI to the live app unchanged.
-// Monochrome brand. No avatars — sender identity is text, not decoration.
+// Monochrome brand. No avatars, sender identity is text, not decoration.
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import {
-  Inbox, CircleCheck, ListChecks, Settings, Search, Users,
+  Inbox, CircleCheck, ListChecks, Settings, Search,
   ChevronsUpDown, Package, Truck, ShieldCheck, Send, Pencil, Trash2,
   RefreshCw, Gavel, Clock, Check, Zap, ArrowUpRight, User, LayoutDashboard,
-  Filter, FileText, Landmark, X, Plus, PauseCircle, Languages, ChevronDown,
+  Filter, FileText, X, Plus, PauseCircle, Languages, ChevronDown,
   Unlink, Loader2, Factory, RotateCcw, Tag,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -40,12 +40,11 @@ const NAV: { group: string; items: { v: View; Ic: LucideIcon; label: string }[] 
     group: 'Operations',
     items: [
       { v: 'tasks', Ic: ListChecks, label: 'Tasks' },
-      { v: 'customs', Ic: Landmark, label: 'Customs' },
       { v: 'chargebacks', Ic: Gavel, label: 'Chargebacks' },
     ],
   },
   { group: 'Automation', items: [{ v: 'ailog', Ic: Zap, label: 'Automation log' }] },
-  { group: '', items: [{ v: 'users', Ic: Users, label: 'Users' }, { v: 'settings', Ic: Settings, label: 'Settings' }] },
+  { group: '', items: [{ v: 'settings', Ic: Settings, label: 'Settings' }] },
 ]
 
 const STATUS_LABEL: Record<TicketStatus, string> = {
@@ -94,7 +93,7 @@ function Overview({ shopId }: { shopId: string }) {
     { label: 'Escalated', v: String(counts.escalated), sub: 'dispute language' },
     { label: 'Avg first reply', v: '38m', sub: 'last 7 days · demo' },
   ]
-  const BACKLOG = [['<4h', 4], ['4–24h', 1], ['1–3d', 1], ['3d+', 0]] as const
+  const BACKLOG = [['<4h', 4], ['4 to 24h', 1], ['1 to 3d', 1], ['3d+', 0]] as const
   const VOLUME = [['Mon', 62], ['Tue', 78], ['Wed', 54], ['Thu', 88], ['Fri', 100], ['Sat', 46], ['Sun', 58]] as const
   const HEALTH = [
     ['Gmail connection', 'Connected · support@aurora.com'],
@@ -154,7 +153,7 @@ function Overview({ shopId }: { shopId: string }) {
           {api.getLog().slice(0, 5).map((e, i) => (
             <div className="c-ev" key={i}>
               <span className={'ic ' + e.kind}>{e.kind === 'hold' ? <PauseCircle size={13} /> : e.kind === 'send' ? <Send size={12} /> : <Check size={13} />}</span>
-              <span className="t"><b>{e.ev}</b> — {e.detail}</span>
+              <span className="t"><b>{e.ev}</b>, {e.detail}</span>
               <span className="at">{timeAgo(e.at)}</span>
             </div>
           ))}
@@ -315,14 +314,14 @@ function TicketsView({ shopId }: { shopId: string }) {
         <header className="c-c-head">
           <div className="who">
             <div>
-              <div className="nm">{t.customer_name ?? t.customer_email} <span className="lang">{t.customer_language.toUpperCase()}</span>{t.chargeback_status === 'warning' && <span className="c-chip red" style={{ marginLeft: 8 }}>Chargeback risk</span>}</div>
+              <div className="nm">{t.customer_name ?? t.customer_email}{t.chargeback_status === 'warning' && <span className="c-chip red" style={{ marginLeft: 8 }}>Chargeback risk</span>}</div>
               <div className="meta">{t.customer_email} · {t.shop_id} · {t.message_count} message{t.message_count > 1 ? 's' : ''}</div>
             </div>
           </div>
           <div className="acts">
             {isForeign && (
-              <button className={'c-mirror' + (mirror ? ' on' : '')} onClick={() => setMirror(!mirror)}>
-                <Languages size={12} /> {mirror ? 'Showing EN' : `Original · ${t.customer_language.toUpperCase()}`}
+              <button className={'c-mirror' + (mirror ? ' on' : '')} onClick={() => setMirror(!mirror)} title={mirror ? 'Showing English translation' : 'Showing original language'}>
+                <Languages size={12} /> {mirror ? 'EN' : t.customer_language.toUpperCase()}
               </button>
             )}
             <CategoryDropdown t={t} />
@@ -342,10 +341,10 @@ function TicketsView({ shopId }: { shopId: string }) {
         </header>
 
         <div className="c-thread">
-          {t.status === 'ESCALATED' && <div className="c-risk"><ShieldCheck size={14} /> Dispute language detected — pulled from every automated lane, routed to a human.</div>}
-          {t.ai_disabled && <div className="c-risk mut"><PauseCircle size={14} /> AI is disabled for this ticket — no drafting, no auto-send, until re-enabled.</div>}
+          {t.status === 'ESCALATED' && <div className="c-risk"><ShieldCheck size={14} /> Dispute language detected, pulled from every automated lane, routed to a human.</div>}
+          {t.ai_disabled && <div className="c-risk mut"><PauseCircle size={14} /> AI is disabled for this ticket, no drafting, no auto-send, until re-enabled.</div>}
           {t.supplier_status === 'REQUESTED' && (
-            <div className="c-risk mut"><Factory size={14} /> Waiting on supplier — {t.supplier_request_type} · sent by email. Auto-reminder if no reply in 48h.</div>
+            <div className="c-risk mut"><Factory size={14} /> Waiting on supplier, {t.supplier_request_type} · sent by email. Auto-reminder if no reply in 48h.</div>
           )}
           {t.messages.map((m) => (
             <div key={m.id} className={'c-msg' + (m.is_customer ? '' : ' me')}>
@@ -378,7 +377,7 @@ function TicketsView({ shopId }: { shopId: string }) {
               <div className="acts">
                 <AutoSendBar t={t} />
                 {onCooldown ? (
-                  <span className="c-held"><Clock size={13} /> Sent — cooldown {cooldownLeft}s (anti double-send)</span>
+                  <span className="c-held"><Clock size={13} /> Sent, cooldown {cooldownLeft}s (anti double-send)</span>
                 ) : (
                   <>
                     <button className="c-act prim" disabled={busy !== ''} onClick={doSend}>
@@ -396,7 +395,7 @@ function TicketsView({ shopId }: { shopId: string }) {
             </div>
           ) : (
             <div className="c-draft">
-              <div className="h"><span className="tag">{t.status === 'RESOLVED' ? 'Resolved — no reply needed' : 'No draft yet'}</span></div>
+              <div className="h"><span className="tag">{t.status === 'RESOLVED' ? 'Resolved, no reply needed' : 'No draft yet'}</span></div>
               {t.status !== 'RESOLVED' && (
                 <div className="acts">
                   <button className="c-act" disabled={busy !== ''} onClick={doRegen}>
@@ -490,7 +489,7 @@ function DerivedList({ title, sub, filterFn, empty }: {
           {rows.length === 0 && <p className="c-note" style={{ marginTop: 0 }}>{empty}</p>}
           {rows.map((t) => (
             <div className="c-ev" key={t.id}>
-              <span className="t"><b>{t.subject}</b> — {t.customer_name ?? t.customer_email} · {CATEGORY_LABEL[t.category]}</span>
+              <span className="t"><b>{t.subject}</b>, {t.customer_name ?? t.customer_email} · {CATEGORY_LABEL[t.category]}</span>
               <span className="at">{timeAgo(t.last_customer_message_at)}</span>
             </div>
           ))}
@@ -507,7 +506,7 @@ function StaticList({ title, sub, rows }: { title: string; sub: string; rows: [s
       <div className="c-card">
         <div className="c-rows">
           {rows.map(([a, b, c], i) => (
-            <div className="c-ev" key={i}><span className="t"><b>{a}</b> — {b}</span><span className="at">{c}</span></div>
+            <div className="c-ev" key={i}><span className="t"><b>{a}</b>, {b}</span><span className="at">{c}</span></div>
           ))}
         </div>
       </div>
@@ -536,7 +535,7 @@ function Compose() {
         <label>From<select value={from} onChange={(e) => setFrom(e.target.value)}><option>support@aurora.com</option><option>hello@harborgoods.com</option><option>care@northbound.co</option></select></label>
         <label>To<input placeholder="customer@email.com" value={to} onChange={(e) => setTo(e.target.value)} /></label>
         <label>Subject<input placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} /></label>
-        <label>Message<textarea rows={8} placeholder="Write your message — or type # to attach an order." value={body} onChange={(e) => setBody(e.target.value)} /></label>
+        <label>Message<textarea rows={8} placeholder="Write your message, or type # to attach an order." value={body} onChange={(e) => setBody(e.target.value)} /></label>
         <div className="row">
           <button className="c-act prim" disabled={state !== 'idle' || !to || !subject} onClick={doSend}>
             {state === 'sending' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {state === 'sent' ? 'Sent ✓' : 'Send'}
@@ -568,7 +567,7 @@ function ChargebacksView() {
             ))}
           </tbody>
         </table>
-        <p className="c-note">Chargeback tickets are never auto-replied — the linked conversation sits at the top of your queue.</p>
+        <p className="c-note">Chargeback tickets are never auto-replied, the linked conversation sits at the top of your queue.</p>
       </div>
     </div>
   )
@@ -584,7 +583,7 @@ function AiLog() {
           {api.getLog().map((e, i) => (
             <div className="c-ev" key={i}>
               <span className={'ic ' + e.kind}>{e.kind === 'hold' ? <PauseCircle size={13} /> : e.kind === 'send' ? <Send size={12} /> : <Check size={13} />}</span>
-              <span className="t"><b>{e.ev}</b> — {e.detail}</span>
+              <span className="t"><b>{e.ev}</b>, {e.detail}</span>
               <span className="at">{timeAgo(e.at)}</span>
             </div>
           ))}
@@ -601,13 +600,13 @@ function BinView() {
     .filter((t): t is Ticket => !!t && !!t.is_deleted)
   return (
     <div className="c-page">
-      <header className="c-page-h"><div><h1>Bin</h1><p>Deleted conversations — recoverable for 30 days</p></div></header>
+      <header className="c-page-h"><div><h1>Bin</h1><p>Deleted conversations, recoverable for 30 days</p></div></header>
       <div className="c-card">
         <div className="c-rows">
           {rows.length === 0 && <p className="c-note" style={{ marginTop: 0 }}>Bin is empty.</p>}
           {rows.map((t) => (
             <div className="c-ev" key={t.id}>
-              <span className="t"><b>{t.subject}</b> — {t.customer_name ?? t.customer_email}</span>
+              <span className="t"><b>{t.subject}</b>, {t.customer_name ?? t.customer_email}</span>
               <button className="c-act" onClick={() => api.restoreTicket(t.id)}><RotateCcw size={13} /> Restore</button>
               <button className="c-act red" onClick={() => api.permanentDelete(t.id)}><Trash2 size={13} /> Delete forever</button>
             </div>
@@ -651,7 +650,7 @@ function TasksView() {
       {adding && (
         <div className="c-card" style={{ display: 'flex', gap: 10 }}>
           <input
-            className="c-input" autoFocus placeholder="Task title — Enter to add"
+            className="c-input" autoFocus placeholder="Task title, Enter to add"
             value={title} onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && title.trim()) { api.createTask(title.trim(), 'added manually'); setTitle(''); setAdding(false) } if (e.key === 'Escape') setAdding(false) }}
           />
@@ -697,7 +696,7 @@ function TasksView() {
                 <button className={'c-check' + (k.col === 'done' ? ' on' : '')} onClick={() => api.toggleTask(k.id)} aria-label="toggle task">
                   {k.col === 'done' && <Check size={12} strokeWidth={3} />}
                 </button>
-                <span className="t" style={k.col === 'done' ? { textDecoration: 'line-through' } : undefined}><b>{k.t}</b> — {k.d}</span>
+                <span className="t" style={k.col === 'done' ? { textDecoration: 'line-through' } : undefined}><b>{k.t}</b>, {k.d}</span>
                 <span className="c-chip mut">{KANBAN_COLS.find((c) => c.id === k.col)!.label}</span>
                 <span className="at">{k.due}</span>
               </div>
@@ -724,7 +723,7 @@ function SentView() {
           {rows.length === 0 && <p className="c-note" style={{ marginTop: 0 }}>Nothing sent yet.</p>}
           {rows.map((r, i) => (
             <div className="c-ev" key={i}>
-              <span className="t"><b>{r.subject}</b> — to {r.to} · from {r.from}</span>
+              <span className="t"><b>{r.subject}</b>, to {r.to} · from {r.from}</span>
               <span className="at">{timeAgo(r.at)}</span>
             </div>
           ))}
@@ -743,8 +742,8 @@ function UsersView() {
       </header>
       <div className="c-card">
         <div className="c-rows">
-          <div className="c-ev"><span className="t"><b>Nathan</b> — Owner · all stores</span><span className="at">you</span></div>
-          <div className="c-ev"><span className="t"><b>Chandan</b> — Agent · AURORA only</span><span className="at">active</span></div>
+          <div className="c-ev"><span className="t"><b>Nathan</b>, Owner · all stores</span><span className="at">you</span></div>
+          <div className="c-ev"><span className="t"><b>Chandan</b>, Agent · AURORA only</span><span className="at">active</span></div>
         </div>
       </div>
     </div>
@@ -762,13 +761,13 @@ type Lanes = typeof LANES_INIT
 function SettingsView({ lanes, setLanes, killed, setKilled }: {
   lanes: Lanes; setLanes: (l: Lanes) => void; killed: boolean; setKilled: (b: boolean) => void
 }) {
-  const [tab, setTab] = useState<'Lanes' | 'Stores' | 'Policies & SOP' | 'Email' | 'Billing'>('Lanes')
+  const [tab, setTab] = useState<'Lanes' | 'Stores' | 'Policies & SOP' | 'Email' | 'Team' | 'Billing'>('Lanes')
   return (
     <div className="c-page">
       <header className="c-page-h"><div><h1>Settings</h1><p>AURORA · owner access</p></div></header>
       <div className="c-set">
         <nav className="c-set-nav">
-          {(['Lanes', 'Stores', 'Policies & SOP', 'Email', 'Billing'] as const).map((x) => (
+          {(['Lanes', 'Stores', 'Policies & SOP', 'Email', 'Team', 'Billing'] as const).map((x) => (
             <button key={x} className={x === tab ? 'on' : ''} onClick={() => setTab(x)}>{x}</button>
           ))}
         </nav>
@@ -798,15 +797,15 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
           )}
           {tab === 'Stores' && (
             <div className="c-rows">
-              {['AURORA — aurora.com · 4 open', 'Harbor Goods — harborgoods.com · 1 open', 'Northbound — northbound.co · 1 open'].map((s) => (
-                <div className="c-ev" key={s}><span className="t"><b>{s.split(' — ')[0]}</b> — {s.split(' — ')[1]}</span><span className="at">connected</span></div>
+              {['AURORA, aurora.com · 4 open', 'Harbor Goods, harborgoods.com · 1 open', 'Northbound, northbound.co · 1 open'].map((s) => (
+                <div className="c-ev" key={s}><span className="t"><b>{s.split(', ')[0]}</b>, {s.split(', ')[1]}</span><span className="at">connected</span></div>
               ))}
               <button className="c-act" style={{ marginTop: 14, alignSelf: 'flex-start' }}><Plus size={14} /> Add store</button>
             </div>
           )}
           {tab === 'Policies & SOP' && (
             <div className="c-rows">
-              <div className="c-ev"><span className="ic ok"><FileText size={13} /></span><span className="t"><b>support-sop-v3.pdf</b> — uploaded Jun 12 · constrains every draft</span><span className="at">replace</span></div>
+              <div className="c-ev"><span className="ic ok"><FileText size={13} /></span><span className="t"><b>support-sop-v3.pdf</b>, uploaded Jun 12 · constrains every draft</span><span className="at">replace</span></div>
               <div className="c-kv"><span>Refund window</span><b>30 days</b></div>
               <div className="c-kv"><span>Reshipment policy</span><b>Free reship on damage w/ photo</b></div>
               <div className="c-kv"><span>Tone</span><b>Warm, plain, no exclamation marks</b></div>
@@ -814,15 +813,22 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
           )}
           {tab === 'Email' && (
             <div className="c-rows">
-              <div className="c-kv"><span>Provider</span><b>Gmail — support@aurora.com</b></div>
+              <div className="c-kv"><span>Provider</span><b>Gmail, support@aurora.com</b></div>
               <div className="c-kv"><span>Send verification</span><b className="green">Verified</b></div>
               <div className="c-kv"><span>DKIM / SPF</span><b className="green">Verified</b></div>
-              <div className="c-kv"><span>Loop protection</span><b>On — auto-replies filtered</b></div>
+              <div className="c-kv"><span>Loop protection</span><b>On, auto-replies filtered</b></div>
+            </div>
+          )}
+          {tab === 'Team' && (
+            <div className="c-rows">
+              <div className="c-ev"><span className="t"><b>Nathan</b>, owner, all stores</span><span className="at">you</span></div>
+              <div className="c-ev"><span className="t"><b>Chandan</b>, agent, AURORA only</span><span className="at">active</span></div>
+              <button className="c-act" style={{ marginTop: 14, alignSelf: 'flex-start' }}><Plus size={14} /> Invite teammate</button>
             </div>
           )}
           {tab === 'Billing' && (
             <div className="c-rows">
-              <div className="c-kv"><span>Plan</span><b>Team — $249/mo</b></div>
+              <div className="c-kv"><span>Plan</span><b>Team, $249/mo</b></div>
               <div className="c-kv"><span>Usage this cycle</span><b>1,412 of 2,500 tickets</b></div>
               <div className="c-kv"><span>Stores</span><b>3 of 3</b></div>
               <div className="c-kv"><span>Managed by</span><b>Shopify billing</b></div>
@@ -847,7 +853,7 @@ export function AppConsole() {
   const counts = api.getCounts(shopId)
 
   const badge: Partial<Record<View, number>> = {
-    tickets: counts.open, tasks: 3, customs: 2, chargebacks: counts.escalated,
+    tickets: counts.open, tasks: 3, chargebacks: counts.escalated,
   }
 
   const CONTENT: Record<View, () => React.ReactElement> = {
@@ -855,7 +861,7 @@ export function AppConsole() {
     tickets: () => <TicketsView shopId={shopId} />,
     resolved: () => <DerivedList title="Resolved" sub="Closed conversations" filterFn={(t) => t.status === 'RESOLVED'} empty="Nothing resolved yet today." />,
     bin: () => <BinView />,
-    filtered: () => <StaticList title="Filtered" sub="Suppressed inbound — never reached the inbox" rows={[
+    filtered: () => <StaticList title="Filtered" sub="Suppressed inbound, never reached the inbox" rows={[
       ['Newsletter · Shopify Weekly', 'marketing filter', '2h'],
       ['Auto-reply · Out of office', 'loop protection', '3h'],
     ]} />,
@@ -863,8 +869,8 @@ export function AppConsole() {
     sent: () => <SentView />,
     tasks: () => <TasksView />,
     customs: () => <StaticList title="Customs" sub="Clearance requests detected in tracking" rows={[
-      ['#1042 · CP998341US', 'cleared this morning — customer notified in draft', '2h'],
-      ['#2088 · CP584201US', 'fee requested by carrier — customer asked to pay €4.20', 'yesterday'],
+      ['#1042 · CP998341US', 'cleared this morning, customer notified in draft', '2h'],
+      ['#2088 · CP584201US', 'fee requested by carrier, customer asked to pay €4.20', 'yesterday'],
     ]} />,
     chargebacks: () => <ChargebacksView />,
     ailog: () => <AiLog />,
