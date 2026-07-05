@@ -595,7 +595,8 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-list{overflow-y:auto;padding:4px 8px 16px;display:flex;flex-direction:column;gap:2px}
 .c-row{display:flex;gap:10px;text-align:left;padding:11px 10px;border-radius:11px;align-items:flex-start}
 .c-row:hover{background:#ECECEA}
-.c-row.sel{background:#fff;box-shadow:0 1px 2px rgba(22,24,28,.06)}
+.c-row.sel{background:#fff;box-shadow:0 1px 3px rgba(22,24,28,.10);position:relative}
+.c-row.sel::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:99px;background:var(--ink)}
 .c-row .main{flex:1;display:flex;flex-direction:column;gap:2px}
 .c-row .top{display:flex;justify-content:space-between;gap:8px;font-size:13px}
 .c-row .top b{font-weight:600}

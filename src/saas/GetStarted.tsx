@@ -57,7 +57,7 @@ export function GetStarted() {
               Setup starts in your Shopify admin: one click from the App Store, read-only scopes. No account needed first; your login comes right after the install.
             </p>
             <div className="ob-perm">
-              <div><Lock size={13} /> Orders, customers, fulfillments, <b>read-only</b></div>
+              <div><Lock size={13} /> Orders, customers, fulfillments: <b>read-only</b></div>
               <div><Lock size={13} /> Resolver cannot modify your store</div>
             </div>
             <button className="btn pri" disabled={busy} onClick={() => fake(900)}>
