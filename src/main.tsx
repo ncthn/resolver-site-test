@@ -4,6 +4,7 @@ import { Landing } from './saas/Landing'
 import { AppConsole } from './saas/AppConsole'
 import { BrandPage } from './saas/BrandPage'
 import { PricingPage, AboutPage, ContactPage, IntegrationsPage, FaqPage, PrivacyPage, TermsPage, CookiesPage } from './saas/pages'
+import { GetStarted } from './saas/GetStarted'
 
 // Path routing with #hash fallback for static hosts without rewrites.
 const path = window.location.pathname.replace(/\/+$/, '')
@@ -12,6 +13,7 @@ const r = (p: string) => path === '/' + p || hash === p
 
 const ROUTES: [boolean, () => React.ReactElement][] = [
   [r('app'), () => <AppConsole />],
+  [r('get-started'), () => <GetStarted />],
   [r('brand'), () => <BrandPage />],
   [r('pricing'), () => <PricingPage />],
   [r('about'), () => <AboutPage />],

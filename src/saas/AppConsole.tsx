@@ -165,10 +165,19 @@ function Overview({ shopId }: { shopId: string }) {
 }
 
 /* ------------- tickets: the 3-pane, running the real state machine ----- */
+function useOutsideClose(open: boolean, close: () => void) {
+  useEffect(() => {
+    if (!open) return
+    const h = () => close()
+    document.addEventListener('click', h)
+    return () => document.removeEventListener('click', h)
+  }, [open, close])
+}
 function CategoryDropdown({ t }: { t: Ticket }) {
   const [open, setOpen] = useState(false)
+  useOutsideClose(open, () => setOpen(false))
   return (
-    <div className="c-status-wrap">
+    <div className="c-status-wrap" onClick={(e) => e.stopPropagation()}>
       <button className="c-chip-btn" onClick={() => setOpen(!open)}>
         <Tag size={13} /> {CATEGORY_LABEL[t.category]} <ChevronDown size={13} />
       </button>
@@ -186,8 +195,9 @@ function CategoryDropdown({ t }: { t: Ticket }) {
 }
 function StatusDropdown({ t }: { t: Ticket }) {
   const [open, setOpen] = useState(false)
+  useOutsideClose(open, () => setOpen(false))
   return (
-    <div className="c-status-wrap">
+    <div className="c-status-wrap" onClick={(e) => e.stopPropagation()}>
       <button className="c-chip-btn" onClick={() => setOpen(!open)}>
         <RefreshCw size={13} /> {STATUS_LABEL[t.status]} <ChevronDown size={13} />
       </button>
@@ -335,7 +345,7 @@ function TicketsView({ shopId }: { shopId: string }) {
           {t.status === 'ESCALATED' && <div className="c-risk"><ShieldCheck size={14} /> Dispute language detected — pulled from every automated lane, routed to a human.</div>}
           {t.ai_disabled && <div className="c-risk mut"><PauseCircle size={14} /> AI is disabled for this ticket — no drafting, no auto-send, until re-enabled.</div>}
           {t.supplier_status === 'REQUESTED' && (
-            <div className="c-risk mut"><Factory size={14} /> Waiting on supplier — {t.supplier_request_type}. Reminder scheduled if no reply in 48h.</div>
+            <div className="c-risk mut"><Factory size={14} /> Waiting on supplier — {t.supplier_request_type} · sent by email. Auto-reminder if no reply in 48h.</div>
           )}
           {t.messages.map((m) => (
             <div key={m.id} className={'c-msg' + (m.is_customer ? '' : ' me')}>
@@ -608,24 +618,93 @@ function BinView() {
   )
 }
 
+const KANBAN_COLS: { id: api.TaskCol; label: string }[] = [
+  { id: 'todo', label: 'To do' },
+  { id: 'doing', label: 'In progress' },
+  { id: 'waiting', label: 'Waiting' },
+  { id: 'done', label: 'Done' },
+]
 function TasksView() {
   useStore()
+  const [mode, setMode] = useState<'board' | 'list'>('board')
+  const [adding, setAdding] = useState(false)
+  const [title, setTitle] = useState('')
+  const tasks = api.getTasks()
+  const onDrop = (e: React.DragEvent, col: api.TaskCol) => {
+    e.preventDefault()
+    const id = e.dataTransfer.getData('text/task')
+    if (id) api.moveTask(id, col)
+  }
   return (
     <div className="c-page">
-      <header className="c-page-h"><div><h1>Tasks</h1><p>Follow-ups the AI queued for you</p></div></header>
-      <div className="c-card">
-        <div className="c-rows">
-          {api.getTasks().map((k) => (
-            <div className="c-ev" key={k.id} style={k.done ? { opacity: .45 } : undefined}>
-              <button className={'c-check' + (k.done ? ' on' : '')} onClick={() => api.toggleTask(k.id)} aria-label="toggle task">
-                {k.done && <Check size={12} strokeWidth={3} />}
-              </button>
-              <span className="t" style={k.done ? { textDecoration: 'line-through' } : undefined}><b>{k.t}</b> — {k.d}</span>
-              <span className="at">{k.due}</span>
-            </div>
-          ))}
+      <header className="c-page-h">
+        <div><h1>Tasks</h1><p>Follow-ups the AI queued, plus your own</p></div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className="c-seg">
+            {(['board', 'list'] as const).map((m) => (
+              <button key={m} className={mode === m ? 'on' : ''} onClick={() => setMode(m)}>{m === 'board' ? 'Board' : 'List'}</button>
+            ))}
+          </div>
+          <button className="c-act prim" onClick={() => setAdding(!adding)}><Plus size={14} /> New task</button>
         </div>
-      </div>
+      </header>
+      {adding && (
+        <div className="c-card" style={{ display: 'flex', gap: 10 }}>
+          <input
+            className="c-input" autoFocus placeholder="Task title — Enter to add"
+            value={title} onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && title.trim()) { api.createTask(title.trim(), 'added manually'); setTitle(''); setAdding(false) } if (e.key === 'Escape') setAdding(false) }}
+          />
+          <button className="c-act" onClick={() => { if (title.trim()) { api.createTask(title.trim(), 'added manually'); setTitle(''); setAdding(false) } }}>Add</button>
+        </div>
+      )}
+      {mode === 'board' ? (
+        <div className="c-kanban">
+          {KANBAN_COLS.map((col) => {
+            const items = tasks.filter((k) => k.col === col.id)
+            return (
+              <div className="kb-col" key={col.id} onDragOver={(e) => e.preventDefault()} onDrop={(e) => onDrop(e, col.id)}>
+                <div className="kb-h">{col.label}<span className="n">{items.length}</span></div>
+                <div className="kb-list">
+                  {items.map((k) => (
+                    <div
+                      className={'kb-card' + (col.id === 'done' ? ' done' : '')} key={k.id} draggable
+                      onDragStart={(e) => e.dataTransfer.setData('text/task', k.id)}
+                    >
+                      <div className="t">{k.t}</div>
+                      <div className="d">{k.d}</div>
+                      <div className="kb-foot">
+                        <span className="due">{k.due}</span>
+                        <div className="mv">
+                          {KANBAN_COLS.filter((c) => c.id !== col.id).slice(0, 3).map((c) => (
+                            <button key={c.id} title={'Move to ' + c.label} onClick={() => api.moveTask(k.id, c.id)}>{c.label[0]}</button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {items.length === 0 && <div className="kb-empty">Drop here</div>}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="c-card">
+          <div className="c-rows">
+            {tasks.map((k) => (
+              <div className="c-ev" key={k.id} style={k.col === 'done' ? { opacity: .45 } : undefined}>
+                <button className={'c-check' + (k.col === 'done' ? ' on' : '')} onClick={() => api.toggleTask(k.id)} aria-label="toggle task">
+                  {k.col === 'done' && <Check size={12} strokeWidth={3} />}
+                </button>
+                <span className="t" style={k.col === 'done' ? { textDecoration: 'line-through' } : undefined}><b>{k.t}</b> — {k.d}</span>
+                <span className="c-chip mut">{KANBAN_COLS.find((c) => c.id === k.col)!.label}</span>
+                <span className="at">{k.due}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -761,6 +840,7 @@ export function AppConsole() {
   const [view, setView] = useState<View>('tickets')
   const [shopIdx, setShopIdx] = useState(0)
   const [storeOpen, setStoreOpen] = useState(false)
+  useOutsideClose(storeOpen, () => setStoreOpen(false))
   const [lanes, setLanes] = useState<Lanes>(LANES_INIT)
   const [killed, setKilled] = useState(false)
   const shopId = api.SHOPS[shopIdx].id
@@ -797,7 +877,7 @@ export function AppConsole() {
       <aside className="c-rail">
         <div className="c-brand"><img src={LOGO} alt="" /><span>resolver.chat</span></div>
 
-        <div className="c-store-wrap">
+        <div className="c-store-wrap" onClick={(e) => e.stopPropagation()}>
           <button className="c-store" onClick={() => setStoreOpen(!storeOpen)}>
             <span className="dot">{api.SHOPS[shopIdx].name[0]}</span>
             <span className="nm">{api.SHOPS[shopIdx].name}<small>{counts.open} open{shopId === 'all' ? ' · 3 stores' : ''}</small></span>
@@ -837,7 +917,7 @@ export function AppConsole() {
         </div>
       </aside>
 
-      <div className="c-main">{CONTENT[view]()}</div>
+      <div className="c-main"><div className="c-view" key={view}>{CONTENT[view]()}</div></div>
     </div>
   )
 }

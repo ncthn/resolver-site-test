@@ -16,10 +16,10 @@ import {
 
 const LOGO = '/logo/recolor/oct-black-t.png';
 
-const START = 'https://resolver.chat/get-started';
-const LOGIN = 'https://resolver.chat/login';
-const DEMO = 'https://resolver.chat/contact';
-const PRICING_FULL = 'https://resolver.chat/pricing';
+const START = '/get-started';
+const LOGIN = '/app';
+const DEMO = '/contact';
+const PRICING_FULL = '/pricing';
 
 const reduced = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

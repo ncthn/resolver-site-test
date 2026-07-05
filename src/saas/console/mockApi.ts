@@ -331,17 +331,32 @@ export async function sendCompose(from: string, to: string, subject: string) {
   notify()
 }
 export function getOutbound() { return OUTBOUND }
-/* ---- tasks (production: tasks queue) */
-const TASKS = [
-  { id: 'k1', t: 'Check reshipment stock · Aurora Linen Set', d: 'damage claim #2061 awaiting supplier', due: 'due today', done: false },
-  { id: 'k2', t: 'Confirm supplier ETA · Harbor Robe', d: 'restock answer promised to 2 customers', due: 'due tomorrow', done: false },
-  { id: 'k3', t: 'Review dispute evidence · #1991', d: 'chargeback deadline in 6 days', due: 'due in 3 days', done: false },
+/* ---- tasks (production: tasks queue) — list + kanban columns */
+export type TaskCol = 'todo' | 'doing' | 'waiting' | 'done'
+export interface Task { id: string; t: string; d: string; due: string; col: TaskCol; ticketId?: string }
+const TASKS: Task[] = [
+  { id: 'k1', t: 'Check reshipment stock · Aurora Linen Set', d: 'damage claim #2061 — replacement promised if in stock', due: 'today', col: 'doing', ticketId: 't-4455' },
+  { id: 'k2', t: 'Confirm supplier ETA · Harbor Robe', d: 'restock answer promised to 2 customers', due: 'tomorrow', col: 'waiting' },
+  { id: 'k3', t: 'Review dispute evidence · #1991', d: 'chargeback deadline in 6 days', due: 'in 3 days', col: 'todo', ticketId: 't-4468' },
+  { id: 'k4', t: 'Update size guide · Northbound field jacket', d: 'third sizing question this week — fix at the source', due: 'this week', col: 'todo' },
+  { id: 'k5', t: 'Refund posted · order #2031', d: 'confirmed by Shopify, customer notified', due: 'done', col: 'done' },
 ]
 export function getTasks() { return TASKS }
-export async function toggleTask(id: string) {
+export async function moveTask(id: string, col: TaskCol) {
   await delay(60)
   const k = TASKS.find((x) => x.id === id)!
-  k.done = !k.done
-  if (k.done) log('Task completed', k.t, 'ok')
+  const was = k.col
+  k.col = col
+  if (col === 'done' && was !== 'done') log('Task completed', k.t, 'ok')
   notify()
+}
+export async function createTask(t: string, d: string) {
+  await delay(80)
+  TASKS.unshift({ id: 'k' + Date.now(), t, d, due: 'unscheduled', col: 'todo' })
+  log('Task created', t, 'ok')
+  notify()
+}
+export async function toggleTask(id: string) {
+  const k = TASKS.find((x) => x.id === id)!
+  return moveTask(id, k.col === 'done' ? 'todo' : 'done')
 }

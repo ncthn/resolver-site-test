@@ -9,7 +9,7 @@ import {
   ShieldCheck, Inbox, FileText,
 } from 'lucide-react';
 
-const START = 'https://resolver.chat/get-started';
+const START = '/get-started';
 const DEMO_MAIL = 'hello@resolver.chat';
 
 function Page({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
