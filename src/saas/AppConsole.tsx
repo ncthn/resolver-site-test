@@ -425,9 +425,13 @@ function TicketsView({ shopId }: { shopId: string }) {
                 <span className="c-drafted-at">drafted {timeAgo(t.draft_generated_at!)} ago</span>
               </div>
               {editing ? (
-                <textarea className="c-edit" value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={6} />
+                <textarea
+                  className="c-edit" value={editBody} rows={6} autoFocus
+                  onChange={(e) => setEditBody(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false) }}
+                />
               ) : (
-                <p className="body">{draftEN}</p>
+                <p className="body editable" title="Click to edit" onClick={() => { setEditing(true); setEditBody(draftEN ?? '') }}>{draftEN}</p>
               )}
               {t.draft_body_english && !editing && <NativeDraft t={t} />}
               {t.order_name && (
@@ -440,20 +444,13 @@ function TicketsView({ shopId }: { shopId: string }) {
               {t.trace && <Trace steps={t.trace} />}
               <div className="acts">
                 <AutoSendBar t={t} />
-                {onCooldown ? (
-                  <span className="c-held"><Clock size={13} /> Sent, cooldown {cooldownLeft}s (anti double-send)</span>
-                ) : (
-                  <>
-                    <button className="c-act prim" disabled={busy !== ''} onClick={doSend}>
-                      {busy === 'send' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {editing ? 'Send edited' : 'Approve & send'}
-                    </button>
-                    <button className="c-act" onClick={() => { setEditing(!editing); setEditBody(draftEN ?? '') }}>
-                      <Pencil size={14} /> {editing ? 'Discard edit' : 'Edit'}
-                    </button>
-                    <button className="c-act ic" title="Regenerate" disabled={busy !== ''} onClick={doRegen}>
-                      {busy === 'regen' ? <Loader2 size={14} className="c-spin" /> : <RefreshCw size={14} />}
-                    </button>
-                  </>
+                {onCooldown && <span className="c-held"><Clock size={13} /> Sent, cooldown {cooldownLeft}s (anti double-send)</span>}
+                <span className="sp" />
+                {editing && <button className="c-act" onClick={() => setEditing(false)}>Discard edits</button>}
+                {!onCooldown && (
+                  <button className="c-act prim" disabled={busy !== ''} onClick={doSend}>
+                    {busy === 'send' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {editing ? 'Send edited' : 'Approve & send'}
+                  </button>
                 )}
               </div>
             </div>

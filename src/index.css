@@ -840,3 +840,8 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-trace .tr-step .tx{flex:1}
 .c-trace .tr-step .tx b{color:var(--ink);font-weight:600}
 .c-trace .tr-step .ms{font-size:10.5px;color:var(--tx-faint);font-variant-numeric:tabular-nums}
+
+/* click-to-edit draft + right-aligned send */
+.c-draft .body.editable{cursor:text;border-radius:8px;margin:6px -8px 0;padding:4px 8px;transition:background .15s}
+.c-draft .body.editable:hover{background:var(--band)}
+.c-draft .acts .sp{flex:1}
