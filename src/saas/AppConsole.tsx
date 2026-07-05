@@ -1229,10 +1229,58 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
 }
 
 /* ---------------------------------------------------------------- shell */
+const TOUR: { sel: string; title: string; body: string; place: 'right' | 'bottom' | 'left' | 'top' }[] = [
+  { sel: '.c-store', title: 'All your stores, one inbox', body: 'Switch between stores or work across all of them at once. Counts follow.', place: 'right' },
+  { sel: '.c-ftabs', title: 'The queue, sliced', body: 'Open, escalated, waiting, resolved. Escalations always float to the top.', place: 'bottom' },
+  { sel: '.c-draft', title: 'Drafts, not homework', body: 'Every ticket arrives with a reply already written from the real order. Click the text to edit it, then approve.', place: 'top' },
+  { sel: '.c-statusselect', title: 'Status lives here', body: 'Move tickets through open, waiting, resolved. Escalations happen automatically on risk.', place: 'left' },
+  { sel: '.c-auto', title: 'Autonomy, on a leash', body: 'This shows which lanes auto-send. The kill switch in Settings stops everything instantly.', place: 'right' },
+]
+function Tour({ onDone }: { onDone: () => void }) {
+  const [i, setI] = useState(0)
+  const [rect, setRect] = useState<DOMRect | null>(null)
+  const step = TOUR[i]
+  useEffect(() => {
+    const el = document.querySelector(step.sel)
+    if (!el) { if (i < TOUR.length - 1) setI(i + 1); else onDone(); return }
+    el.scrollIntoView({ block: 'nearest' })
+    setRect(el.getBoundingClientRect())
+  }, [i, step.sel, onDone])
+  if (!rect) return null
+  const pos: React.CSSProperties =
+    step.place === 'right' ? { left: rect.right + 14, top: Math.max(12, rect.top + rect.height / 2 - 40) } :
+    step.place === 'left' ? { right: window.innerWidth - rect.left + 14, top: Math.max(12, rect.top + rect.height / 2 - 40) } :
+    step.place === 'bottom' ? { left: Math.min(rect.left, window.innerWidth - 320), top: rect.bottom + 12 } :
+    { left: Math.min(rect.left, window.innerWidth - 320), top: rect.top - 12, transform: 'translateY(-100%)' }
+  return (
+    <>
+      <div className="tour-glow" style={{ left: rect.left - 6, top: rect.top - 6, width: rect.width + 12, height: rect.height + 12 }} />
+      <div className={'tour-bubble ' + step.place} style={pos}>
+        <b>{step.title}</b>
+        <p>{step.body}</p>
+        <div className="row">
+          <span className="n">{i + 1} of {TOUR.length}</span>
+          <span className="sp" />
+          <button className="skip" onClick={onDone}>Skip tour</button>
+          <button className="next" onClick={() => (i < TOUR.length - 1 ? setI(i + 1) : onDone())}>{i < TOUR.length - 1 ? 'Next' : 'Done'}</button>
+        </div>
+      </div>
+    </>
+  )
+}
+
 export function AppConsole() {
   useStore()
   const [view, setView] = useState<View>('tickets')
   const [collapsed, setCollapsed] = useState(false)
+  const [tour, setTour] = useState(false)
+  useEffect(() => {
+    if (!localStorage.getItem('resolver.tour_done')) {
+      const id = setTimeout(() => setTour(true), 900)
+      return () => clearTimeout(id)
+    }
+  }, [])
+  const endTour = () => { setTour(false); localStorage.setItem('resolver.tour_done', '1') }
   const [shopIdx, setShopIdx] = useState(0)
   const [storeOpen, setStoreOpen] = useState(false)
   useOutsideClose(storeOpen, () => setStoreOpen(false))
@@ -1316,11 +1364,15 @@ export function AppConsole() {
             <b>{killed ? 'Auto-send paused' : 'Auto-send active'}</b>
             <p>{killed ? 'Kill switch is on' : `${lanes.filter((l) => l.mode === 'live').length} lanes live · risky tickets always wait`}</p>
           </div>
-          <div className="c-me"><span className="av">N</span><span>Nathan<small>Owner</small></span></div>
+          <div className="c-me">
+            <span className="av">N</span><span>Nathan<small>Owner</small></span>
+            <button className="c-tourbtn" title="Replay the welcome tour" onClick={() => { setView('tickets'); setTour(true) }}>?</button>
+          </div>
         </div>
       </aside>
 
       <div className="c-main"><div className="c-view" key={view}>{CONTENT[view]()}</div></div>
+      {tour && view === 'tickets' && <Tour onDone={endTour} />}
     </div>
   )
 }

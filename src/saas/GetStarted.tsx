@@ -6,11 +6,11 @@
 // from the uploaded document) that personalization is built on.
 import { useEffect, useState } from 'react';
 import {
-  ShoppingBag, Mail, FileText, Check, ArrowRight, Loader2, Eye, Lock,
+  ShoppingBag, Mail, FileText, Check, ArrowRight, Loader2, Eye, Lock, FileSearch,
 } from 'lucide-react';
 
 const LOGO = '/logo/recolor/oct-black-t.png';
-const STEPS = ['Store', 'Account', 'Policies', 'Inbox', 'Done'] as const;
+const STEPS = ['Store', 'Account', 'Policies', 'Inbox', 'History', 'Done'] as const;
 
 function Stepper({ at }: { at: number }) {
   return (
@@ -23,6 +23,72 @@ function Stepper({ at }: { at: number }) {
         </div>
       ))}
     </div>
+  );
+}
+
+function ImportStep({ onDone }: { onDone: () => void }) {
+  const [phase, setPhase] = useState<'ask' | 'scanning' | 'confirm'>('ask');
+  const [scanned, setScanned] = useState(0);
+  useEffect(() => {
+    if (phase !== 'scanning') return;
+    const id = setInterval(() => {
+      setScanned((n) => {
+        if (n >= 412) { clearInterval(id); setTimeout(() => setPhase('confirm'), 400); return 412; }
+        return Math.min(412, n + 23);
+      });
+    }, 90);
+    return () => clearInterval(id);
+  }, [phase]);
+  return (
+    <section className="ob-card">
+      <span className="ob-ic"><FileSearch size={22} strokeWidth={1.9} /></span>
+      {phase === 'ask' && (
+        <>
+          <h1>Learn from your last 30 days.</h1>
+          <p>
+            Resolver can read your recent support conversations to learn your tone, your
+            most common requests, and how you actually answer. Nothing is changed or
+            sent; you confirm everything it finds.
+          </p>
+          <div className="ob-perm">
+            <div><Lock size={13} /> Read-only scan of the connected mailbox</div>
+            <div><Lock size={13} /> Findings are shown to you before anything is used</div>
+          </div>
+          <button className="btn pri" onClick={() => setPhase('scanning')}>Analyze my last 30 days</button>
+          <button className="ob-skip" onClick={onDone}>Skip, start from my SOP only</button>
+        </>
+      )}
+      {phase === 'scanning' && (
+        <>
+          <h1>Reading your conversations…</h1>
+          <p>Pairing customer questions with the answers your team actually sent.</p>
+          <div className="ob-scan">
+            <div className="bar"><i style={{ width: (scanned / 412) * 100 + '%' }} /></div>
+            <span>{scanned} of 412 conversations</span>
+          </div>
+        </>
+      )}
+      {phase === 'confirm' && (
+        <>
+          <h1>Here&rsquo;s what we learned. Confirm it.</h1>
+          <div className="ob-extract" style={{ marginTop: 14 }}>
+            <div className="ok"><Check size={13} strokeWidth={2.6} /> 412 conversations analyzed</div>
+            {[
+              ['Top requests', 'Shipping 38%, returns 19%, sizing 12%'],
+              ['Languages seen', 'EN 61%, DE 15%, FR 13%, IT 7%'],
+              ['Your tone', 'Warm, concise, first-name greetings, no exclamation marks'],
+              ['Reply patterns', '5 example replies saved as voice references'],
+              ['Suggested first lane', 'Shipping / WISMO, your most repetitive volume'],
+            ].map(([k, v]) => (
+              <div className="row" key={k}><span>{k}</span><b>{v}</b></div>
+            ))}
+            <span className="ob-fine">Every one of these is editable later in Settings → Policies.</span>
+          </div>
+          <button className="btn pri" onClick={onDone}>Use this <ArrowRight size={15} /></button>
+          <button className="ob-skip" onClick={onDone}>Discard the analysis</button>
+        </>
+      )}
+    </section>
   );
 }
 
@@ -131,6 +197,10 @@ export function GetStarted() {
         )}
 
         {at === 4 && (
+          <ImportStep onDone={advance} />
+        )}
+
+        {at === 5 && (
           <section className="ob-card">
             <span className="ob-ic" style={{ background: '#E8F0EB', color: '#3D7A50' }}><Eye size={22} strokeWidth={1.9} /></span>
             <h1>You&rsquo;re in shadow mode.</h1>
