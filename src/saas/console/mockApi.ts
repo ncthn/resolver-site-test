@@ -429,6 +429,24 @@ export async function addNote(id: string, body: string) {
   log('Internal note added', t.subject, 'ok')
   notify()
 }
+
+/** POST /api/tickets/:id/summarize — distill the thread into an AI internal note. */
+export async function summarizeThread(id: string) {
+  await delay(700)
+  const t = TICKETS.find((x) => x.id === id)!
+  const customerMsgs = t.messages.filter((m) => m.is_customer).length
+  const aiMsgs = t.messages.filter((m) => !m.is_customer && m.auto_sent).length
+  const parts = [
+    `${t.customer_name ?? t.customer_email} wrote ${customerMsgs} message${customerMsgs === 1 ? '' : 's'} about "${t.subject}"${t.order_name ? ` on order ${t.order_name}` : ''}.`,
+    aiMsgs > 0 ? `Resolver answered ${aiMsgs} of them automatically.` : 'No automatic replies were sent.',
+    t.order_snapshot?.tracking_status[0] ? `Latest tracking: ${t.order_snapshot.tracking_status[0]}.` : '',
+    `Status now: ${t.status.toLowerCase().replace(/_/g, ' ')}.`,
+  ].filter(Boolean)
+  t.notes = t.notes ?? []
+  t.notes.push({ id: 'n' + Date.now(), author: 'Resolver AI', body: parts.join(' '), at: new Date().toISOString(), ai: true })
+  log('AI summary saved as internal note', t.subject, 'ok')
+  notify()
+}
 /** AI-first compose: drafts from an intent, an optional order, and a language. */
 export async function composeDraft(intent: string, lang: string, orderName: string | null) {
   await delay(1100)

@@ -385,32 +385,124 @@ function NativeDraft({ t }: { t: Ticket }) {
   )
 }
 
-function NoteComposer({ t }: { t: Ticket }) {
-  const [open, setOpen] = useState(false)
-  const [v, setV] = useState('')
-  if (!open) {
-    return (
-      <button className="c-addnote" onClick={() => setOpen(true)}>
-        <StickyNote size={12} /> Add internal note
-      </button>
-    )
+/* Docked composer (Gorgias-pattern): Reply and Internal note live in one
+   surface pinned under the thread. The reply tab IS the AI draft — click the
+   text to edit it. Countdown and cooldown are quiet text, not pill clusters. */
+function Composer({ t }: { t: Ticket }) {
+  const [tab, setTab] = useState<'reply' | 'note'>('reply')
+  const [editing, setEditing] = useState(false)
+  const [editBody, setEditBody] = useState('')
+  const [busy, setBusy] = useState<'' | 'send' | 'regen'>('')
+  const [cooldownAt, setCooldownAt] = useState<Record<string, number>>({})
+  const [note, setNote] = useState('')
+  const [, setTick] = useState(0)
+  useEffect(() => { setTab('reply'); setEditing(false); setBusy(''); setNote('') }, [t.id])
+  useEffect(() => {
+    const id = setInterval(() => setTick((x) => x + 1), 1000)
+    return () => clearInterval(id)
+  }, [])
+  const draftEN = t.draft_body_english ?? t.draft_body
+  const cooldownLeft = Math.max(0, 180 - Math.floor((Date.now() - (cooldownAt[t.id] ?? -1e12)) / 1000))
+  const onCooldown = cooldownAt[t.id] != null && cooldownLeft > 0
+  const held = t.status === 'ESCALATED'
+  const autoMs = t.auto_send_queued_at ? new Date(t.auto_send_queued_at).getTime() - Date.now() : 0
+  const mm = Math.floor(autoMs / 60000)
+  const ss = String(Math.max(0, Math.floor((autoMs % 60000) / 1000))).padStart(2, '0')
+  const doSend = async () => {
+    setBusy('send')
+    await api.postSend(t.id, editing ? editBody : (t.draft_body ?? ''))
+    setCooldownAt((c) => ({ ...c, [t.id]: Date.now() }))
+    setEditing(false)
+    setBusy('')
   }
+  const doRegen = async () => { setBusy('regen'); await api.postRegenerate(t.id); setBusy('') }
+  const saveNote = () => { if (note.trim()) { api.addNote(t.id, note.trim()); setNote(''); setTab('reply') } }
   return (
-    <div className="c-note editing">
-      <span className="nh"><StickyNote size={12} /> Internal note · never sent to the customer</span>
-      <textarea
-        autoFocus rows={2} value={v} placeholder="Context for your team…"
-        onChange={(e) => setV(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey && v.trim()) { e.preventDefault(); api.addNote(t.id, v.trim()); setV(''); setOpen(false) }
-          if (e.key === 'Escape') setOpen(false)
-        }}
-      />
-      <div className="row">
-        <button className="c-act" onClick={() => setOpen(false)}>Cancel</button>
-        <button className="c-act prim" disabled={!v.trim()} onClick={() => { api.addNote(t.id, v.trim()); setV(''); setOpen(false) }}>Save note</button>
+    <div className="c-composer">
+      <div className="c-tabs" role="tablist">
+        <button className={tab === 'reply' ? 'on' : ''} onClick={() => setTab('reply')} role="tab" aria-selected={tab === 'reply'}><Send size={11} /> Reply</button>
+        <button className={'note' + (tab === 'note' ? ' on' : '')} onClick={() => setTab('note')} role="tab" aria-selected={tab === 'note'}><StickyNote size={11} /> Internal note</button>
+        <span className="sp" />
+        {tab === 'reply' && t.draft_body && <span className="meta">drafted {timeAgo(t.draft_generated_at!)} ago</span>}
       </div>
+      {tab === 'reply' ? (
+        t.draft_body ? (
+          <>
+            <div className="c-toline">
+              <span className="k">To</span>
+              <span className="v">{t.customer_name ?? t.customer_email} ({t.customer_email})</span>
+              {held && <span className="held"><ShieldCheck size={11} /> Held for you · never auto-sent</span>}
+            </div>
+            {editing ? (
+              <textarea
+                className="c-edit" value={editBody} rows={6} autoFocus
+                onChange={(e) => setEditBody(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false) }}
+              />
+            ) : (
+              <p className="body editable" title="Click to edit" onClick={() => { setEditing(true); setEditBody(draftEN ?? '') }}>{draftEN}</p>
+            )}
+            <div className="c-cmeta">
+              {t.draft_body_english && !editing && <NativeDraft t={t} />}
+              {t.trace && <Trace steps={t.trace} />}
+            </div>
+            <div className="c-cfoot">
+              {!held && t.auto_send_queued_at && autoMs > 0 && (
+                <span className="c-autosend"><Clock size={12} /> Auto-sends in {mm}:{ss} · <button onClick={() => api.cancelAutoSend(t.id)}>Cancel</button></span>
+              )}
+              {onCooldown && <span className="c-autosend mut"><Clock size={12} /> Sent · {cooldownLeft}s cooldown</span>}
+              <span className="sp" />
+              {editing && <button className="c-act" onClick={() => setEditing(false)}>Discard edits</button>}
+              {!onCooldown && (
+                <button className="c-act prim" disabled={busy !== ''} onClick={doSend}>
+                  {busy === 'send' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {editing ? 'Send edited' : held ? 'Send reply' : 'Approve & send'}
+                </button>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="c-cfoot" style={{ marginTop: 6 }}>
+            <span className="c-autosend mut">{t.status === 'RESOLVED' ? 'Resolved · no reply needed' : 'No draft yet'}</span>
+            <span className="sp" />
+            {t.status !== 'RESOLVED' && (
+              <button className="c-act" disabled={busy !== ''} onClick={doRegen}>
+                {busy === 'regen' ? <Loader2 size={14} className="c-spin" /> : <Zap size={14} />} Generate draft
+              </button>
+            )}
+          </div>
+        )
+      ) : (
+        <>
+          <textarea
+            className="c-notearea" rows={3} autoFocus value={note}
+            placeholder="Context for your team — never sent to the customer…"
+            onChange={(e) => setNote(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveNote() }
+              if (e.key === 'Escape') setTab('reply')
+            }}
+          />
+          <div className="c-cfoot">
+            <span className="c-autosend mut"><StickyNote size={12} /> Only your team sees this</span>
+            <span className="sp" />
+            <button className="c-act" onClick={() => setTab('reply')}>Cancel</button>
+            <button className="c-act prim" disabled={!note.trim()} onClick={saveNote}>Save note</button>
+          </div>
+        </>
+      )}
     </div>
+  )
+}
+
+/* Gorgias-pattern centered pill: distill the thread into an AI internal note. */
+function SummarizePill({ t }: { t: Ticket }) {
+  const [busy, setBusy] = useState(false)
+  const hasSummary = (t.notes ?? []).some((n) => n.ai)
+  if (t.messages.length < 2 || hasSummary) return null
+  return (
+    <button className="c-sum-pill" disabled={busy} onClick={async () => { setBusy(true); await api.summarizeThread(t.id); setBusy(false) }}>
+      {busy ? <Loader2 size={12} className="c-spin" /> : <Zap size={12} />} Summarize {t.messages.length} messages as a note
+    </button>
   )
 }
 
@@ -442,25 +534,6 @@ function MoreMenu({ t }: { t: Ticket }) {
   )
 }
 
-function AutoSendBar({ t }: { t: Ticket }) {
-  const [, setTick] = useState(0)
-  useEffect(() => {
-    const id = setInterval(() => setTick((x) => x + 1), 1000)
-    return () => clearInterval(id)
-  }, [])
-  if (!t.auto_send_queued_at) return null
-  const ms = new Date(t.auto_send_queued_at).getTime() - Date.now()
-  if (ms <= 0) return null
-  const mm = Math.floor(ms / 60000)
-  const ss = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')
-  return (
-    <>
-      <span className="c-count"><Clock size={13} /> Auto-sends in {mm}:{ss}</span>
-      <button className="c-act red" onClick={() => api.cancelAutoSend(t.id)}><X size={14} /> Cancel send</button>
-    </>
-  )
-}
-
 let PENDING_OPEN: string | null = null
 function openTicketById(id: string) { PENDING_OPEN = id }
 
@@ -469,10 +542,6 @@ function TicketsView({ shopId }: { shopId: string }) {
   const [sel, setSel] = useState(() => { const pnd = PENDING_OPEN; PENDING_OPEN = null; return pnd ?? 't-4471' })
   const [filter, setFilter] = useState<typeof FILTERS[number]>('All')
   const [q, setQ] = useState('')
-  const [editing, setEditing] = useState(false)
-  const [editBody, setEditBody] = useState('')
-  const [busy, setBusy] = useState<'' | 'send' | 'regen'>('')
-  const [cooldownAt, setCooldownAt] = useState<Record<string, number>>({})
 
   // listTickets is async in production; the mock store is read synchronously.
   const tickets = ((): Ticket[] => {
@@ -489,25 +558,7 @@ function TicketsView({ shopId }: { shopId: string }) {
   })()
 
   const t = api.getTicket(sel) ?? tickets[0]
-  useEffect(() => { setEditing(false); setBusy('') }, [sel])
   if (!t) return <div className="c-page"><p>No tickets.</p></div>
-
-  const draftEN = t.draft_body_english ?? t.draft_body
-  const cooldownLeft = Math.max(0, 180 - Math.floor((Date.now() - (cooldownAt[t.id] ?? -1e12)) / 1000))
-  const onCooldown = cooldownAt[t.id] != null && cooldownLeft > 0
-
-  const doSend = async () => {
-    setBusy('send')
-    await api.postSend(t.id, editing ? editBody : (t.draft_body ?? ''))
-    setCooldownAt((c) => ({ ...c, [t.id]: Date.now() }))
-    setEditing(false)
-    setBusy('')
-  }
-  const doRegen = async () => {
-    setBusy('regen')
-    await api.postRegenerate(t.id)
-    setBusy('')
-  }
 
   return (
     <div className="c-3pane">
@@ -570,70 +621,21 @@ function TicketsView({ shopId }: { shopId: string }) {
           )}
           {t.messages.map((m) => <Bubble m={m} lang={t.customer_language} key={m.id} />)}
           {(t.notes ?? []).map((n) => (
-            <div className="c-note" key={n.id}>
-              <span className="nh"><StickyNote size={12} /> Internal note · {n.ai ? 'AI summary' : n.author} · {timeAgo(n.at)} ago</span>
+            <div className={'c-note' + (n.ai ? ' ai' : '')} key={n.id}>
+              <span className="nh">
+                {n.ai ? <Zap size={12} /> : <StickyNote size={12} />}
+                <b>{n.ai ? 'Resolver AI' : n.author}</b> · Internal note{n.ai ? ' · summary' : ''}
+                <span className="at">{timeAgo(n.at)} ago</span>
+              </span>
               {n.body}
             </div>
           ))}
-          <NoteComposer t={t} />
-
-          {t.draft_body ? (
-            <div className={'c-draft' + (t.status === 'ESCALATED' ? ' esc' : '')}>
-              <div className="h">
-                <span className="tag">{t.status === 'ESCALATED' ? 'Suggested opener, held for you' : 'Resolver drafted a reply'}</span>
-                <span className="c-drafted-at">drafted {timeAgo(t.draft_generated_at!)} ago</span>
-              </div>
-              {editing ? (
-                <textarea
-                  className="c-edit" value={editBody} rows={6} autoFocus
-                  onChange={(e) => setEditBody(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false) }}
-                />
-              ) : (
-                <p className="body editable" title="Click to edit" onClick={() => { setEditing(true); setEditBody(draftEN ?? '') }}>{draftEN}</p>
-              )}
-              {t.draft_body_english && !editing && <NativeDraft t={t} />}
-              {t.order_name && (
-                <div className="chips">
-                  <span><Check size={11} /> {t.order_name}</span>
-                  {t.order_snapshot?.tracking_numbers[0] && <span><Check size={11} /> Live tracking</span>}
-                  <span><Check size={11} /> SOP policies</span>
-                </div>
-              )}
-              {t.trace && <Trace steps={t.trace} />}
-              <div className="acts">
-                <AutoSendBar t={t} />
-                {t.status === 'ESCALATED' && <span className="c-held esc"><ShieldCheck size={13} /> Never auto-sent, held for you</span>}
-                {onCooldown && <span className="c-held"><Clock size={13} /> Sent, cooldown {cooldownLeft}s (anti double-send)</span>}
-                <span className="sp" />
-                {editing && <button className="c-act" onClick={() => setEditing(false)}>Discard edits</button>}
-                {!onCooldown && (
-                  <button className="c-act prim" disabled={busy !== ''} onClick={doSend}>
-                    {busy === 'send' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {editing ? 'Send edited' : t.status === 'ESCALATED' ? 'Send reply' : 'Approve & send'}
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="c-draft">
-              <div className="h"><span className="tag">{t.status === 'RESOLVED' ? 'Resolved, no reply needed' : 'No draft yet'}</span></div>
-              {t.status !== 'RESOLVED' && (
-                <div className="acts">
-                  <button className="c-act" disabled={busy !== ''} onClick={doRegen}>
-                    {busy === 'regen' ? <Loader2 size={14} className="c-spin" /> : <Zap size={14} />} Generate draft
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          <SummarizePill t={t} />
         </div>
+        <Composer t={t} />
       </main>
 
       <aside className="c-ctx2">
-        <div className="sec">
-          <div className="h">Status</div>
-          <div className="card"><StatusSelect t={t} /></div>
-        </div>
         <div className="sec">
           <div className="h">Order match</div>
           <div className="card">
@@ -695,6 +697,10 @@ function TicketsView({ shopId }: { shopId: string }) {
             <div className="c-kv"><span>Sentiment</span><b className={t.sentiment === 'angry' ? 'red' : ''}>{t.sentiment}</b></div>
             <div className="c-kv"><span>Urgency</span><b>{t.urgency_score}/100</b></div>
           </div>
+        </div>
+        <div className="sec">
+          <div className="h">Status</div>
+          <div className="card"><StatusSelect t={t} /></div>
         </div>
       </aside>
     </div>
@@ -1271,7 +1277,7 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
 const TOUR: { sel: string; title: string; body: string; place: 'right' | 'bottom' | 'left' | 'top' }[] = [
   { sel: '.c-store', title: 'All your stores, one inbox', body: 'Switch between stores or work across all of them at once. Counts follow.', place: 'right' },
   { sel: '.c-ftabs', title: 'The queue, sliced', body: 'Open, escalated, waiting, resolved. Escalations always float to the top.', place: 'bottom' },
-  { sel: '.c-draft', title: 'Drafts, not homework', body: 'Every ticket arrives with a reply already written from the real order. Click the text to edit it, then approve.', place: 'top' },
+  { sel: '.c-composer', title: 'Drafts, not homework', body: 'Every ticket arrives with a reply already written from the real order. Click the text to edit it, then approve. Notes for your team live in the same place.', place: 'top' },
   { sel: '.c-statusselect', title: 'Status lives here', body: 'Move tickets through open, waiting, resolved. Escalations happen automatically on risk.', place: 'left' },
   { sel: '.c-auto', title: 'Autonomy, on a leash', body: 'This shows which lanes auto-send. The kill switch in Settings stops everything instantly.', place: 'right' },
 ]
