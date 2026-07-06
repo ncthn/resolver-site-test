@@ -51,6 +51,10 @@ export const getTasks = LIVE ? live.getTasks : mock.getTasks
 export const moveTask = LIVE ? live.moveTask : mock.moveTask
 export const createTask = LIVE ? live.createTask : mock.createTask
 export const toggleTask = LIVE ? live.toggleTask : mock.toggleTask
+export const INBOX_RULES = LIVE ? live.INBOX_RULES_LIVE : mock.INBOX_RULES
+export const addInboxRule = LIVE ? live.addInboxRule : mock.addInboxRule
+export const toggleInboxRule = LIVE ? live.toggleInboxRule : mock.toggleInboxRule
+export const deleteInboxRule = LIVE ? live.deleteInboxRule : mock.deleteInboxRule
 
 // Live-only plumbing (no-ops in demo mode)
 export const setTokenProvider = live.setTokenProvider

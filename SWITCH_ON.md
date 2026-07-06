@@ -28,7 +28,9 @@ actual cutover takes.
 - Returns flow: WIRED (server-side state machine live on resolver.chat)
 - Macros: WIRED (company-scoped CRUD live; insert, save-from-draft, remove)
 - Tasks: WIRED (company-scoped kanban CRUD live, drag-drop and quick-add real)
-- Chargebacks workbench, CSAT, inbox rules
+- Inbox rules: WIRED v1 (sender/subject -> close-as-filtered, evaluated in
+  both intake paths; category/language conditions and more actions later)
+- Chargebacks workbench, CSAT
   (features that do not exist server-side yet — each needs its production
   model before wiring)
 - Settings > Filters / Emails / Stores / Notifications / Billing (config

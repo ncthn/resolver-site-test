@@ -1558,16 +1558,16 @@ function InboxRules() {
           <select value={nw.if_field} onChange={(e) => setNw({ ...nw, if_field: e.target.value as api.InboxRule['if_field'] })}>
             <option value="sender">sender contains</option>
             <option value="subject">subject contains</option>
-            <option value="category">category is</option>
-            <option value="language">language is</option>
+            {!api.LIVE && <option value="category">category is</option>}
+            {!api.LIVE && <option value="language">language is</option>}
           </select>
           <input autoFocus placeholder={nw.if_field === 'sender' ? '@domain.com' : nw.if_field === 'subject' ? 'phrase…' : nw.if_field === 'category' ? 'PARTNERSHIP' : 'IT'} value={nw.if_value} onChange={(e) => setNw({ ...nw, if_value: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter') void save() }} />
           <span className="lbl">then</span>
           <select value={nw.action} onChange={(e) => setNw({ ...nw, action: e.target.value as api.InboxRule['action'] })}>
             <option value="close">close as filtered</option>
-            <option value="assign">assign to</option>
-            <option value="skip_ai">skip AI drafting</option>
-            <option value="bin">move to bin</option>
+            {!api.LIVE && <option value="assign">assign to</option>}
+            {!api.LIVE && <option value="skip_ai">skip AI drafting</option>}
+            {!api.LIVE && <option value="bin">move to bin</option>}
           </select>
           {nw.action === 'assign' && (
             <select value={nw.target} onChange={(e) => setNw({ ...nw, target: e.target.value })}>

@@ -109,6 +109,7 @@ export function startPolling() {
   void refreshBinAndSent()
   void refreshMacros()
   void refreshTasks()
+  void refreshInboxRules()
   setInterval(() => { void refresh() }, 12_000)
   setInterval(() => { void refreshBinAndSent() }, 30_000)
 }
@@ -411,4 +412,32 @@ export async function createTask(t: string, d: string) {
 export async function toggleTask(id: string) {
   const k = TASKS_LIVE.find((x) => x.id === id)
   if (k) await moveTask(id, k.col === 'done' ? 'todo' : 'done')
+}
+
+/* ------------------------------------------------------ live inbox rules -- */
+import type { InboxRule } from './mockApi'
+export const INBOX_RULES_LIVE: InboxRule[] = []
+export async function refreshInboxRules() {
+  try {
+    const raw = await apiFetch('/inbox-rules') as { id: string; if_field: 'sender' | 'subject'; if_value: string; enabled: boolean; hits30d: number }[]
+    INBOX_RULES_LIVE.splice(0, INBOX_RULES_LIVE.length, ...raw.map((r) => ({
+      id: r.id, if_field: r.if_field, if_value: r.if_value, action: 'close' as const, target: null, enabled: r.enabled, hits30d: r.hits30d,
+    })))
+  } catch { /* keep last */ }
+  notify()
+}
+export async function addInboxRule(r: Omit<InboxRule, 'id' | 'enabled' | 'hits30d'>) {
+  await apiFetch('/inbox-rules', { method: 'POST', body: JSON.stringify({ if_field: r.if_field, if_value: r.if_value }) })
+  await refreshInboxRules()
+}
+export async function toggleInboxRule(id: string) {
+  const r = INBOX_RULES_LIVE.find((x) => x.id === id)
+  if (!r) return
+  r.enabled = !r.enabled
+  notify()
+  await apiFetch(`/inbox-rules/${id}`, { method: 'PATCH', body: JSON.stringify({ enabled: r.enabled }) }).catch(() => void refreshInboxRules())
+}
+export async function deleteInboxRule(id: string) {
+  await apiFetch(`/inbox-rules/${id}`, { method: 'DELETE' })
+  await refreshInboxRules()
 }
