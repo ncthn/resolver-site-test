@@ -47,6 +47,10 @@ export const updateRuleCondV2 = LIVE ? live.updateRuleCondV2 : mock.updateRuleCo
 export const toggleRuleV2 = LIVE ? live.toggleRuleV2 : mock.toggleRuleV2
 export const deleteRuleV2 = LIVE ? live.deleteRuleV2 : mock.deleteRuleV2
 export const addRuleV2 = LIVE ? live.addRuleV2 : mock.addRuleV2
+export const getTasks = LIVE ? live.getTasks : mock.getTasks
+export const moveTask = LIVE ? live.moveTask : mock.moveTask
+export const createTask = LIVE ? live.createTask : mock.createTask
+export const toggleTask = LIVE ? live.toggleTask : mock.toggleTask
 
 // Live-only plumbing (no-ops in demo mode)
 export const setTokenProvider = live.setTokenProvider

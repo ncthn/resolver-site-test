@@ -108,6 +108,7 @@ export function startPolling() {
   void refresh()
   void refreshBinAndSent()
   void refreshMacros()
+  void refreshTasks()
   setInterval(() => { void refresh() }, 12_000)
   setInterval(() => { void refreshBinAndSent() }, 30_000)
 }
@@ -384,4 +385,30 @@ export async function refreshInsights(shopId: string) {
   if (!shopId || shopId === 'all') return
   try { INSIGHTS_LIVE[shopId] = await apiFetch(`/insights?shop_id=${encodeURIComponent(shopId)}`) as { tickets: number; insights: LiveInsight[] } } catch { /* keep last */ }
   notify()
+}
+
+/* ------------------------------------------------------------ live tasks -- */
+import type { TaskCol } from './mockApi'
+interface LiveTask { id: string; t: string; d: string; due: string; col: TaskCol; ticketId?: string }
+let TASKS_LIVE: LiveTask[] = []
+export function getTasks() { return TASKS_LIVE }
+export async function refreshTasks() {
+  try {
+    const raw = await apiFetch('/kanban-tasks') as { id: string; title: string; detail: string; col: TaskCol; due: string; ticket_id: string | null }[]
+    TASKS_LIVE = raw.map((r) => ({ id: r.id, t: r.title, d: r.detail, due: r.due, col: r.col, ticketId: r.ticket_id ?? undefined }))
+  } catch { /* keep last */ }
+  notify()
+}
+export async function moveTask(id: string, col: TaskCol) {
+  const k = TASKS_LIVE.find((x) => x.id === id); if (k) k.col = col
+  notify()
+  await apiFetch(`/kanban-tasks/${id}`, { method: 'PATCH', body: JSON.stringify({ col }) }).catch(() => void refreshTasks())
+}
+export async function createTask(t: string, d: string) {
+  await apiFetch('/kanban-tasks', { method: 'POST', body: JSON.stringify({ title: t, detail: d }) })
+  await refreshTasks()
+}
+export async function toggleTask(id: string) {
+  const k = TASKS_LIVE.find((x) => x.id === id)
+  if (k) await moveTask(id, k.col === 'done' ? 'todo' : 'done')
 }

@@ -27,7 +27,8 @@ actual cutover takes.
 - Overview: FULLY WIRED (live KPIs, volume, categories, backlog, and AI trend insights from /api/insights, per store, 1h cache)
 - Returns flow: WIRED (server-side state machine live on resolver.chat)
 - Macros: WIRED (company-scoped CRUD live; insert, save-from-draft, remove)
-- Tasks, Chargebacks workbench, CSAT, inbox rules
+- Tasks: WIRED (company-scoped kanban CRUD live, drag-drop and quick-add real)
+- Chargebacks workbench, CSAT, inbox rules
   (features that do not exist server-side yet — each needs its production
   model before wiring)
 - Settings > Filters / Emails / Stores / Notifications / Billing (config
