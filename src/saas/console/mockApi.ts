@@ -771,3 +771,12 @@ export async function advanceReturn(ticketId: string, choice?: 'A' | 'B') {
   log('Return flow advanced', `${ticketId} → ${r.stage}`, 'ok')
   notify()
 }
+
+/* ------------------------------- support insights (trend mining, demo) --- */
+export interface Insight { id: string; severity: 'warn' | 'info' | 'good'; label: string; detail: string; count: number; action: string }
+export const INSIGHTS: Insight[] = [
+  { id: 'i1', severity: 'warn', label: 'Sizing questions up 2.4x this week', detail: 'Nearly all mention the Harbor Robe in size M. Nine of eleven customers ended up asking for a different size than they ordered.', count: 11, action: 'Add a sizing note to the product page, then a rule so drafts mention it proactively' },
+  { id: 'i2', severity: 'warn', label: 'Delivery attempt failures cluster in Germany', detail: 'Six shipments this month, all failing at the same last-mile handoff. Two escalated into chargeback threats.', count: 6, action: 'Ask the supplier about the DE last-mile carrier before the next batch ships' },
+  { id: 'i3', severity: 'info', label: 'Refund requests mention "quality" 40% more than last month', detail: 'Concentrated on the Aurora Throw. Customer photos show loose stitching on what looks like one production batch.', count: 8, action: 'Flag the batch to the supplier and consider a proactive outreach rule' },
+  { id: 'i4', severity: 'good', label: 'Where-is-my-order volume down 18%', detail: 'Since drafts started leading with the live tracking link, most shipping questions resolve without a human touch.', count: 0, action: 'Nothing to do, keep the shipping lane live' },
+]

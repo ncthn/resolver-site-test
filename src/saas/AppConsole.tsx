@@ -157,6 +157,21 @@ function Overview({ shopId }: { shopId: string }) {
           </div>
         ))}
       </div>
+      <div className="c-card">
+        <div className="c-card-h">Insights <span className="c-chip mut" style={{ marginLeft: 8 }}>found by Resolver · demo data</span></div>
+        <div className="c-rows" style={{ gap: 2 }}>
+          {api.INSIGHTS.map((x) => (
+            <div className="c-insight" key={x.id}>
+              <span className={'dot ' + x.severity} />
+              <div className="bd">
+                <div className="hd"><b>{x.label}</b>{x.count > 0 && <span className="ct">{x.count} tickets</span>}</div>
+                <p>{x.detail}</p>
+                <span className="act">Suggested: {x.action}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
       <div className="c-grid2">
         <div className="c-card">
           <div className="c-card-h">Ticket volume</div>

@@ -1252,3 +1252,17 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 
 /* guided returns card */
 .c-return .c-tl .e.now span{color:var(--ink);font-weight:600}
+
+/* overview insights */
+.c-insight{display:flex;gap:11px;padding:12px 0;border-top:1px solid var(--line)}
+.c-insight:first-child{border-top:none;padding-top:4px}
+.c-insight .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}
+.c-insight .dot.warn{background:#B4472F}
+.c-insight .dot.info{background:var(--ink)}
+.c-insight .dot.good{background:#3D7A50}
+.c-insight .bd{flex:1;min-width:0}
+.c-insight .hd{display:flex;align-items:baseline;gap:10px}
+.c-insight .hd b{font-size:13.5px;font-weight:600}
+.c-insight .ct{font-size:10.5px;color:var(--tx-faint);font-variant-numeric:tabular-nums;white-space:nowrap}
+.c-insight p{font-size:12.5px;color:var(--tx-soft);line-height:1.55;margin-top:3px;max-width:74ch}
+.c-insight .act{display:block;font-size:12px;font-weight:600;color:var(--acc,#2F6B45);margin-top:5px}
