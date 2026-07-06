@@ -296,18 +296,32 @@ function CategoryDropdown({ t }: { t: Ticket }) {
     </div>
   )
 }
-function StatusSelect({ t }: { t: Ticket }) {
+/* Status lives in the conversation header, Gorgias-style: a chip with a
+   colored state dot, right next to the chat, not buried in the side rail. */
+const STATUS_DOT: Record<TicketStatus, string> = {
+  OPEN: '#3D7A50', WAITING_CUSTOMER: '#9A9C9F', WAITING_SUPPLIER: '#9A9C9F',
+  RESOLVED: '#9A9C9F', REPLACEMENT_SENT: '#16181C', ESCALATED: '#B4472F',
+}
+function StatusDropdown({ t }: { t: Ticket }) {
+  const [open, setOpen] = useState(false)
+  useOutsideClose(open, () => setOpen(false))
   return (
-    <select
-      className="c-statusselect"
-      value={t.status}
-      onChange={(e) => api.patchStatus(t.id, e.target.value as TicketStatus)}
-      aria-label="Ticket status"
-    >
-      {(Object.keys(STATUS_LABEL) as TicketStatus[]).map((st) => (
-        <option key={st} value={st}>{STATUS_LABEL[st]}</option>
-      ))}
-    </select>
+    <div className="c-status-wrap" onClick={(e) => e.stopPropagation()}>
+      <button className="c-chip-btn c-statuschip" onClick={() => setOpen(!open)} aria-label="Ticket status">
+        <span className="dot" style={{ background: STATUS_DOT[t.status] }} />
+        {STATUS_LABEL[t.status]} <ChevronDown size={13} />
+      </button>
+      {open && (
+        <div className="c-menu">
+          {(Object.keys(STATUS_LABEL) as TicketStatus[]).map((st) => (
+            <button key={st} className={st === t.status ? 'on' : ''} onClick={() => { api.patchStatus(t.id, st); setOpen(false) }}>
+              <span className="mi"><span className="dot" style={{ background: STATUS_DOT[st] }} /> {STATUS_LABEL[st]}</span>
+              {st === t.status && <Check size={13} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -346,41 +360,18 @@ function Bubble({ m, lang }: { m: ThreadMessage; lang: string }) {
   )
 }
 
-/* Decision trace: every check the pipeline ran before this draft existed. */
-function Trace({ steps }: { steps: TraceStep[] }) {
-  const [open, setOpen] = useState(false)
-  const fails = steps.filter((x) => !x.ok).length
+/* Decision-trace step list; the toggle lives on the composer's single
+   bottom bar, expanded content renders full-width below it. */
+function TraceList({ steps }: { steps: TraceStep[] }) {
   return (
-    <div className="c-trace">
-      <button className="tr-head" onClick={() => setOpen(!open)} aria-expanded={open}>
-        <Route size={12} /> How Resolver decided · {steps.length} checks{fails > 0 ? ` · ${fails} flag` : ''}
-        <ChevronDown size={12} className={open ? 'r' : ''} />
-      </button>
-      {open && (
-        <div className="tr-list">
-          {steps.map((x) => (
-            <div className={'tr-step' + (x.ok ? '' : ' flag')} key={x.step}>
-              <span className="ic">{x.ok ? <Check size={11} strokeWidth={2.6} /> : <ShieldCheck size={11} strokeWidth={2.4} />}</span>
-              <span className="tx"><b>{x.step}</b> — {x.detail}</span>
-              {x.ms != null && <span className="ms">{x.ms}ms</span>}
-            </div>
-          ))}
+    <div className="tr-list">
+      {steps.map((x) => (
+        <div className={'tr-step' + (x.ok ? '' : ' flag')} key={x.step}>
+          <span className="ic">{x.ok ? <Check size={11} strokeWidth={2.6} /> : <ShieldCheck size={11} strokeWidth={2.4} />}</span>
+          <span className="tx"><b>{x.step}</b> — {x.detail}</span>
+          {x.ms != null && <span className="ms">{x.ms}ms</span>}
         </div>
-      )}
-    </div>
-  )
-}
-
-/* The native-language version that will actually send (English is the mirror). */
-function NativeDraft({ t }: { t: Ticket }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <div className="c-nativedraft">
-      <button onClick={() => setOpen(!open)} aria-expanded={open}>
-        <Languages size={11} /> {open ? 'Hide' : 'Sends in'} {t.customer_language.toUpperCase()}
-        <ChevronDown size={11} className={open ? 'r' : ''} />
-      </button>
-      {open && <p>{t.draft_body}</p>}
+      ))}
     </div>
   )
 }
@@ -395,8 +386,9 @@ function Composer({ t }: { t: Ticket }) {
   const [busy, setBusy] = useState<'' | 'send' | 'regen'>('')
   const [cooldownAt, setCooldownAt] = useState<Record<string, number>>({})
   const [note, setNote] = useState('')
+  const [expand, setExpand] = useState<'' | 'native' | 'trace'>('')
   const [, setTick] = useState(0)
-  useEffect(() => { setTab('reply'); setEditing(false); setBusy(''); setNote('') }, [t.id])
+  useEffect(() => { setTab('reply'); setEditing(false); setBusy(''); setNote(''); setExpand('') }, [t.id])
   useEffect(() => {
     const id = setInterval(() => setTick((x) => x + 1), 1000)
     return () => clearInterval(id)
@@ -442,11 +434,19 @@ function Composer({ t }: { t: Ticket }) {
             ) : (
               <p className="body editable" title="Click to edit" onClick={() => { setEditing(true); setEditBody(draftEN ?? '') }}>{draftEN}</p>
             )}
-            <div className="c-cmeta">
-              {t.draft_body_english && !editing && <NativeDraft t={t} />}
-              {t.trace && <Trace steps={t.trace} />}
-            </div>
-            <div className="c-cfoot">
+            {/* ONE bottom bar: toggles + countdown left, send right.
+                Expanded panels open full-width underneath. */}
+            <div className="c-cbar">
+              {t.draft_body_english && !editing && (
+                <button className={'c-bartoggle' + (expand === 'native' ? ' on' : '')} onClick={() => setExpand(expand === 'native' ? '' : 'native')} aria-expanded={expand === 'native'}>
+                  <Languages size={11} /> Sends in {t.customer_language.toUpperCase()} <ChevronDown size={11} className={expand === 'native' ? 'r' : ''} />
+                </button>
+              )}
+              {t.trace && (
+                <button className={'c-bartoggle' + (expand === 'trace' ? ' on' : '')} onClick={() => setExpand(expand === 'trace' ? '' : 'trace')} aria-expanded={expand === 'trace'}>
+                  <Route size={11} /> {t.trace.length} checks{t.trace.filter((x) => !x.ok).length > 0 ? ` · ${t.trace.filter((x) => !x.ok).length} flag` : ''} <ChevronDown size={11} className={expand === 'trace' ? 'r' : ''} />
+                </button>
+              )}
               {!held && t.auto_send_queued_at && autoMs > 0 && (
                 <span className="c-autosend"><Clock size={12} /> Auto-sends in {mm}:{ss} · <button onClick={() => api.cancelAutoSend(t.id)}>Cancel</button></span>
               )}
@@ -459,6 +459,8 @@ function Composer({ t }: { t: Ticket }) {
                 </button>
               )}
             </div>
+            {expand === 'native' && !editing && <p className="c-native-p">{t.draft_body}</p>}
+            {expand === 'trace' && t.trace && <TraceList steps={t.trace} />}
           </>
         ) : (
           <div className="c-cfoot" style={{ marginTop: 6 }}>
@@ -600,6 +602,7 @@ function TicketsView({ shopId }: { shopId: string }) {
             </div>
           </div>
           <div className="acts">
+            <StatusDropdown t={t} />
             <CategoryDropdown t={t} />
             <button className={'c-aiswitch' + (t.ai_disabled ? ' off' : '')} onClick={() => api.postAiToggle(t.id)} title={t.ai_disabled ? 'AI is off for this ticket: no drafting, no auto-send. Click to re-enable.' : 'AI is drafting on this ticket. Click to take over by hand.'}>
               <Zap size={12} /> AI <span className="sw"><i /></span>
@@ -697,10 +700,6 @@ function TicketsView({ shopId }: { shopId: string }) {
             <div className="c-kv"><span>Sentiment</span><b className={t.sentiment === 'angry' ? 'red' : ''}>{t.sentiment}</b></div>
             <div className="c-kv"><span>Urgency</span><b>{t.urgency_score}/100</b></div>
           </div>
-        </div>
-        <div className="sec">
-          <div className="h">Status</div>
-          <div className="card"><StatusSelect t={t} /></div>
         </div>
       </aside>
     </div>
@@ -1278,7 +1277,7 @@ const TOUR: { sel: string; title: string; body: string; place: 'right' | 'bottom
   { sel: '.c-store', title: 'All your stores, one inbox', body: 'Switch between stores or work across all of them at once. Counts follow.', place: 'right' },
   { sel: '.c-ftabs', title: 'The queue, sliced', body: 'Open, escalated, waiting, resolved. Escalations always float to the top.', place: 'bottom' },
   { sel: '.c-composer', title: 'Drafts, not homework', body: 'Every ticket arrives with a reply already written from the real order. Click the text to edit it, then approve. Notes for your team live in the same place.', place: 'top' },
-  { sel: '.c-statusselect', title: 'Status lives here', body: 'Move tickets through open, waiting, resolved. Escalations happen automatically on risk.', place: 'left' },
+  { sel: '.c-statuschip', title: 'Status lives with the chat', body: 'Move tickets through open, waiting, resolved right from the header. Escalations happen automatically on risk.', place: 'bottom' },
   { sel: '.c-auto', title: 'Autonomy, on a leash', body: 'This shows which lanes auto-send. The kill switch in Settings stops everything instantly.', place: 'right' },
 ]
 function Tour({ onDone }: { onDone: () => void }) {
