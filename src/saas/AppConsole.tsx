@@ -237,6 +237,35 @@ function Overview({ shopId }: { shopId: string }) {
         </div>
       </div>
       <div className="c-card">
+        <div className="c-card-h">Customer satisfaction <span className="c-chip mut" style={{ marginLeft: 8 }}>one-click rating after resolution · demo</span></div>
+        {(() => {
+          const cs = api.csatSummary()
+          return (
+            <div className="c-csatgrid">
+              <div className="big">
+                <span className="v">{cs.avg.toFixed(1)}</span>
+                <span className="l">average of {cs.count} ratings</span>
+                <span className="split">AI-resolved {cs.autoAvg.toFixed(1)} · human {cs.humanAvg.toFixed(1)}</span>
+              </div>
+              <div className="dist">
+                {cs.dist.map(([sc, n]) => (
+                  <div className="c-lane-row" key={sc}>
+                    <span className="nm">{sc} star{sc > 1 ? 's' : ''}</span>
+                    <span className="bar"><i style={{ width: (n / cs.count) * 100 + '%', background: sc >= 4 ? '#3D7A50' : sc === 3 ? '#8A6D1F' : '#B4472F' }} /></span>
+                    <span className="pct">{n}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="quotes">
+                {cs.comments.slice(0, 3).map((c) => (
+                  <div className="q" key={c.ticket_id}><span className="sc">{c.score}/5</span><p>&ldquo;{c.comment}&rdquo;</p><span className="who">{c.customer}</span></div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+      </div>
+      <div className="c-card">
         <div className="c-card-h">Automation readiness</div>
         <div className="c-rows">
           {api.LANE_STATS.map((st) => {
@@ -763,6 +792,14 @@ function TicketsView({ shopId, catFilter = null, onClearCat }: { shopId: string;
               {n.body}
             </div>
           ))}
+          {(() => {
+            const c = api.CSAT.find((x) => x.ticket_id === t.id)
+            return c ? (
+              <div className="c-csatline">
+                <Check size={12} strokeWidth={2.6} /> Customer rated this conversation {c.score}/5{c.comment ? <> · &ldquo;{c.comment}&rdquo;</> : null}
+              </div>
+            ) : null
+          })()}
           <SummarizePill t={t} />
         </div>
         <Composer t={t} />
@@ -1471,6 +1508,13 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
                   <p>{killed ? 'All automated sending is paused. Drafts still generate and hold for approval.' : 'One switch stops all automated sending immediately. Drafting continues.'}</p>
                 </div>
                 <button className={'c-switch' + (killed ? ' on' : '')} onClick={() => setKilled(!killed)} aria-label="Kill switch"><span className="k" /></button>
+              </div>
+              <div className="c-killrow" style={{ borderColor: 'var(--line)', background: '#fff' }}>
+                <div>
+                  <b>Satisfaction survey</b>
+                  <p>{api.CSAT_SETTINGS.enabled ? 'A one-click rating goes out 24 hours after a conversation resolves. Replies land in Overview.' : 'No survey is sent after resolution.'}</p>
+                </div>
+                <button className={'c-switch green' + (api.CSAT_SETTINGS.enabled ? ' on' : '')} onClick={() => api.toggleCsat()} aria-label="Satisfaction survey"><span className="k" /></button>
               </div>
               {lanes.map((l, i) => {
                 const st = api.LANE_STATS.find((x) => x.lane === l.name)

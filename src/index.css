@@ -1273,3 +1273,18 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 .c-sanity{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;cursor:help;white-space:nowrap}
 .c-sanity.ok{color:#3D7A50}
 .c-sanity.warn{color:#B4472F}
+
+/* CSAT card + thread rating line */
+.c-csatgrid{display:grid;grid-template-columns:170px 1fr 1fr;gap:24px;align-items:start}
+.c-csatgrid .big{display:flex;flex-direction:column;gap:3px}
+.c-csatgrid .big .v{font-size:38px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.c-csatgrid .big .l{font-size:12px;color:var(--tx-faint)}
+.c-csatgrid .big .split{font-size:11.5px;font-weight:600;color:#3D7A50;margin-top:4px}
+.c-csatgrid .dist{display:flex;flex-direction:column;gap:4px}
+.c-csatgrid .quotes{display:flex;flex-direction:column;gap:8px}
+.c-csatgrid .q{border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--tx-soft)}
+.c-csatgrid .q .sc{font-weight:700;color:var(--ink);margin-right:6px}
+.c-csatgrid .q p{display:inline;line-height:1.5}
+.c-csatgrid .q .who{display:block;margin-top:3px;font-size:10.5px;color:var(--tx-faint)}
+.c-csatline{align-self:center;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#3D7A50;background:#E8F0EB;border-radius:999px;padding:6px 13px}
+@media (max-width:1100px){.c-csatgrid{grid-template-columns:1fr 1fr}.c-csatgrid .quotes{grid-column:1/-1}}

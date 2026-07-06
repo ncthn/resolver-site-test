@@ -217,6 +217,8 @@ const LOG: ActivityEvent[] = [
   { at: iso(30 * 60_000), ev: 'Draft created (IT)', detail: 'DAMAGED · photo request per SOP · EN mirror attached', kind: 'ok' },
   { at: iso(32 * 60_000), ev: 'Supplier requested', detail: 'Replacement stock check · Aurora Linen Set, Clay', kind: 'hold' },
   { at: iso(5.5 * 3_600_000), ev: 'Auto-sent (FR)', detail: 'CANCEL · address updated pre-fulfillment · t-4440', kind: 'send' },
+  { at: iso(3.1 * 3_600_000), ev: 'Tracking push received', detail: '17TRACK · CP771222US delivery attempt failed · t-4468', kind: 'hold' },
+  { at: iso(3 * 3_600_000), ev: 'Proactive draft created', detail: 'Delivery failure detected before the customer wrote · opener ready on t-4468', kind: 'ok' },
 ]
 
 /* ------------------------------------------------------------- store core */
@@ -797,4 +799,28 @@ export function fillMacro(body: string, t: Ticket): string {
     .replace(/\{order\}/g, t.order_name ?? 'your order')
     .replace(/\{tracking\}/g, t.order_snapshot?.tracking_urls?.[0] && t.order_snapshot.tracking_numbers[0] ? t.order_snapshot.tracking_numbers[0] : 'the tracking link')
     .replace(/\{tracking_status\}/g, t.order_snapshot?.tracking_status?.[0] ?? 'in transit')
+}
+
+/* --------------------------------------------- CSAT after resolution ----- */
+export interface CsatEntry { ticket_id: string; customer: string; score: 1 | 2 | 3 | 4 | 5; comment: string | null; auto: boolean; at: string }
+export const CSAT: CsatEntry[] = [
+  { ticket_id: 't-4440', customer: 'Chloé Martin', score: 5, comment: 'Réponse en 2 minutes, parfait.', auto: true, at: iso(4.2 * 3_600_000) },
+  { ticket_id: 't-4449', customer: 'mk@email.com', score: 4, comment: null, auto: false, at: iso(9 * 3_600_000) },
+  { ticket_id: 'old-1', customer: 'P. Janssen', score: 5, comment: 'Fast and kind, thank you.', auto: true, at: iso(30 * 3_600_000) },
+  { ticket_id: 'old-2', customer: 'R. Alvarez', score: 5, comment: null, auto: true, at: iso(52 * 3_600_000) },
+  { ticket_id: 'old-3', customer: 'T. Okafor', score: 3, comment: 'Answer was right but took a day.', auto: false, at: iso(70 * 3_600_000) },
+  { ticket_id: 'old-4', customer: 'S. Weiss', score: 5, comment: null, auto: true, at: iso(90 * 3_600_000) },
+  { ticket_id: 'old-5', customer: 'L. Moreau', score: 4, comment: 'Merci pour le suivi.', auto: false, at: iso(110 * 3_600_000) },
+  { ticket_id: 'old-6', customer: 'K. Tanaka', score: 5, comment: null, auto: true, at: iso(140 * 3_600_000) },
+]
+export const CSAT_SETTINGS = { enabled: true }
+export function toggleCsat() { CSAT_SETTINGS.enabled = !CSAT_SETTINGS.enabled; notify() }
+export function csatSummary() {
+  const rated = CSAT
+  const avg = rated.reduce((a, c) => a + c.score, 0) / rated.length
+  const autoRated = rated.filter((c) => c.auto)
+  const humanRated = rated.filter((c) => !c.auto)
+  const mean = (xs: CsatEntry[]) => xs.length ? xs.reduce((a, c) => a + c.score, 0) / xs.length : 0
+  const dist = [5, 4, 3, 2, 1].map((sc) => [sc, rated.filter((c) => c.score === sc).length] as const)
+  return { avg, count: rated.length, autoAvg: mean(autoRated), humanAvg: mean(humanRated), dist, comments: rated.filter((c) => c.comment) }
 }
