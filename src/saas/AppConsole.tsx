@@ -1788,11 +1788,15 @@ function Tour({ onDone }: { onDone: () => void }) {
     setRect(el.getBoundingClientRect())
   }, [i, step.sel, onDone])
   if (!rect) return null
+  // Vertically center side bubbles on the target and clamp every placement
+  // inside the viewport so a bottom-anchored step can never spill off-screen.
+  const EST_H = 170
+  const sideTop = Math.max(12, Math.min(rect.top + rect.height / 2 - EST_H / 2, window.innerHeight - EST_H - 12))
   const pos: React.CSSProperties =
-    step.place === 'right' ? { left: rect.right + 14, top: Math.max(12, rect.top + rect.height / 2 - 40) } :
-    step.place === 'left' ? { right: window.innerWidth - rect.left + 14, top: Math.max(12, rect.top + rect.height / 2 - 40) } :
-    step.place === 'bottom' ? { left: Math.min(rect.left, window.innerWidth - 320), top: rect.bottom + 12 } :
-    { left: Math.min(rect.left, window.innerWidth - 320), top: rect.top - 12, transform: 'translateY(-100%)' }
+    step.place === 'right' ? { left: Math.min(rect.right + 16, window.innerWidth - 300), top: sideTop } :
+    step.place === 'left' ? { right: window.innerWidth - rect.left + 16, top: sideTop } :
+    step.place === 'bottom' ? { left: Math.min(rect.left, window.innerWidth - 320), top: Math.min(rect.bottom + 12, window.innerHeight - EST_H - 12) } :
+    { left: Math.min(rect.left, window.innerWidth - 320), top: Math.max(rect.top - 12, EST_H + 12), transform: 'translateY(-100%)' }
   return (
     <>
       <div className="tour-glow" style={{ left: rect.left - 6, top: rect.top - 6, width: rect.width + 12, height: rect.height + 12 }} />
