@@ -35,6 +35,9 @@ export const deleteTicket = LIVE ? live.deleteTicket : mock.deleteTicket
 export const restoreTicket = LIVE ? live.restoreTicket : mock.restoreTicket
 export const getOutbound = LIVE ? live.getOutbound : mock.getOutbound
 export const listBinSync = () => (LIVE ? live.listBinSync() : [])
+export const getReturn = LIVE ? live.getReturn : mock.getReturn
+export const startReturn = LIVE ? live.startReturn : mock.startReturn
+export const advanceReturn = LIVE ? live.advanceReturn : mock.advanceReturn
 
 // Live-only plumbing (no-ops in demo mode)
 export const setTokenProvider = live.setTokenProvider

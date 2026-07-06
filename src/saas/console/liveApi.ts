@@ -284,3 +284,19 @@ export async function refreshStats(shopId: string | undefined, days: number) {
   } catch { /* keep last */ }
   notify()
 }
+
+/* ------------------------------------------------------- live returns ---- */
+export function getReturn(ticketId: string): { stage: 'requested' | 'options_sent' | 'return_approved' | 'item_received' | 'refunded' | 'partial_refunded'; option: 'A' | 'B' | null; updated_at: string } | null {
+  const t = TICKETS.find((x) => x.id === ticketId) as (Ticket & { returns?: { stage: 'requested' | 'options_sent' | 'return_approved' | 'item_received' | 'refunded' | 'partial_refunded'; option: 'A' | 'B' | null; updated_at: string } | null }) | undefined
+  return t?.returns ?? null
+}
+export async function startReturn(ticketId: string) {
+  await apiFetch(`/tickets/${ticketId}/return/start`, { method: 'POST' })
+  void refresh()
+}
+export async function advanceReturn(ticketId: string, choice?: 'A' | 'B') {
+  const r = await apiFetch(`/tickets/${ticketId}/return/advance`, { method: 'POST', body: JSON.stringify({ choice }) }) as { returns: { stage: 'requested' | 'options_sent' | 'return_approved' | 'item_received' | 'refunded' | 'partial_refunded'; option: 'A' | 'B' | null; updated_at: string } }
+  const t = TICKETS.find((x) => x.id === ticketId) as (Ticket & { returns?: unknown }) | undefined
+  if (t) t.returns = r.returns
+  notify(); void refresh()
+}
