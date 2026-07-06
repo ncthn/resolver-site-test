@@ -11,7 +11,7 @@ import {
   RefreshCw, Gavel, Clock, Check, Zap, ArrowUpRight, User, LayoutDashboard,
   Filter, FileText, X, Plus, PauseCircle, Languages, ChevronDown,
   Unlink, Loader2, Factory, RotateCcw, Tag, Paperclip, Download, Route,
-  PanelLeft, MoreHorizontal, StickyNote, Sparkles,
+  PanelLeft, MoreHorizontal, StickyNote, Sparkles, MapPin, Copy, Mail, Globe,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { Category, Ticket, TicketStatus, ThreadMessage, TraceStep } from './console/types'
@@ -677,6 +677,12 @@ function TicketsView({ shopId }: { shopId: string }) {
                   <div className="line" key={li.title}><Package size={13} /><span>{li.quantity}× {li.title}</span></div>
                 ))}
                 <div className="c-kv"><span>Payment</span><b>{t.order_snapshot.financial_status}</b></div>
+                {t.order_snapshot.payment_gateways[0] && (
+                  <div className="c-kv"><span>Method</span><b>
+                    {({ shopify_payments: 'Shopify Payments', paypal: 'PayPal', klarna: 'Klarna' } as Record<string, string>)[t.order_snapshot.payment_gateways[0]] ?? t.order_snapshot.payment_gateways[0]}
+                    {['paypal', 'klarna'].includes(t.order_snapshot.payment_gateways[0]) && <span className="c-gwflag">dispute-prone</span>}
+                  </b></div>
+                )}
                 <div className="c-kv"><span>Fulfillment</span><b>{t.order_snapshot.fulfillment_status}</b></div>
                 <div className="c-kv"><span>Total</span><b>{t.order_snapshot.currency === 'EUR' ? '€' : '$'}{t.order_snapshot.total_price}</b></div>
                 <div className="c-kv"><span>Ships to</span><b>{t.order_snapshot.shipping_country}</b></div>
@@ -773,92 +779,148 @@ const COMPOSE_ORDERS = [
   { name: '#2061', who: 'Sofia Rossi', item: 'Aurora Linen Set, Clay' },
   { name: '#2103', who: 'Chloé Martin', item: 'Aurora Linen Set, Sand x2' },
 ]
+const COMPOSE_TEMPLATES = [
+  { id: 'address', label: 'Address issue', desc: 'Ask for a correct or complete shipping address', icon: MapPin, intent: 'we could not validate the shipping address on this order and need a corrected, complete address to deliver it' },
+  { id: 'delay', label: 'Shipping delay', desc: 'Apologize for the delay and share an ETA', icon: Clock, intent: 'we are sorry about the delay on this order, it is moving again and we will share the updated delivery estimate' },
+  { id: 'replacement', label: 'Replacement', desc: 'Confirm details to ship a replacement', icon: RotateCcw, intent: 'we are preparing a replacement shipment and want to confirm the item and address before it goes out' },
+  { id: 'custom', label: 'Custom message', desc: 'Write your own intent, Resolver drafts it', icon: Pencil, intent: '' },
+] as const
+type ComposeTemplateId = typeof COMPOSE_TEMPLATES[number]['id']
+
+/* Compose, rebuilt on the ComeDown Support pattern: find the order first,
+   pick what kind of message this is, review the AI draft, send. */
 function Compose() {
+  const [stage, setStage] = useState<'search' | 'template' | 'review' | 'sent'>('search')
   const [from, setFrom] = useState('support@aurora.com')
   const [orderQ, setOrderQ] = useState('')
   const [order, setOrder] = useState<typeof COMPOSE_ORDERS[0] | null>(null)
+  const [tmpl, setTmpl] = useState<ComposeTemplateId | null>(null)
   const [intent, setIntent] = useState('')
   const [lang, setLang] = useState('English')
   const [draft, setDraft] = useState('')
-  const [state, setState] = useState<'idle' | 'drafting' | 'review' | 'sending' | 'sent'>('idle')
-  const matches = orderQ.trim() && !order
-    ? COMPOSE_ORDERS.filter((o) => (o.name + o.who + o.item).toLowerCase().includes(orderQ.toLowerCase()))
-    : []
-  const doDraft = async () => {
-    setState('drafting')
-    const d = await api.composeDraft(intent, lang, order?.name ?? null)
+  const [busy, setBusy] = useState<'' | 'drafting' | 'sending'>('')
+  const matches = COMPOSE_ORDERS.filter((o) => !orderQ.trim() || (o.name + o.who + o.item).toLowerCase().includes(orderQ.toLowerCase()))
+  const recipient = order ? order.who.toLowerCase().replace(' ', '.') + '@email.com' : 'customer@email.com'
+  const doDraft = async (id: ComposeTemplateId) => {
+    const base = COMPOSE_TEMPLATES.find((x) => x.id === id)!
+    const text = id === 'custom' ? intent : base.intent
+    if (!text.trim()) return
+    setBusy('drafting')
+    const d = await api.composeDraft(text, lang, order?.name ?? null)
     setDraft(d)
-    setState('review')
+    setBusy('')
+    setStage('review')
   }
   const doSend = async () => {
-    setState('sending')
-    await api.sendCompose(from, order ? order.who.toLowerCase().replace(' ', '.') + '@email.com' : 'customer@email.com', order ? 'About your order ' + order.name : 'From ' + from)
-    setState('sent')
-    setTimeout(() => { setState('idle'); setDraft(''); setIntent(''); setOrder(null); setOrderQ('') }, 2200)
+    setBusy('sending')
+    await api.sendCompose(from, recipient, order ? 'About your order ' + order.name : 'From ' + from)
+    setBusy('')
+    setStage('sent')
   }
+  const reset = () => { setStage('search'); setOrder(null); setOrderQ(''); setTmpl(null); setIntent(''); setDraft('') }
   return (
     <div className="c-page">
-      <header className="c-page-h"><div><h1>Compose</h1><p>Tell Resolver what to say. It writes the email, you review it.</p></div></header>
-      <div className="c-grid2" style={{ alignItems: 'start' }}>
-        <div className="c-card c-compose">
-          <label>Sending from
-            <select value={from} onChange={(e) => setFrom(e.target.value)}>
-              <option>support@aurora.com</option><option>hello@harborgoods.com</option><option>care@northbound.co</option>
-            </select>
+      <header className="c-page-h"><div><h1>Compose</h1><p>Find the order, pick the message, review the draft, send.</p></div></header>
+
+      {stage === 'search' && (
+        <div className="c-card c-compose2">
+          <div className="c-cp-row">
+            <label className="grow">Sending from
+              <select value={from} onChange={(e) => setFrom(e.target.value)}>
+                <option>support@aurora.com</option><option>hello@harborgoods.com</option><option>care@northbound.co</option>
+              </select>
+            </label>
+          </div>
+          <label>Find the order
+            <span className="c-cp-search"><Search size={14} /><input autoFocus placeholder="Order number, customer name, product…" value={orderQ} onChange={(e) => setOrderQ(e.target.value)} /></span>
           </label>
-          <label>Find the order <span className="opt">optional</span>
+          <div className="c-cp-orders">
+            {matches.map((o) => (
+              <button key={o.name} onClick={() => { setOrder(o); setStage('template') }}>
+                <Package size={14} />
+                <span className="o"><b>{o.name}</b> · {o.who}</span>
+                <span className="i">{o.item}</span>
+                <ChevronDown size={13} style={{ transform: 'rotate(-90deg)' }} />
+              </button>
+            ))}
+            {matches.length === 0 && <p className="c-note" style={{ margin: '6px 0 0' }}>No orders match. Demo data covers 4 recent orders.</p>}
+          </div>
+          <button className="c-cp-skip" onClick={() => { setOrder(null); setStage('template') }}>Continue without an order</button>
+        </div>
+      )}
+
+      {stage === 'template' && (
+        <div className="c-card c-compose2">
+          <div className="c-cp-row">
             {order ? (
-              <span className="c-orderchip">
-                <Package size={13} /> {order.name} · {order.who} · {order.item}
-                <button onClick={() => { setOrder(null); setOrderQ('') }} aria-label="detach order"><X size={12} /></button>
+              <span className="c-orderchip"><Package size={13} /> {order.name} · {order.who} · {order.item}
+                <button onClick={() => setStage('search')} aria-label="change order"><X size={12} /></button>
               </span>
             ) : (
-              <input placeholder="Order number, customer name…" value={orderQ} onChange={(e) => setOrderQ(e.target.value)} />
+              <button className="c-cp-skip" style={{ margin: 0 }} onClick={() => setStage('search')}>No order attached · find one</button>
             )}
-            {matches.length > 0 && (
-              <div className="c-ordermatches">
-                {matches.map((o) => (
-                  <button key={o.name} onClick={() => setOrder(o)}><b>{o.name}</b> {o.who} · {o.item}</button>
-                ))}
-              </div>
-            )}
-          </label>
-          <label>What do you need to say?
-            <textarea rows={4} placeholder="e.g. the replacement ships Monday and we added a 10% discount code SORRY10" value={intent} onChange={(e) => setIntent(e.target.value)} />
-          </label>
-          <label>Resolver will write it in
-            <select value={lang} onChange={(e) => setLang(e.target.value)}>
-              <option>English</option><option>French</option><option>German</option><option>Italian</option><option>Spanish</option>
-            </select>
-          </label>
-          <div className="row">
-            <button className="c-act prim" disabled={!intent.trim() || state === 'drafting'} onClick={doDraft}>
-              {state === 'drafting' ? <Loader2 size={14} className="c-spin" /> : <Sparkles size={14} />} {draft ? 'Regenerate' : 'Draft with AI'}
-            </button>
+            <span className="sp" />
+            <label className="inline">Language
+              <select value={lang} onChange={(e) => setLang(e.target.value)}>
+                <option>English</option><option>French</option><option>German</option><option>Italian</option><option>Spanish</option>
+              </select>
+            </label>
           </div>
-        </div>
-        <div className="c-card">
-          <div className="c-card-h">Draft</div>
-          {state === 'idle' && !draft && <p className="c-note" style={{ marginTop: 0 }}>The drafted email appears here for review before anything sends.</p>}
-          {state === 'drafting' && <p className="c-note" style={{ marginTop: 0 }}><Loader2 size={13} className="c-spin" /> Writing…</p>}
-          {draft && state !== 'drafting' && (
+          <div className="c-tmplgrid">
+            {COMPOSE_TEMPLATES.map((x) => (
+              <button key={x.id} className={'c-tmplcard' + (tmpl === x.id ? ' on' : '')} onClick={() => { setTmpl(x.id); if (x.id !== 'custom') void doDraft(x.id) }}>
+                <span className="ic"><x.icon size={15} /></span>
+                <b>{x.label}</b>
+                <span className="d">{x.desc}</span>
+              </button>
+            ))}
+          </div>
+          {tmpl === 'custom' && (
             <>
-              <p className="body editable" title="Click to edit" style={{ fontSize: 13.5, lineHeight: 1.65, cursor: 'text' }}
-                contentEditable suppressContentEditableWarning
-                onBlur={(e) => setDraft(e.currentTarget.textContent ?? draft)}
-              >{draft}</p>
-              <div className="c-draft-footrow">
-                {order && <span className="c-chip ink">{order.name} attached</span>}
-                <span className="c-chip mut">{lang}</span>
-                <span className="sp" />
-                <button className="c-act prim" disabled={state === 'sending'} onClick={doSend}>
-                  {state === 'sending' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} {state === 'sent' ? 'Sent ✓' : 'Review and send'}
+              <label>What do you need to say?
+                <textarea rows={3} autoFocus placeholder="e.g. the replacement ships Monday and we added a 10% discount code SORRY10" value={intent} onChange={(e) => setIntent(e.target.value)} />
+              </label>
+              <div className="row">
+                <button className="c-act prim" disabled={!intent.trim() || busy === 'drafting'} onClick={() => void doDraft('custom')}>
+                  {busy === 'drafting' ? <Loader2 size={14} className="c-spin" /> : <Sparkles size={14} />} Draft with AI
                 </button>
               </div>
             </>
           )}
+          {busy === 'drafting' && tmpl !== 'custom' && <p className="c-note" style={{ margin: 0 }}><Loader2 size={13} className="c-spin" /> Writing the draft…</p>}
         </div>
-      </div>
+      )}
+
+      {stage === 'review' && (
+        <div className="c-card c-compose2">
+          <div className="c-cp-row meta">
+            <span className="k">To</span><span className="v">{order ? order.who : 'Customer'} ({recipient})</span>
+            <span className="sp" />
+            {order && <span className="c-chip ink">{order.name}</span>}
+            <span className="c-chip mut"><Languages size={11} /> {lang}</span>
+          </div>
+          <p className="body editable" title="Click to edit" style={{ fontSize: 13.5, lineHeight: 1.65, cursor: 'text' }}
+            contentEditable suppressContentEditableWarning
+            onBlur={(e) => setDraft(e.currentTarget.textContent ?? draft)}
+          >{draft}</p>
+          <div className="c-cfoot" style={{ marginTop: 14 }}>
+            <button className="c-act" onClick={() => setStage('template')}>Back</button>
+            <span className="sp" />
+            <button className="c-act prim" disabled={busy === 'sending'} onClick={doSend}>
+              {busy === 'sending' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} Send
+            </button>
+          </div>
+        </div>
+      )}
+
+      {stage === 'sent' && (
+        <div className="c-card c-compose2 sent">
+          <span className="ok"><Check size={18} strokeWidth={2.6} /></span>
+          <b>Sent to {order ? order.who : 'the customer'}</b>
+          <p className="c-note" style={{ margin: 0 }}>Delivered from {from}. It will appear in Sent.</p>
+          <button className="c-act" onClick={reset}>Compose another</button>
+        </div>
+      )}
     </div>
   )
 }
@@ -1197,13 +1259,13 @@ type Lanes = typeof LANES_INIT
 function SettingsView({ lanes, setLanes, killed, setKilled }: {
   lanes: Lanes; setLanes: (l: Lanes) => void; killed: boolean; setKilled: (b: boolean) => void
 }) {
-  const [tab, setTab] = useState<'Lanes' | 'Filters' | 'Stores' | 'Policies & SOP' | 'Email' | 'Team' | 'Notifications' | 'Billing'>('Lanes')
+  const [tab, setTab] = useState<'Lanes' | 'Filters' | 'Stores' | 'Policies & SOP' | 'Emails' | 'Team' | 'Notifications' | 'Billing'>('Lanes')
   return (
     <div className="c-page">
       <header className="c-page-h"><div><h1>Settings</h1><p>AURORA · owner access</p></div></header>
       <div className="c-set">
         <nav className="c-set-nav">
-          {(['Lanes', 'Filters', 'Stores', 'Policies & SOP', 'Email', 'Team', 'Notifications', 'Billing'] as const).map((x) => (
+          {(['Lanes', 'Filters', 'Stores', 'Policies & SOP', 'Emails', 'Team', 'Notifications', 'Billing'] as const).map((x) => (
             <button key={x} className={x === tab ? 'on' : ''} onClick={() => setTab(x)}>{x}</button>
           ))}
         </nav>
@@ -1251,14 +1313,7 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
               <p className="c-note">A lane qualifies for live after {api.LANE_STATS[0].needed}+ reviewed drafts with 85%+ sent unedited. Chargeback and legal language always routes to a human, regardless of modes.</p>
             </>
           )}
-          {tab === 'Stores' && (
-            <div className="c-rows">
-              {['AURORA, aurora.com · 4 open', 'Harbor Goods, harborgoods.com · 1 open', 'Northbound, northbound.co · 1 open'].map((s) => (
-                <div className="c-ev" key={s}><span className="t"><b>{s.split(', ')[0]}</b>, {s.split(', ')[1]}</span><span className="at">connected</span></div>
-              ))}
-              <button className="c-act" style={{ marginTop: 14, alignSelf: 'flex-start' }}><Plus size={14} /> Add store</button>
-            </div>
-          )}
+          {tab === 'Stores' && <StoresSettings />}
           {tab === 'Policies & SOP' && (
             <div className="c-rows">
               <div className="c-ev"><span className="ic ok"><FileText size={13} /></span><span className="t"><b>support-sop-v3.pdf</b>, uploaded Jun 12 · constrains every draft</span><span className="at">replace</span></div>
@@ -1267,14 +1322,7 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
               <div className="c-kv"><span>Tone</span><b>Warm, plain, no exclamation marks</b></div>
             </div>
           )}
-          {tab === 'Email' && (
-            <div className="c-rows">
-              <div className="c-kv"><span>Provider</span><b>Gmail, support@aurora.com</b></div>
-              <div className="c-kv"><span>Send verification</span><b className="green">Verified</b></div>
-              <div className="c-kv"><span>DKIM / SPF</span><b className="green">Verified</b></div>
-              <div className="c-kv"><span>Loop protection</span><b>On, auto-replies filtered</b></div>
-            </div>
-          )}
+          {tab === 'Emails' && <EmailsSettings />}
           {tab === 'Team' && <TeamSettings />}
           {tab === 'Filters' && <FilterSettings />}
           {tab === 'Notifications' && <NotifSettings />}
@@ -1288,6 +1336,98 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+const STORE_ROWS = [
+  { name: 'AURORA', domain: 'aurora.com', open: 4, key: 'rsv_live_a7f39c21d8b44e02' },
+  { name: 'Harbor Goods', domain: 'harborgoods.com', open: 1, key: 'rsv_live_9k2m1x84qz7w5v0p' },
+  { name: 'Northbound', domain: 'northbound.co', open: 1, key: 'rsv_live_p3q8r6t1y4u9i2o5' },
+]
+function StoresSettings() {
+  const [revealed, setRevealed] = useState<string | null>(null)
+  const [copied, setCopied] = useState<string | null>(null)
+  const copy = (k: string) => {
+    void navigator.clipboard?.writeText(k).catch(() => { /* demo */ })
+    setCopied(k)
+    setTimeout(() => setCopied(null), 1400)
+  }
+  return (
+    <div className="c-rows" style={{ gap: 10 }}>
+      {STORE_ROWS.map((st) => (
+        <div className="c-storecard" key={st.name}>
+          <div className="hd">
+            <span className="dot" />
+            <b>{st.name}</b>
+            <span className="dom">{st.domain}</span>
+            <span className="sp" />
+            <span className="open">{st.open} open</span>
+          </div>
+          <div className="keyrow">
+            <span className="k">Connection key</span>
+            <code>{revealed === st.name ? st.key : st.key.slice(0, 9) + '••••••••••'}</code>
+            <button onClick={() => setRevealed(revealed === st.name ? null : st.name)}>{revealed === st.name ? 'Hide' : 'Reveal'}</button>
+            <button onClick={() => copy(st.key)}>{copied === st.key ? <Check size={12} /> : <Copy size={12} />} {copied === st.key ? 'Copied' : 'Copy'}</button>
+          </div>
+          <div className="ft">
+            <span>Orders, fulfillments and customers sync read-only.</span>
+            <a className="link">Reconnect <ArrowUpRight size={11} /></a>
+          </div>
+        </div>
+      ))}
+      <button className="c-act" style={{ marginTop: 6, alignSelf: 'flex-start' }}><Plus size={14} /> Add store</button>
+    </div>
+  )
+}
+
+function EmailsSettings() {
+  const [method, setMethod] = useState<'gmail' | 'domain'>('gmail')
+  const [verifying, setVerifying] = useState(false)
+  return (
+    <div className="c-rows" style={{ gap: 12 }}>
+      <div className="c-card-h" style={{ marginBottom: 0 }}>How replies are sent</div>
+      <div className="c-mailopts">
+        <button className={'c-mailopt' + (method === 'gmail' ? ' on' : '')} onClick={() => setMethod('gmail')}>
+          <span className="ic"><Mail size={15} /></span>
+          <b>Through your Gmail</b>
+          <span className="d">Replies send from support@aurora.com via the connected Gmail. Customers see your address, nothing changes for them.</span>
+          <span className="st green">Connected · verified</span>
+        </button>
+        <button className={'c-mailopt' + (method === 'domain' ? ' on' : '')} onClick={() => setMethod('domain')}>
+          <span className="ic"><Globe size={15} /></span>
+          <b>From your domain, no Gmail needed</b>
+          <span className="d">Resolver sends as support@aurora.com through its own sending infrastructure. Add three DNS records once, then retire the Gmail dependency.</span>
+          <span className="st">Requires DNS setup</span>
+        </button>
+      </div>
+      {method === 'domain' && (
+        <div className="c-dnscard">
+          <div className="c-card-h" style={{ marginBottom: 4 }}>DNS records for aurora.com</div>
+          {[
+            ['CNAME', 'resolver._domainkey', 'dkim.resolver.chat'],
+            ['CNAME', 'rsvbounce', 'bounce.resolver.chat'],
+            ['TXT', '@', 'v=spf1 include:spf.resolver.chat ~all'],
+          ].map(([type, host, val]) => (
+            <div className="rec" key={host}>
+              <span className="ty">{type}</span>
+              <code className="h">{host}</code>
+              <code className="v">{val}</code>
+            </div>
+          ))}
+          <div className="row" style={{ marginTop: 10 }}>
+            <button className="c-act prim" disabled={verifying} onClick={() => { setVerifying(true); setTimeout(() => setVerifying(false), 1800) }}>
+              {verifying ? <Loader2 size={14} className="c-spin" /> : <ShieldCheck size={14} />} {verifying ? 'Checking records…' : 'Verify records'}
+            </button>
+            <span className="c-note" style={{ margin: 0 }}>DNS can take up to an hour to propagate.</span>
+          </div>
+        </div>
+      )}
+      <div style={{ borderTop: '1px solid var(--line)', paddingTop: 12 }}>
+        <div className="c-kv"><span>Send verification</span><b className="green">Verified</b></div>
+        <div className="c-kv"><span>DKIM / SPF</span><b className="green">Verified</b></div>
+        <div className="c-kv"><span>Loop protection</span><b>On, auto-replies filtered</b></div>
       </div>
     </div>
   )

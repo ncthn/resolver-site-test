@@ -1009,3 +1009,63 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 .c-lrow .top b{font-size:13.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c-lrow .time{font-size:11px;color:var(--tx-faint);font-variant-numeric:tabular-nums;white-space:nowrap}
 .c-lrow .sub{font-size:12.5px;color:var(--tx-soft)}
+
+/* batch 2: compose stage flow, store cards, email method options, gateway flag */
+.c-gwflag{display:inline-flex;margin-left:8px;font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#B4472F;background:#FBEFEC;border-radius:999px;padding:2px 7px;vertical-align:1px}
+.c-compose2{display:flex;flex-direction:column;gap:14px;max-width:720px}
+.c-compose2 label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink)}
+.c-compose2 label.inline{flex-direction:row;align-items:center;gap:8px;color:var(--tx-faint)}
+.c-compose2 select,.c-compose2 textarea{border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-family:var(--pj);font-size:13px;background:#fff;outline:none}
+.c-compose2 textarea{resize:vertical;line-height:1.6}
+.c-cp-row{display:flex;align-items:center;gap:10px}
+.c-cp-row .grow{flex:1}
+.c-cp-row.meta{font-size:12.5px}
+.c-cp-row.meta .k{color:var(--tx-faint);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}
+.c-cp-row.meta .v{font-weight:500}
+.c-cp-search{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--tx-faint)}
+.c-cp-search input{flex:1;border:none;outline:none;font-family:var(--pj);font-size:13.5px;background:none;color:var(--ink)}
+.c-cp-orders{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.console2 .c-cp-orders button{display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--tx-soft);text-align:left;background:#fff}
+.console2 .c-cp-orders button:first-child{border-top:none}
+.console2 .c-cp-orders button:hover{background:var(--band)}
+.c-cp-orders .o{color:var(--ink)}
+.c-cp-orders .o b{font-weight:600}
+.c-cp-orders .i{flex:1;color:var(--tx-faint);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.console2 .c-cp-skip{align-self:flex-start;font-size:12px;font-weight:600;color:var(--tx-faint);text-decoration:underline;text-underline-offset:2px}
+.console2 .c-cp-skip:hover{color:var(--ink)}
+.c-tmplgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.console2 .c-tmplcard{display:flex;flex-direction:column;align-items:flex-start;gap:5px;border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:#fff;text-align:left;transition:border-color .15s,background .15s}
+.console2 .c-tmplcard:hover{background:var(--band)}
+.console2 .c-tmplcard.on{border-color:var(--ink)}
+.c-tmplcard .ic{width:30px;height:30px;border-radius:9px;background:var(--band);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.c-tmplcard b{font-size:13.5px;font-weight:600;margin-top:2px}
+.c-tmplcard .d{font-size:12px;color:var(--tx-faint);line-height:1.45}
+.c-compose2.sent{align-items:center;text-align:center;padding:44px 24px;gap:10px}
+.c-compose2.sent .ok{width:40px;height:40px;border-radius:50%;background:#E8F0EB;color:#3D7A50;display:flex;align-items:center;justify-content:center}
+.c-storecard{border:1px solid var(--line);border-radius:12px;padding:13px 15px;display:flex;flex-direction:column;gap:9px;background:#fff}
+.c-storecard .hd{display:flex;align-items:center;gap:8px}
+.c-storecard .hd .dot{width:7px;height:7px;border-radius:50%;background:#3D7A50}
+.c-storecard .hd b{font-size:13.5px}
+.c-storecard .hd .dom{font-size:12px;color:var(--tx-faint)}
+.c-storecard .hd .sp{flex:1}
+.c-storecard .hd .open{font-size:11px;color:var(--tx-faint)}
+.c-storecard .keyrow{display:flex;align-items:center;gap:8px;font-size:12px}
+.c-storecard .keyrow .k{color:var(--tx-faint);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}
+.c-storecard .keyrow code{background:var(--band);border-radius:6px;padding:4px 8px;font-size:11.5px;font-variant-ligatures:none}
+.console2 .c-storecard .keyrow button{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--tx-soft);border:1px solid var(--line);border-radius:999px;padding:4px 9px;background:#fff}
+.console2 .c-storecard .keyrow button:hover{background:var(--band);color:var(--ink)}
+.c-storecard .ft{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--tx-faint);border-top:1px solid var(--line);padding-top:9px}
+.c-mailopts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.console2 .c-mailopt{display:flex;flex-direction:column;align-items:flex-start;gap:6px;border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:#fff;text-align:left;transition:border-color .15s}
+.console2 .c-mailopt:hover{background:var(--band)}
+.console2 .c-mailopt.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.c-mailopt .ic{width:30px;height:30px;border-radius:9px;background:var(--band);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.c-mailopt b{font-size:13.5px;font-weight:600;margin-top:2px}
+.c-mailopt .d{font-size:12px;color:var(--tx-faint);line-height:1.5}
+.c-mailopt .st{font-size:11px;font-weight:600;color:var(--tx-faint);margin-top:2px}
+.c-mailopt .st.green{color:#3D7A50}
+.c-dnscard{border:1px solid var(--line);border-radius:12px;padding:13px 15px;display:flex;flex-direction:column;gap:7px}
+.c-dnscard .rec{display:grid;grid-template-columns:52px 170px 1fr;gap:10px;align-items:center;font-size:12px}
+.c-dnscard .ty{font-weight:700;font-size:10.5px;letter-spacing:.04em;color:var(--tx-faint)}
+.c-dnscard code{background:var(--band);border-radius:6px;padding:4px 8px;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:900px){.c-tmplgrid,.c-mailopts{grid-template-columns:1fr}}

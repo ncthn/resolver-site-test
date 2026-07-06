@@ -28,7 +28,7 @@ const TICKETS: Ticket[] = [
     order_snapshot: {
       order_name: '#1042', order_id: 'gid://1042', shopify_url: '#',
       created_at: iso(21 * 86_400_000), financial_status: 'paid', fulfillment_status: 'fulfilled',
-      tracking_numbers: ['CP998341US'], tracking_urls: ['#'], tracking_status: ['In transit, customs cleared'],
+      payment_gateways: ['shopify_payments'], tracking_numbers: ['CP998341US'], tracking_urls: ['#'], tracking_status: ['In transit, customs cleared'],
       line_items: [{ title: 'Aurora Linen Set, Sand', quantity: 1, price: '148.00' }],
       total_price: '148.00', currency: 'USD', shipping_country: 'United States',
     },
@@ -65,7 +65,7 @@ const TICKETS: Ticket[] = [
     order_snapshot: {
       order_name: '#1991', order_id: 'gid://1991', shopify_url: '#',
       created_at: iso(34 * 86_400_000), financial_status: 'paid', fulfillment_status: 'fulfilled',
-      tracking_numbers: ['CP771222US'], tracking_urls: ['#'], tracking_status: ['Delivery attempt failed'],
+      payment_gateways: ['klarna'], tracking_numbers: ['CP771222US'], tracking_urls: ['#'], tracking_status: ['Delivery attempt failed'],
       line_items: [{ title: 'Aurora Throw, Charcoal', quantity: 1, price: '59.00' }],
       total_price: '59.00', currency: 'USD', shipping_country: 'Germany',
     },
@@ -105,7 +105,7 @@ const TICKETS: Ticket[] = [
     order_snapshot: {
       order_name: '#2090', order_id: 'gid://2090', shopify_url: '#',
       created_at: iso(6 * 86_400_000), financial_status: 'paid', fulfillment_status: 'fulfilled',
-      tracking_numbers: ['CP771204US'], tracking_urls: ['#'], tracking_status: ['Delivered'],
+      payment_gateways: ['paypal'], tracking_numbers: ['CP771204US'], tracking_urls: ['#'], tracking_status: ['Delivered'],
       line_items: [{ title: 'Harbor Robe, M', quantity: 1, price: '72.00' }],
       total_price: '72.00', currency: 'USD', shipping_country: 'United States',
     },
@@ -132,7 +132,7 @@ const TICKETS: Ticket[] = [
     order_snapshot: {
       order_name: '#2061', order_id: 'gid://2061', shopify_url: '#',
       created_at: iso(9 * 86_400_000), financial_status: 'paid', fulfillment_status: 'fulfilled',
-      tracking_numbers: ['CP663118US'], tracking_urls: ['#'], tracking_status: ['Delivered'],
+      payment_gateways: ['shopify_payments'], tracking_numbers: ['CP663118US'], tracking_urls: ['#'], tracking_status: ['Delivered'],
       line_items: [{ title: 'Aurora Linen Set, Clay', quantity: 1, price: '148.00' }],
       total_price: '148.00', currency: 'USD', shipping_country: 'Italy',
     },
@@ -188,6 +188,7 @@ const TICKETS: Ticket[] = [
     order_snapshot: {
       order_name: '#2103', order_id: 'gid://2103', shopify_url: '#',
       created_at: iso(2 * 86_400_000), financial_status: 'paid', fulfillment_status: 'unfulfilled',
+      payment_gateways: ['shopify_payments'],
       tracking_numbers: [], tracking_urls: [], tracking_status: [],
       line_items: [{ title: 'Aurora Linen Set, Sand', quantity: 2, price: '296.00' }],
       total_price: '296.00', currency: 'EUR', shipping_country: 'France',

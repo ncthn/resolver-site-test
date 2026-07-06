@@ -25,6 +25,8 @@ export interface OrderSnapshot {
   tracking_numbers: string[]
   tracking_urls: string[]
   tracking_status: string[]
+  /** e.g. shopify_payments, paypal, klarna — mirrors production payment_gateways */
+  payment_gateways: string[]
   line_items: LineItem[]
   total_price: string
   currency: string
