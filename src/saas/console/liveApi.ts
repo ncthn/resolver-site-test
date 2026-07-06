@@ -212,3 +212,15 @@ export async function composeGenerateDraft(order: LiveOrder | null, instructions
 export async function composeSendLive(data: { to: string; subject: string; body: string; order_snapshot?: Record<string, unknown>; order_id?: string; language?: string; shop_id: string }) {
   return await apiFetch('/compose/send', { method: 'POST', body: JSON.stringify(data) })
 }
+
+/* ------------------------------------------------------------ live team --- */
+export interface LiveUser { id: string; email: string; name: string; role: 'admin' | 'agent'; read_only: boolean; is_active: boolean; last_login_at: string | null }
+export async function listUsers() {
+  return await apiFetch('/users') as LiveUser[]
+}
+export async function createUser(data: { email: string; name: string; role: 'admin' | 'agent' }) {
+  return await apiFetch('/users', { method: 'POST', body: JSON.stringify(data) })
+}
+export async function updateUser(id: string, patch: Record<string, unknown>) {
+  return await apiFetch(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(patch) })
+}

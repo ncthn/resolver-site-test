@@ -1670,7 +1670,7 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
           {tab === 'Stores' && <StoresSettings />}
           {tab === 'Policies & SOP' && <SopSettings />}
           {tab === 'Emails' && <EmailsSettings />}
-          {tab === 'Team' && <TeamSettings />}
+          {tab === 'Team' && (api.LIVE ? <LiveTeam /> : <TeamSettings />)}
           {tab === 'Filters' && <FilterSettings />}
           {tab === 'Notifications' && <NotifSettings />}
           {tab === 'Billing' && (
@@ -2372,6 +2372,74 @@ function LiveCompose() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+/* Live team: the real user list on resolver.chat. Roles are admin/agent with
+   a read-only flag; invitees sign in with Google using the invited email. */
+function LiveTeam() {
+  const [users, setUsers] = useState<api.LiveUser[] | null>(null)
+  const [err, setErr] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [nw, setNw] = useState({ name: '', email: '', role: 'agent' as 'admin' | 'agent' })
+  const [busy, setBusy] = useState('')
+  const load = () => { api.listLiveUsers().then(setUsers).catch((e) => setErr((e as Error).message)) }
+  useEffect(load, [])
+  const patch = async (id: string, p: Record<string, unknown>) => {
+    setBusy(id)
+    try { await api.updateLiveUser(id, p); load(); setErr('') }
+    catch (e) { setErr((e as Error).message) }
+    setBusy('')
+  }
+  const invite = async () => {
+    if (!nw.email.trim() || !nw.name.trim()) return
+    setBusy('invite')
+    try { await api.createLiveUser({ email: nw.email.trim().toLowerCase(), name: nw.name.trim(), role: nw.role }); setNw({ name: '', email: '', role: 'agent' }); setAdding(false); load(); setErr('') }
+    catch (e) { setErr((e as Error).message) }
+    setBusy('')
+  }
+  if (!users) return <p className="c-note" style={{ margin: 0 }}>{err || 'Loading team…'}</p>
+  return (
+    <div className="c-rows" style={{ gap: 0 }}>
+      <p className="c-note" style={{ margin: '0 0 8px' }}><b>Live:</b> the real team on resolver.chat. New members sign in with Google using the invited email.</p>
+      {users.map((u) => (
+        <div className="c-teamrow" key={u.id}>
+          <div className="hd">
+            <span className="c-avatar sm" style={{ width: 26, height: 26, fontSize: 11 }}>{u.name.slice(0, 1).toUpperCase()}</span>
+            <b>{u.name}</b>
+            <span className="stores">{u.email}</span>
+            <span className="sp" style={{ flex: 1 }} />
+            <span className="at">{u.last_login_at ? 'last seen ' + timeAgo(u.last_login_at) + ' ago' : 'never signed in'}</span>
+            <select value={u.role} disabled={busy === u.id} onChange={(e) => void patch(u.id, { role: e.target.value })}>
+              <option value="admin">Admin</option>
+              <option value="agent">Agent</option>
+            </select>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--tx-soft)' }}>
+              <input type="checkbox" checked={u.read_only} disabled={busy === u.id} onChange={(e) => void patch(u.id, { read_only: e.target.checked })} /> read-only
+            </label>
+            <button className={'c-switch sm' + (u.is_active ? ' on green' : '')} title={u.is_active ? 'Active · click to deactivate' : 'Deactivated · click to reactivate'} disabled={busy === u.id} onClick={() => void patch(u.id, { is_active: !u.is_active })}><span className="k" /></button>
+          </div>
+        </div>
+      ))}
+      {err && <p className="c-note" style={{ margin: '8px 0 0', color: '#B4472F' }}>{err}</p>}
+      {!adding ? (
+        <button className="c-act" style={{ marginTop: 14, alignSelf: 'flex-start' }} onClick={() => setAdding(true)}><Plus size={14} /> Invite teammate</button>
+      ) : (
+        <div className="c-rulebuilder" style={{ marginTop: 14 }}>
+          <input autoFocus placeholder="Name" value={nw.name} onChange={(e) => setNw({ ...nw, name: e.target.value })} style={{ minWidth: 120 }} />
+          <input placeholder="email@company.com" value={nw.email} onChange={(e) => setNw({ ...nw, email: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter') void invite() }} />
+          <select value={nw.role} onChange={(e) => setNw({ ...nw, role: e.target.value as 'admin' | 'agent' })}>
+            <option value="agent">Agent</option>
+            <option value="admin">Admin</option>
+          </select>
+          <span className="sp" />
+          <button className="c-act" onClick={() => setAdding(false)}>Cancel</button>
+          <button className="c-act prim" disabled={!nw.email.trim() || !nw.name.trim() || busy === 'invite'} onClick={() => void invite()}>
+            {busy === 'invite' ? <Loader2 size={13} className="c-spin" /> : <Check size={13} />} Invite
+          </button>
+        </div>
+      )}
     </div>
   )
 }

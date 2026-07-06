@@ -81,3 +81,7 @@ Phase 4 (same day): live Compose — order search (compose/search-order),
 AI drafting with native language + translated subject (compose/generate-draft)
 and real sending that opens a ticket (compose/send), per store, with a manual
 recipient when no order is attached. Demo compose unchanged.
+
+Phase 5 (same day): live Team — the real user list (GET/POST/PATCH
+/api/users): role changes, read-only flag, activate/deactivate, and invites
+(Google sign-in on the invited email). Demo team unchanged.

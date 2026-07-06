@@ -47,4 +47,7 @@ export const liveLaneReadiness = live.laneReadiness
 export const composeSearchOrder = live.composeSearchOrder
 export const composeGenerateDraft = live.composeGenerateDraft
 export const composeSendLive = live.composeSendLive
-export type { LiveOrder } from './liveApi'
+export const listLiveUsers = live.listUsers
+export const createLiveUser = live.createUser
+export const updateLiveUser = live.updateUser
+export type { LiveOrder, LiveUser } from './liveApi'
