@@ -55,3 +55,15 @@ actually sends — shown under a "Sends in XX" expander. Auto-sent messages carr
 an AI chip. The decision trace on the draft card maps to the pipeline stages
 (classify -> match -> tracking -> policy -> risk scan -> lane decision) and the
 draft_audit_log.
+
+## Live mode (switch-on phase 1, 2026-07-06)
+
+/app?live=1 wires the console to the REAL resolver.chat API (?live=0 back to
+demo). src/saas/console/api.ts is the adapter switch; liveApi.ts implements
+tickets list/read/counts + status, category, send, regenerate, AI toggle,
+notes and summarize against production, with a 12s poll and the same
+subscribe/notify contract as the mock. LiveGate.tsx signs into the production
+Firebase project (Google or email) and feeds ID tokens to the adapter.
+Production CORS allows the test-site origin + localhost:5195 via CORS_ORIGIN.
+Everything not yet wired (tasks, chargebacks, SOP editor, settings) stays on
+the demo store in live mode.

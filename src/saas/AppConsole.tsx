@@ -15,7 +15,8 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { Category, Ticket, TicketStatus, ThreadMessage, TraceStep } from './console/types'
-import * as api from './console/mockApi'
+import * as api from './console/api'
+import { LiveGate } from './console/LiveGate'
 
 const LOGO = '/logo/recolor/oct-black-t.png'
 
@@ -742,7 +743,8 @@ function TicketsView({ shopId, catFilter = null, onClearCat }: { shopId: string;
 
   // listTickets is async in production; the mock store is read synchronously.
   const tickets = ((): Ticket[] => {
-    const base = ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
+    const ids = api.LIVE ? api.liveTicketIds() : ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
+    const base = ids
       .map((id) => api.getTicket(id))
       .filter((t): t is Ticket => !!t && !t.is_deleted)
       .filter((t) => shopId === 'all' || t.shop_id === shopId)
@@ -938,8 +940,9 @@ function DerivedList({ title, sub, filterFn, empty }: {
   title: string; sub: string; filterFn: (t: Ticket) => boolean; empty: string
 }) {
   useStore()
-  const rows = ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
+  const rows = (api.LIVE ? api.liveTicketIds() : ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440'])
     .map((id) => api.getTicket(id)!)
+    .filter((t) => !!t)
     .filter(filterFn)
   return (
     <div className="c-page">
@@ -2134,7 +2137,7 @@ export function AppConsole() {
     settings: () => <SettingsView lanes={lanes} setLanes={setLanes} killed={killed} setKilled={setKilled} />,
   }
 
-  return (
+  const shell = (
     <div className={'console2' + (collapsed ? ' collapsed' : '')}>
       <aside className="c-rail">
         <div className="c-brand">
@@ -2217,4 +2220,5 @@ export function AppConsole() {
       {tour && view === 'tickets' && <Tour onDone={endTour} />}
     </div>
   )
+  return api.LIVE ? <LiveGate>{shell}</LiveGate> : shell
 }
