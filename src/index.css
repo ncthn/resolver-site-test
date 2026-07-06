@@ -670,9 +670,10 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-autosend.mut{color:var(--tx-faint)}
 .c-notearea{width:100%;margin-top:12px;background:#FBF6E3;border:1px solid #EFE4B8;border-radius:10px;padding:10px 13px;font-family:var(--pj);font-size:12.5px;line-height:1.6;color:#5C5334;outline:none;resize:vertical}
 .c-notearea::placeholder{color:#B3A469}
-.c-sum-pill{align-self:center;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--tx-soft);background:var(--band);border-radius:999px;padding:7px 13px;transition:background .15s,color .15s}
-.c-sum-pill:hover{background:#ECECEA;color:var(--ink)}
-.c-sum-pill:disabled{opacity:.6}
+.c-sumline{margin-top:auto;display:flex;justify-content:center;padding-top:14px}
+.console2 .c-sum-pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;box-shadow:0 1px 2px rgba(22,24,28,.05);transition:background .15s,border-color .15s}
+.console2 .c-sum-pill:hover{background:var(--band);border-color:#D6D6D3}
+.console2 .c-sum-pill:disabled{opacity:.6}
 .c-mirror{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:6px 11px;color:var(--tx-soft);white-space:nowrap}
 .c-mirror:hover,.c-mirror.on{background:var(--band);color:var(--ink)}
 .c-act{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:9px 16px;font-size:12.5px;font-weight:500;background:var(--band);color:var(--ink)}
@@ -926,11 +927,13 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 /* status select + internal notes (Gorgias pattern: full-width tinted block,
    author + label + timestamp on one hairline header) */
 .c-statuschip .dot,.c-menu .dot{width:7px;height:7px;border-radius:50%;flex:none;display:inline-block}
-.c-note{background:#FBF6E3;border:1px solid #EFE4B8;border-left:3px solid #D9C97E;border-radius:10px;padding:11px 14px;font-size:12.5px;line-height:1.6;color:#5C5334}
-.c-note .nh{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:500;color:#A08F51;margin-bottom:6px}
-.c-note .nh b{font-weight:700;color:#8A7A3B}
-.c-note .nh .at{margin-left:auto;font-size:10.5px;color:#B3A469}
-.c-note.ai{border-left-color:#B9AD79;background:#FAF7EC}
+.c-note{background:#FCF9F0;border:1px solid #EDE5CC;border-radius:9px;padding:10px 13px;font-size:13px;line-height:1.6;color:#4A4433}
+.c-note .nh{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#8A7A3B;margin-bottom:4px}
+.c-note .nh b{font-weight:700;color:#5C5334}
+.c-note .nh svg{color:#B3A469}
+.c-note .nh .at{margin-left:auto;font-weight:500;font-size:10.5px;color:#B3A469;font-variant-numeric:tabular-nums}
+.c-note.ai{background:#FAFAF7;border-color:#E3E1D5}
+.c-note.ai .nh{color:#6E6A52}
 p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;padding:0}
 .c-compose .opt{font-weight:400;color:var(--tx-faint);font-size:11px;margin-left:6px}
 .c-orderchip{display:inline-flex;align-items:center;gap:8px;background:var(--band);border-radius:9px;padding:9px 12px;font-size:12.5px;font-weight:500}
@@ -995,3 +998,14 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 .gtxt{font-size:11px;color:var(--tx-faint);white-space:nowrap}
 .c-gradbtn{display:inline-flex;align-items:center;gap:5px;background:#E8F0EB;color:#3D7A50;border-radius:999px;padding:6px 12px;font-size:11.5px;font-weight:600}
 .c-gradbtn:hover{background:#3D7A50;color:#fff}
+
+.kb-card .mv button{font-size:10px;font-weight:600;color:var(--tx-faint);border:1px solid var(--line);border-radius:999px;padding:3px 8px;white-space:nowrap;background:#fff}
+.kb-card .mv button:hover{color:var(--ink);background:var(--band)}
+
+/* clean two-line rows for Resolved / Filtered / Customs / Sent */
+.c-lrow{display:flex;flex-direction:column;gap:2px;padding:13px 0;border-top:1px solid var(--line)}
+.c-lrow:first-child{border-top:none;padding-top:2px}
+.c-lrow .top{display:flex;align-items:baseline;gap:12px}
+.c-lrow .top b{font-size:13.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-lrow .time{font-size:11px;color:var(--tx-faint);font-variant-numeric:tabular-nums;white-space:nowrap}
+.c-lrow .sub{font-size:12.5px;color:var(--tx-soft)}

@@ -4,7 +4,7 @@
 // map 1:1 to real endpoints, see WIRING.md). Swapping mockApi's internals
 // for fetch calls wires this UI to the live app unchanged.
 // Monochrome brand. No avatars, sender identity is text, not decoration.
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import {
   Inbox, CircleCheck, ListChecks, Settings, Search,
   ChevronsUpDown, Package, Truck, ShieldCheck, Send, Pencil, Trash2,
@@ -238,7 +238,7 @@ function Overview({ shopId }: { shopId: string }) {
             )
           })}
         </div>
-        <p className="c-note">Best practice: keep a lane in shadow until 25+ drafts were reviewed and 85%+ shipped unedited, then flip it live. Highest-volume lanes first.</p>
+        <p className="c-note">Best practice: keep a lane on Draft only until 25+ drafts were reviewed and 85%+ shipped unedited, then turn on auto-send. Highest-volume lanes first.</p>
       </div>
       <div className="c-card">
         <div className="c-card-h">By store</div>
@@ -388,12 +388,25 @@ function Composer({ t }: { t: Ticket }) {
   const [note, setNote] = useState('')
   const [expand, setExpand] = useState<'' | 'native' | 'trace'>('')
   const [, setTick] = useState(0)
+  const rootRef = useRef<HTMLDivElement>(null)
   useEffect(() => { setTab('reply'); setEditing(false); setBusy(''); setNote(''); setExpand('') }, [t.id])
   useEffect(() => {
     const id = setInterval(() => setTick((x) => x + 1), 1000)
     return () => clearInterval(id)
   }, [])
   const draftEN = t.draft_body_english ?? t.draft_body
+  // Clicking anywhere outside the composer minimizes open text boxes again:
+  // an empty note tab folds back to Reply, an unchanged draft edit closes.
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        if (tab === 'note' && !note.trim()) setTab('reply')
+        if (editing && editBody === (draftEN ?? '')) setEditing(false)
+      }
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [tab, note, editing, editBody, draftEN])
   const cooldownLeft = Math.max(0, 180 - Math.floor((Date.now() - (cooldownAt[t.id] ?? -1e12)) / 1000))
   const onCooldown = cooldownAt[t.id] != null && cooldownLeft > 0
   const held = t.status === 'ESCALATED'
@@ -410,7 +423,7 @@ function Composer({ t }: { t: Ticket }) {
   const doRegen = async () => { setBusy('regen'); await api.postRegenerate(t.id); setBusy('') }
   const saveNote = () => { if (note.trim()) { api.addNote(t.id, note.trim()); setNote(''); setTab('reply') } }
   return (
-    <div className="c-composer">
+    <div className="c-composer" ref={rootRef}>
       <div className="c-tabs" role="tablist">
         <button className={tab === 'reply' ? 'on' : ''} onClick={() => setTab('reply')} role="tab" aria-selected={tab === 'reply'}><Send size={11} /> Reply</button>
         <button className={'note' + (tab === 'note' ? ' on' : '')} onClick={() => setTab('note')} role="tab" aria-selected={tab === 'note'}><StickyNote size={11} /> Internal note</button>
@@ -496,15 +509,19 @@ function Composer({ t }: { t: Ticket }) {
   )
 }
 
-/* Gorgias-pattern centered pill: distill the thread into an AI internal note. */
+/* Gorgias-pattern control: distill the thread into an AI internal note.
+   Rendered as an explicit bordered button on a hairline strip that sits at
+   the very bottom of the thread, directly above the drafting space. */
 function SummarizePill({ t }: { t: Ticket }) {
   const [busy, setBusy] = useState(false)
   const hasSummary = (t.notes ?? []).some((n) => n.ai)
   if (t.messages.length < 2 || hasSummary) return null
   return (
-    <button className="c-sum-pill" disabled={busy} onClick={async () => { setBusy(true); await api.summarizeThread(t.id); setBusy(false) }}>
-      {busy ? <Loader2 size={12} className="c-spin" /> : <Zap size={12} />} Summarize {t.messages.length} messages as a note
-    </button>
+    <div className="c-sumline">
+      <button className="c-sum-pill" disabled={busy} onClick={async () => { setBusy(true); await api.summarizeThread(t.id); setBusy(false) }}>
+        {busy ? <Loader2 size={12} className="c-spin" /> : <Sparkles size={12} />} Summarize {t.messages.length} messages as a note
+      </button>
+    </div>
   )
 }
 
@@ -626,7 +643,7 @@ function TicketsView({ shopId }: { shopId: string }) {
           {(t.notes ?? []).map((n) => (
             <div className={'c-note' + (n.ai ? ' ai' : '')} key={n.id}>
               <span className="nh">
-                {n.ai ? <Zap size={12} /> : <StickyNote size={12} />}
+                {n.ai ? <Sparkles size={12} /> : <StickyNote size={12} />}
                 <b>{n.ai ? 'Resolver AI' : n.author}</b> · Internal note{n.ai ? ' · summary' : ''}
                 <span className="at">{timeAgo(n.at)} ago</span>
               </span>
@@ -721,9 +738,9 @@ function DerivedList({ title, sub, filterFn, empty }: {
         <div className="c-rows">
           {rows.length === 0 && <p className="c-note" style={{ marginTop: 0 }}>{empty}</p>}
           {rows.map((t) => (
-            <div className="c-ev" key={t.id}>
-              <span className="t"><b>{t.subject}</b>, {t.customer_name ?? t.customer_email} · {CATEGORY_LABEL[t.category]}</span>
-              <span className="at">{timeAgo(t.last_customer_message_at)}</span>
+            <div className="c-lrow" key={t.id}>
+              <span className="top"><b>{t.subject}</b><span className="time">{timeAgo(t.last_customer_message_at)} ago</span></span>
+              <span className="sub">{t.customer_name ?? t.customer_email} · {CATEGORY_LABEL[t.category]} · {t.shop_id}</span>
             </div>
           ))}
         </div>
@@ -739,7 +756,10 @@ function StaticList({ title, sub, rows }: { title: string; sub: string; rows: [s
       <div className="c-card">
         <div className="c-rows">
           {rows.map(([a, b, c], i) => (
-            <div className="c-ev" key={i}><span className="t"><b>{a}</b>, {b}</span><span className="at">{c}</span></div>
+            <div className="c-lrow" key={i}>
+              <span className="top"><b>{a}</b><span className="time">{c}</span></span>
+              <span className="sub">{b}</span>
+            </div>
           ))}
         </div>
       </div>
@@ -972,7 +992,7 @@ function TasksView() {
                         <span className="due">{k.due}</span>
                         <div className="mv">
                           {KANBAN_COLS.filter((c) => c.id !== col.id).slice(0, 3).map((c) => (
-                            <button key={c.id} title={'Move to ' + c.label} onClick={() => api.moveTask(k.id, c.id)}>{c.label[0]}</button>
+                            <button key={c.id} title={'Move to ' + c.label} onClick={() => api.moveTask(k.id, c.id)}>→ {c.label}</button>
                           ))}
                         </div>
                       </div>
@@ -1096,7 +1116,7 @@ function TeamSettings() {
                 >{on && <Check size={11} strokeWidth={2.6} />}{st}</button>
               )
             })}
-            {u.role === 'Owner' && <span className="c-note" style={{ margin: 0 }}>owners see every store</span>}
+            {u.role === 'Owner' && <span className="stores">sees every store</span>}
           </div>
           <div className="perms">
             {PERM_LABELS.map(([k, label]) => (
@@ -1213,17 +1233,17 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
                     </div>
                     <div className="modes">
                       {(['off', 'shadow', 'live'] as const).map((m) => (
-                        <button key={m} className={l.mode === m ? 'on' : ''} onClick={() => setLanes(lanes.map((x, j) => (j === i ? { ...x, mode: m } : x)))}>{m}</button>
+                        <button key={m} className={l.mode === m ? 'on' : ''} onClick={() => setLanes(lanes.map((x, j) => (j === i ? { ...x, mode: m } : x)))}>{{ off: 'Off', shadow: 'Draft only', live: 'Auto-send' }[m]}</button>
                       ))}
                     </div>
                     <span className="note">
                       {ready ? (
                         <button className="c-gradbtn" onClick={() => setLanes(lanes.map((x, j) => (j === i ? { ...x, mode: 'live' } : x)))}>
-                          <Check size={11} strokeWidth={2.6} /> Ready, flip live
+                          <Check size={11} strokeWidth={2.6} /> Ready, turn on auto-send
                         </button>
-                      ) : l.mode === 'live' ? (killed ? 'paused by kill switch' : 'auto-send · 3-min cancel window')
-                        : l.mode === 'shadow' ? (st && st.reviewed < st.needed ? `watching · ${st.needed - st.reviewed} more reviews to qualify` : 'drafts only, nothing sends')
-                        : 'no drafting'}
+                      ) : l.mode === 'live' ? (killed ? 'paused by kill switch' : 'sends on its own · 3-min cancel window')
+                        : l.mode === 'shadow' ? (st && st.reviewed < st.needed ? `every draft waits for you · ${st.needed - st.reviewed} more reviews to qualify` : 'every draft waits for your approval')
+                        : 'no drafting on this lane'}
                     </span>
                   </div>
                 )
@@ -1264,6 +1284,7 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
               <div className="c-kv"><span>Usage this cycle</span><b>1,412 of 2,500 tickets</b></div>
               <div className="c-kv"><span>Stores</span><b>3 of 3</b></div>
               <div className="c-kv"><span>Managed by</span><b>Shopify billing</b></div>
+              <a className="link" style={{ marginTop: 10 }} href="https://admin.shopify.com/store/aurora/charges/resolver/pricing_plans" target="_blank" rel="noreferrer">Manage plan in the Shopify admin <ArrowUpRight size={12} /></a>
             </div>
           )}
         </div>
