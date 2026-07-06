@@ -17,7 +17,7 @@ Loop job 6934f827 works through this top to bottom. Update statuses every iterat
 | 11 | Team tab: "owners see every store" pill looks stupid: plain text | DONE (batch 1) |
 | 12 | Billing: link to the Shopify app billing page | DONE (batch 1) |
 | 13 | Orders context: show payment method, warning flag when PayPal or Klarna (check comedown-support integration for source field) | DONE (batch 2) |
-| 14 | Fulfillment tracking: research ParcelPanel + 17TRACK integrations, document feasibility, add UI affordance | TODO |
+| 14 | Fulfillment tracking: research ParcelPanel + 17TRACK integrations, document feasibility, add UI affordance | DONE (batch 4: TRACKING_RESEARCH.md + source row in Fulfillment card) |
 | 15 | Resolved/Filtered/Customs/Sent list views: alignment is off, clean them up | DONE (batch 1) |
 
 Rules: deploy each batch (push, manual Render trigger, verify deploy commit SHA + cache-busted URL), verify in preview with screenshots, no em dashes in UI text, V1 monochrome brand, honesty rule (demo data labeled demo).

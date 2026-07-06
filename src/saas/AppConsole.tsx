@@ -710,6 +710,7 @@ function TicketsView({ shopId }: { shopId: string }) {
                 <div className="card">
                   <div className="line"><Truck size={13} /><span>{t.order_snapshot.tracking_numbers[0]}</span></div>
                   <div className="c-kv"><span>Status</span><b className="green">{t.order_snapshot.tracking_status[0]}</b></div>
+                  <div className="c-kv"><span>Source</span><b>17TRACK push · demo</b></div>
                   <a className="link">Live tracking <ArrowUpRight size={12} /></a>
                 </div>
               </div>
