@@ -819,9 +819,23 @@ function Compose() {
     setStage('sent')
   }
   const reset = () => { setStage('search'); setOrder(null); setOrderQ(''); setTmpl(null); setIntent(''); setDraft('') }
+  const STAGE_STEPS = [
+    ['search', 'Order'], ['template', 'Message'], ['review', 'Review'],
+  ] as const
+  const stageIdx = stage === 'sent' ? 3 : STAGE_STEPS.findIndex(([k]) => k === stage)
   return (
     <div className="c-page">
-      <header className="c-page-h"><div><h1>Compose</h1><p>Find the order, pick the message, review the draft, send.</p></div></header>
+      <div className="c-cwrap">
+      <header className="c-page-h" style={{ marginBottom: 0 }}>
+        <div><h1>Compose</h1><p>Find the order, pick the message, review the draft, send.</p></div>
+        <div className="c-steps" aria-hidden="true">
+          {STAGE_STEPS.map(([k, label], i) => (
+            <span key={k} className={'st' + (i === stageIdx ? ' on' : i < stageIdx ? ' done' : '')}>
+              <i>{i < stageIdx ? '✓' : i + 1}</i>{label}
+            </span>
+          ))}
+        </div>
+      </header>
 
       {stage === 'search' && (
         <div className="c-card c-compose2">
@@ -922,6 +936,7 @@ function Compose() {
           <button className="c-act" onClick={reset}>Compose another</button>
         </div>
       )}
+      </div>
     </div>
   )
 }
