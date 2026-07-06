@@ -927,25 +927,83 @@ function Compose() {
 
 function ChargebacksView() {
   useStore()
-  const rows = ['t-4468'].map((id) => api.getTicket(id)!)
+  const [open, setOpen] = useState<string | null>(null)
+  const [busy, setBusy] = useState('')
+  const rows = api.CHARGEBACKS
+  const needs = rows.filter((c) => c.status === 'needs_response')
+  const atRisk = needs.reduce((a, c) => a + parseFloat(c.amount), 0)
+  const decided = rows.filter((c) => c.status === 'won' || c.status === 'lost')
+  const winRate = decided.length ? Math.round((decided.filter((c) => c.status === 'won').length / decided.length) * 100) : 0
+  const dueIn = (iso: string) => Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000)
+  const STATUS: Record<api.Chargeback['status'], [string, string]> = {
+    needs_response: ['Needs response', 'red'], under_review: ['Under review', 'mut'], won: ['Won', 'green'], lost: ['Lost', 'mut'],
+  }
+  const GW: Record<string, string> = { shopify_payments: 'Shopify Payments', paypal: 'PayPal', klarna: 'Klarna' }
+  const submit = async (id: string) => { setBusy(id); await api.submitChargeback(id); setBusy(''); setOpen(null) }
   return (
     <div className="c-page">
-      <header className="c-page-h"><div><h1>Chargebacks</h1><p>Disputes from Shopify Payments · demo data</p></div></header>
+      <header className="c-page-h"><div><h1>Chargebacks</h1><p>Every dispute, its deadline, and the evidence to fight it · demo data</p></div></header>
+      <div className="c-kpis" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        <div className="c-kpi"><span className="n">{needs.length}</span><span className="l">need a response</span></div>
+        <div className="c-kpi"><span className="n">${atRisk.toFixed(2)}</span><span className="l">at risk right now</span></div>
+        <div className="c-kpi"><span className="n">{winRate}%</span><span className="l">win rate, decided disputes</span></div>
+      </div>
       <div className="c-card">
         <table className="c-table">
-          <thead><tr><th>Order</th><th>Customer</th><th>Store</th><th>Amount</th><th>Signal</th><th>Status</th></tr></thead>
+          <thead><tr><th>Order</th><th>Customer</th><th>Store</th><th>Amount</th><th>Method</th><th>Reason</th><th>Evidence due</th><th>Status</th><th /></tr></thead>
           <tbody>
-            {rows.map((t) => (
-              <tr key={t.id}>
-                <td><b>{t.order_name}</b></td><td>{t.customer_name}</td><td>{t.shop_id}</td>
-                <td>${t.order_snapshot?.total_price}</td>
-                <td>Dispute language in email</td>
-                <td><span className="c-chip red">{t.chargeback_status === 'warning' ? 'Warning' : t.chargeback_status}</span></td>
-              </tr>
-            ))}
+            {rows.map((c) => {
+              const d = dueIn(c.evidence_due)
+              const [label, tone] = STATUS[c.status]
+              return (
+                <tr key={c.id}>
+                  <td><b>{c.order_name}</b></td>
+                  <td>{c.customer}</td>
+                  <td>{c.shop_id}</td>
+                  <td>${c.amount}</td>
+                  <td>{GW[c.gateway] ?? c.gateway}</td>
+                  <td>{c.reason}</td>
+                  <td>{c.status === 'needs_response' ? <span className={'c-due' + (d <= 3 ? ' hot' : '')}>{d <= 0 ? 'today' : `in ${d} day${d === 1 ? '' : 's'}`}</span> : '·'}</td>
+                  <td><span className={'c-chip ' + tone}>{label}</span></td>
+                  <td>{c.status === 'needs_response' && (
+                    <button className="c-act" style={{ padding: '6px 12px', fontSize: 11.5 }} onClick={() => setOpen(open === c.id ? null : c.id)}>
+                      {open === c.id ? 'Close' : 'Build response'}
+                    </button>
+                  )}</td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
-        <p className="c-note">Chargeback tickets are never auto-replied, the linked conversation sits at the top of your queue.</p>
+        {open && (() => {
+          const c = rows.find((x) => x.id === open)!
+          const ready = c.evidence.filter((e) => e.ready).length
+          return (
+            <div className="c-cbdrawer">
+              <div className="hd">
+                <b>Response for {c.order_name} · {c.reason}</b>
+                <span className="sub">{ready} of {c.evidence.length} evidence pieces ready · Resolver assembled these from the order and the conversation</span>
+              </div>
+              <div className="list">
+                {c.evidence.map((e) => (
+                  <div className={'ev' + (e.ready ? ' ok' : '')} key={e.label}>
+                    <span className="ic">{e.ready ? <Check size={11} strokeWidth={2.8} /> : <Clock size={11} />}</span>
+                    {e.label}
+                    <span className="st">{e.ready ? 'ready' : 'add manually'}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="ft">
+                <span className="c-note" style={{ margin: 0 }}>Submitting sends the package to {GW[c.gateway] ?? c.gateway} through Shopify. You cannot edit it after.</span>
+                <span className="sp" />
+                <button className="c-act prim" disabled={busy === c.id} onClick={() => void submit(c.id)}>
+                  {busy === c.id ? <Loader2 size={14} className="c-spin" /> : <ShieldCheck size={14} />} Submit response
+                </button>
+              </div>
+            </div>
+          )
+        })()}
+        <p className="c-note">Chargeback tickets are never auto-replied. The linked conversation is pulled from every automated lane and sits at the top of your queue.</p>
       </div>
     </div>
   )
@@ -1314,14 +1372,7 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
             </>
           )}
           {tab === 'Stores' && <StoresSettings />}
-          {tab === 'Policies & SOP' && (
-            <div className="c-rows">
-              <div className="c-ev"><span className="ic ok"><FileText size={13} /></span><span className="t"><b>support-sop-v3.pdf</b>, uploaded Jun 12 · constrains every draft</span><span className="at">replace</span></div>
-              <div className="c-kv"><span>Refund window</span><b>30 days</b></div>
-              <div className="c-kv"><span>Reshipment policy</span><b>Free reship on damage w/ photo</b></div>
-              <div className="c-kv"><span>Tone</span><b>Warm, plain, no exclamation marks</b></div>
-            </div>
-          )}
+          {tab === 'Policies & SOP' && <SopSettings />}
           {tab === 'Emails' && <EmailsSettings />}
           {tab === 'Team' && <TeamSettings />}
           {tab === 'Filters' && <FilterSettings />}
@@ -1429,6 +1480,102 @@ function EmailsSettings() {
         <div className="c-kv"><span>DKIM / SPF</span><b className="green">Verified</b></div>
         <div className="c-kv"><span>Loop protection</span><b>On, auto-replies filtered</b></div>
       </div>
+    </div>
+  )
+}
+
+const SOP_CATEGORIES = ['Refunds & returns', 'Shipping', 'Tone & voice', 'Escalation', 'Other'] as const
+/* Per-store rules: every rule Resolver follows for this store, editable in
+   place, with an AI assist that turns plain words into a crisp rule. */
+function SopSettings() {
+  useStore()
+  const [shopId, setShopId] = useState('aurora')
+  const [editing, setEditing] = useState<string | null>(null)
+  const [editText, setEditText] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [newText, setNewText] = useState('')
+  const [newCat, setNewCat] = useState<typeof SOP_CATEGORIES[number]>('Refunds & returns')
+  const [busy, setBusy] = useState<'' | 'polish' | 'save'>('')
+  const rules = api.SOP_RULES[shopId] ?? []
+  const byCat = SOP_CATEGORIES.map((cat) => ({ cat, items: rules.filter((r) => r.category === cat) })).filter((g) => g.items.length > 0)
+  const startEdit = (r: api.SopRule) => { setEditing(r.id); setEditText(r.text) }
+  const saveEdit = async () => {
+    if (editing && editText.trim()) { await api.updateSopRule(shopId, editing, editText.trim()) }
+    setEditing(null)
+  }
+  const polish = async () => {
+    if (!newText.trim()) return
+    setBusy('polish')
+    setNewText(await api.aiPolishRule(newText))
+    setBusy('')
+  }
+  const addRule = async () => {
+    if (!newText.trim()) return
+    setBusy('save')
+    await api.addSopRule(shopId, newCat, newText.trim())
+    setNewText(''); setAdding(false); setBusy('')
+  }
+  return (
+    <div className="c-rows" style={{ gap: 14 }}>
+      <div className="c-sopshops">
+        {api.SHOPS.filter((x) => x.id !== 'all').map((x) => (
+          <button key={x.id} className={shopId === x.id ? 'on' : ''} onClick={() => { setShopId(x.id); setEditing(null); setAdding(false) }}>{x.name}</button>
+        ))}
+      </div>
+      <div className="c-ev" style={{ borderTop: 'none', paddingTop: 0 }}>
+        <span className="ic ok"><FileText size={13} /></span>
+        <span className="t"><b>support-sop-v3.pdf</b>, uploaded Jun 12 · the source document these rules were extracted from</span>
+        <span className="at" style={{ display: 'inline-flex', gap: 10 }}><a className="link">Replace</a><a className="link">Re-extract</a></span>
+      </div>
+      {byCat.map((g) => (
+        <div className="c-sopgroup" key={g.cat}>
+          <div className="gh">{g.cat}</div>
+          {g.items.map((r) => (
+            <div className={'c-soprule' + (r.enabled ? '' : ' off')} key={r.id}>
+              <button className={'c-switch sm' + (r.enabled ? ' on green' : '')} onClick={() => void api.toggleSopRule(shopId, r.id)} aria-label="toggle rule"><span className="k" /></button>
+              {editing === r.id ? (
+                <textarea
+                  autoFocus rows={2} value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  onBlur={() => void saveEdit()}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void saveEdit() } if (e.key === 'Escape') setEditing(null) }}
+                />
+              ) : (
+                <span className="tx" title="Click to edit" onClick={() => startEdit(r)}>{r.text}</span>
+              )}
+              <button className="del" title="Delete rule" onClick={() => void api.deleteSopRule(shopId, r.id)}><Trash2 size={12} /></button>
+            </div>
+          ))}
+        </div>
+      ))}
+      {rules.length === 0 && <p className="c-note" style={{ margin: 0 }}>No rules for this store yet. Add the first one below or upload an SOP document.</p>}
+      {!adding ? (
+        <button className="c-act" style={{ alignSelf: 'flex-start' }} onClick={() => setAdding(true)}><Plus size={14} /> Add rule</button>
+      ) : (
+        <div className="c-sopadd">
+          <div className="row" style={{ marginBottom: 8 }}>
+            <select value={newCat} onChange={(e) => setNewCat(e.target.value as typeof SOP_CATEGORIES[number])}>
+              {SOP_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <textarea
+            autoFocus rows={2} value={newText}
+            placeholder="Describe the policy in plain words, e.g. if the customer ordered the wrong size we exchange it for free once"
+            onChange={(e) => setNewText(e.target.value)}
+          />
+          <div className="row" style={{ marginTop: 8 }}>
+            <button className="c-act" disabled={!newText.trim() || busy !== ''} onClick={() => void polish()}>
+              {busy === 'polish' ? <Loader2 size={13} className="c-spin" /> : <Sparkles size={13} />} Tighten with AI
+            </button>
+            <span className="sp" />
+            <button className="c-act" onClick={() => { setAdding(false); setNewText('') }}>Cancel</button>
+            <button className="c-act prim" disabled={!newText.trim() || busy !== ''} onClick={() => void addRule()}>
+              {busy === 'save' ? <Loader2 size={13} className="c-spin" /> : <Check size={13} />} Save rule
+            </button>
+          </div>
+        </div>
+      )}
+      <p className="c-note" style={{ margin: 0 }}>Every enabled rule constrains every draft for this store. Disabled rules stay here but are ignored.</p>
     </div>
   )
 }

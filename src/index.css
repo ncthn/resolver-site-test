@@ -550,8 +550,8 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .c-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 .c-kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
-.c-kpi .n{font-size:26px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.c-kpi .l{font-size:12.5px;font-weight:500;margin-top:2px}
+.c-kpi .n{display:block;font-size:26px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.c-kpi .l{display:block;font-size:12.5px;font-weight:500;margin-top:2px}
 .c-kpi .s{font-size:11.5px;color:var(--tx-faint);margin-top:1px}
 .c-bars{display:flex;gap:10px;align-items:flex-end;height:150px}
 .c-bars .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%}
@@ -1069,3 +1069,39 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 .c-dnscard .ty{font-weight:700;font-size:10.5px;letter-spacing:.04em;color:var(--tx-faint)}
 .c-dnscard code{background:var(--band);border-radius:6px;padding:4px 8px;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:900px){.c-tmplgrid,.c-mailopts{grid-template-columns:1fr}}
+
+/* batch 3: chargebacks drawer + per-store SOP rules editor */
+.c-due{font-size:12px;font-weight:600;color:var(--tx-soft);font-variant-numeric:tabular-nums}
+.c-due.hot{color:#B4472F}
+.c-cbdrawer{border:1px solid var(--line);border-radius:12px;margin-top:14px;padding:14px 16px;display:flex;flex-direction:column;gap:11px;background:var(--band)}
+.c-cbdrawer .hd b{font-size:13.5px}
+.c-cbdrawer .hd .sub{display:block;font-size:12px;color:var(--tx-faint);margin-top:2px}
+.c-cbdrawer .list{display:flex;flex-direction:column;gap:6px}
+.c-cbdrawer .ev{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--tx-soft);background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 11px}
+.c-cbdrawer .ev .ic{width:18px;height:18px;border-radius:50%;background:#ECECEA;color:var(--tx-faint);display:flex;align-items:center;justify-content:center;flex:none}
+.c-cbdrawer .ev.ok .ic{background:#E8F0EB;color:#3D7A50}
+.c-cbdrawer .ev .st{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--tx-faint);text-transform:uppercase;letter-spacing:.04em}
+.c-cbdrawer .ft{display:flex;align-items:center;gap:12px}
+.c-cbdrawer .ft .sp{flex:1}
+.c-sopshops{display:flex;gap:6px}
+.console2 .c-sopshops button{font-size:12.5px;font-weight:600;color:var(--tx-soft);border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:#fff}
+.console2 .c-sopshops button:hover{background:var(--band)}
+.console2 .c-sopshops button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.c-sopgroup{display:flex;flex-direction:column;gap:6px}
+.c-sopgroup .gh{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--tx-faint);margin-bottom:2px}
+.c-soprule{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+.c-soprule.off .tx{opacity:.45;text-decoration:line-through}
+.c-soprule .tx{flex:1;font-size:13px;line-height:1.55;color:var(--ink);cursor:text;border-radius:6px;margin:-2px -6px;padding:2px 6px;transition:background .15s}
+.c-soprule .tx:hover{background:var(--band)}
+.c-soprule textarea{flex:1;border:1px solid var(--ink);border-radius:8px;padding:7px 9px;font-family:var(--pj);font-size:13px;line-height:1.55;outline:none;resize:vertical}
+.console2 .c-soprule .del{color:var(--tx-faint);padding:4px;border-radius:6px;margin-top:1px}
+.console2 .c-soprule .del:hover{color:#B4472F;background:#FBEFEC}
+.c-switch.sm{width:30px;height:18px;flex:none;margin-top:2px}
+.c-switch.sm .k{width:13px;height:13px}
+.c-switch.sm.on .k{left:14px}
+.c-switch.green.on{background:#3D7A50}
+.c-sopadd{border:1px dashed var(--line);border-radius:12px;padding:13px 15px}
+.c-sopadd textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-family:var(--pj);font-size:13px;line-height:1.55;outline:none;resize:vertical}
+.c-sopadd select{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-family:var(--pj);font-size:12.5px;background:#fff}
+.c-sopadd .row{display:flex;align-items:center;gap:8px}
+.c-sopadd .row .sp{flex:1}

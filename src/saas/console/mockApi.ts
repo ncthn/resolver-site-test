@@ -473,3 +473,134 @@ export function laneReadiness(st: LaneStats): 'live-ok' | 'ready' | 'watching' {
   if (st.reviewed >= st.needed && st.cleanRate >= 0.85) return 'ready'
   return 'watching'
 }
+
+/* ------------------------------------------------- chargebacks (demo) ----- */
+export interface Chargeback {
+  id: string
+  order_name: string
+  customer: string
+  shop_id: string
+  amount: string
+  currency: string
+  gateway: string
+  reason: string
+  evidence_due: string
+  status: 'needs_response' | 'under_review' | 'won' | 'lost'
+  evidence: { label: string; ready: boolean }[]
+}
+const days = (n: number) => new Date(Date.now() + n * 86400000).toISOString()
+export const CHARGEBACKS: Chargeback[] = [
+  {
+    id: 'cb-1', order_name: '#1991', customer: 'A. Weber', shop_id: 'aurora', amount: '59.00', currency: 'USD',
+    gateway: 'klarna', reason: 'Product not received', evidence_due: days(6), status: 'needs_response',
+    evidence: [
+      { label: 'Order confirmation and invoice', ready: true },
+      { label: 'Tracking with delivery attempts', ready: true },
+      { label: 'Customer conversation export', ready: true },
+      { label: 'Refund and return policy shown at checkout', ready: false },
+    ],
+  },
+  {
+    id: 'cb-2', order_name: '#1764', customer: 'P. Novak', shop_id: 'harbor', amount: '212.40', currency: 'USD',
+    gateway: 'paypal', reason: 'Unauthorized transaction', evidence_due: days(2), status: 'needs_response',
+    evidence: [
+      { label: 'Order confirmation and invoice', ready: true },
+      { label: 'AVS and device match', ready: true },
+      { label: 'Delivery confirmation to billing address', ready: false },
+      { label: 'Customer conversation export', ready: false },
+    ],
+  },
+  {
+    id: 'cb-3', order_name: '#1633', customer: 'L. Costa', shop_id: 'aurora', amount: '89.00', currency: 'USD',
+    gateway: 'shopify_payments', reason: 'Item not as described', evidence_due: days(-9), status: 'under_review',
+    evidence: [
+      { label: 'Order confirmation and invoice', ready: true },
+      { label: 'Product page and photos', ready: true },
+      { label: 'Customer conversation export', ready: true },
+    ],
+  },
+  {
+    id: 'cb-4', order_name: '#1420', customer: 'M. Fontaine', shop_id: 'north', amount: '148.00', currency: 'USD',
+    gateway: 'shopify_payments', reason: 'Product not received', evidence_due: days(-31), status: 'won',
+    evidence: [],
+  },
+  {
+    id: 'cb-5', order_name: '#1388', customer: 'D. Riva', shop_id: 'aurora', amount: '39.00', currency: 'USD',
+    gateway: 'paypal', reason: 'Credit not processed', evidence_due: days(-44), status: 'lost',
+    evidence: [],
+  },
+]
+/** POST /api/chargebacks/:id/submit — demo: marks the dispute submitted. */
+export async function submitChargeback(id: string) {
+  await delay(900)
+  const cb = CHARGEBACKS.find((x) => x.id === id)!
+  cb.status = 'under_review'
+  log('Dispute response submitted', `${cb.order_name} · ${cb.reason}`, 'ok')
+  notify()
+}
+
+/* --------------------------------------- per-store SOP rules (demo) ----- */
+export interface SopRule {
+  id: string
+  category: 'Refunds & returns' | 'Shipping' | 'Tone & voice' | 'Escalation' | 'Other'
+  text: string
+  enabled: boolean
+}
+export const SOP_RULES: Record<string, SopRule[]> = {
+  aurora: [
+    { id: 'r1', category: 'Refunds & returns', text: 'Refund or reship within 30 days of delivery. After 30 days, offer store credit only.', enabled: true },
+    { id: 'r2', category: 'Refunds & returns', text: 'Damaged item: free reship after a photo of the damage. Never ask the customer to return it.', enabled: true },
+    { id: 'r3', category: 'Shipping', text: 'If tracking shows no movement for 8 business days, treat it as lost and offer reship or refund.', enabled: true },
+    { id: 'r4', category: 'Tone & voice', text: 'Warm and plain. No exclamation marks, no corporate phrases, sign as the first name only.', enabled: true },
+    { id: 'r5', category: 'Escalation', text: 'Any mention of a bank, dispute, lawyer or chargeback: stop drafting and hold for a human.', enabled: true },
+  ],
+  harbor: [
+    { id: 'r6', category: 'Refunds & returns', text: 'Returns accepted within 14 days, customer pays return shipping unless our error.', enabled: true },
+    { id: 'r7', category: 'Tone & voice', text: 'Concise and practical. Lead with the answer, then one line of context.', enabled: true },
+  ],
+  north: [
+    { id: 'r8', category: 'Shipping', text: 'EU orders: mention customs handling proactively when the destination is outside the EU.', enabled: true },
+  ],
+}
+export async function addSopRule(shopId: string, category: SopRule['category'], text: string) {
+  await delay(120)
+  const list = (SOP_RULES[shopId] = SOP_RULES[shopId] ?? [])
+  const rule: SopRule = { id: 'r' + Date.now(), category, text, enabled: true }
+  list.push(rule)
+  log('SOP rule added', text.slice(0, 60), 'ok')
+  notify()
+  return rule
+}
+export async function updateSopRule(shopId: string, id: string, text: string) {
+  await delay(100)
+  const r = (SOP_RULES[shopId] ?? []).find((x) => x.id === id)
+  if (r) r.text = text
+  log('SOP rule updated', text.slice(0, 60), 'ok')
+  notify()
+}
+export async function toggleSopRule(shopId: string, id: string) {
+  await delay(60)
+  const r = (SOP_RULES[shopId] ?? []).find((x) => x.id === id)
+  if (r) r.enabled = !r.enabled
+  notify()
+}
+export async function deleteSopRule(shopId: string, id: string) {
+  await delay(80)
+  const list = SOP_RULES[shopId] ?? []
+  const i = list.findIndex((x) => x.id === id)
+  if (i >= 0) list.splice(i, 1)
+  log('SOP rule removed', id, 'ok')
+  notify()
+}
+/** AI assist: turn a plain-words policy into a crisp, enforceable rule. */
+export async function aiPolishRule(text: string): Promise<string> {
+  await delay(900)
+  const stripped = text.trim().replace(/\s+/g, ' ')
+    .replace(/\bwe should\b/gi, '')
+    .replace(/\bplease\b/gi, '')
+    .replace(/\bmaybe\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  const capped = stripped.charAt(0).toUpperCase() + stripped.slice(1)
+  return capped.endsWith('.') ? capped : capped + '.'
+}

@@ -9,10 +9,10 @@ Loop job 6934f827 works through this top to bottom. Update statuses every iterat
 | 3 | Internal notes look bad (incl. AI summary note): restyle clean | DONE (batch 1) |
 | 4 | Compose: rebuild on the ComeDown Support compose pattern (production repo IS comedown-support: check its compose/outbound UI) | DONE (batch 2) |
 | 5 | Tasks: I/W/D chips incomprehensible: use explicit labels | DONE (batch 1) |
-| 6 | Chargebacks tab: more features (deadlines, evidence, respond flow, amounts, outcomes) | TODO |
+| 6 | Chargebacks tab: more features (deadlines, evidence, respond flow, amounts, outcomes) | DONE (batch 3) |
 | 7 | "Shadow mode": rename explicitly (draft-only vs auto-send live) everywhere | DONE (batch 1) |
 | 8 | Settings > Stores: connection key per store + nicer UI | DONE (batch 2) |
-| 9 | Settings > Policies & SOP: go much deeper PER STORE: list all rules, view/edit/create/delete, AI assistance | TODO |
+| 9 | Settings > Policies & SOP: go much deeper PER STORE: list all rules, view/edit/create/delete, AI assistance | DONE (batch 3) |
 | 10 | Settings > Email → "Emails"; add path for sending NOT via Gmail (own domain via Resolver, e.g. Postmark like production) | DONE (batch 2) |
 | 11 | Team tab: "owners see every store" pill looks stupid: plain text | DONE (batch 1) |
 | 12 | Billing: link to the Shopify app billing page | DONE (batch 1) |
