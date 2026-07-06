@@ -556,7 +556,7 @@ function MoreMenu({ t }: { t: Ticket }) {
 let PENDING_OPEN: string | null = null
 function openTicketById(id: string) { PENDING_OPEN = id }
 
-function TicketsView({ shopId }: { shopId: string }) {
+function TicketsView({ shopId, catFilter = null, onClearCat }: { shopId: string; catFilter?: Category | null; onClearCat?: () => void }) {
   useStore()
   const [sel, setSel] = useState(() => { const pnd = PENDING_OPEN; PENDING_OPEN = null; return pnd ?? 't-4471' })
   const [filter, setFilter] = useState<typeof FILTERS[number]>('All')
@@ -568,6 +568,7 @@ function TicketsView({ shopId }: { shopId: string }) {
       .map((id) => api.getTicket(id))
       .filter((t): t is Ticket => !!t && !t.is_deleted)
       .filter((t) => shopId === 'all' || t.shop_id === shopId)
+      .filter((t) => !catFilter || t.category === catFilter)
       .filter((t) => !q || (t.subject + t.customer_email + (t.customer_name ?? '') + (t.order_name ?? '')).toLowerCase().includes(q.toLowerCase()))
     if (filter === 'All') return base
     if (filter === 'Open') return base.filter((t) => t.status === 'OPEN')
@@ -583,7 +584,10 @@ function TicketsView({ shopId }: { shopId: string }) {
     <div className="c-3pane">
       <section className="c-queue">
         <header className="c-q-head">
-          <div className="c-q-title">Tickets <span className="n">{api.getCounts(shopId).open}</span></div>
+          <div className="c-q-title">
+            {catFilter ? (CATEGORY_LABEL[catFilter] ?? catFilter) : 'Tickets'} <span className="n">{tickets.length}</span>
+            {catFilter && <button className="c-catclear" onClick={onClearCat}>All types <X size={11} /></button>}
+          </div>
           <div className="c-search"><Search size={14} /><input placeholder="Search tickets, orders, customers…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <div className="c-ftabs">
             {FILTERS.map((f) => (
@@ -1650,6 +1654,8 @@ export function AppConsole() {
   }, [])
   const endTour = () => { setTour(false); localStorage.setItem('resolver.tour_done', '1') }
   const [shopIdx, setShopIdx] = useState(0)
+  const [catFilter, setCatFilter] = useState<Category | null>(null)
+  const [inboxOpen, setInboxOpen] = useState(true)
   const [storeOpen, setStoreOpen] = useState(false)
   useOutsideClose(storeOpen, () => setStoreOpen(false))
   const [lanes, setLanes] = useState<Lanes>(LANES_INIT)
@@ -1663,7 +1669,7 @@ export function AppConsole() {
 
   const CONTENT: Record<View, () => React.ReactElement> = {
     overview: () => <Overview shopId={shopId} />,
-    tickets: () => <TicketsView shopId={shopId} />,
+    tickets: () => <TicketsView shopId={shopId} catFilter={catFilter} onClearCat={() => setCatFilter(null)} />,
     resolved: () => <DerivedList title="Resolved" sub="Closed conversations" filterFn={(t) => t.status === 'RESOLVED'} empty="Nothing resolved yet today." />,
     bin: () => <BinView onOpen={(id) => { openTicketById(id); setView('tickets') }} />,
     filtered: () => <StaticList title="Filtered" sub="Suppressed inbound, never reached the inbox" rows={[
@@ -1715,10 +1721,33 @@ export function AppConsole() {
             <div key={gi} className="grp">
               {g.group && <div className="glabel">{g.group}</div>}
               {g.items.map((it) => (
-                <a key={it.v} className={'item' + (view === it.v ? ' on' : '')} onClick={() => setView(it.v)}>
-                  <it.Ic size={16} /> <span>{it.label}</span>
-                  {badge[it.v] != null && badge[it.v]! > 0 && <span className="n">{badge[it.v]}</span>}
-                </a>
+                <div key={it.v}>
+                  <a className={'item' + (view === it.v && (it.v !== 'tickets' || !catFilter) ? ' on' : '')} onClick={() => { setView(it.v); if (it.v === 'tickets') setCatFilter(null) }}>
+                    <it.Ic size={16} /> <span>{it.label}</span>
+                    {badge[it.v] != null && badge[it.v]! > 0 && <span className="n">{badge[it.v]}</span>}
+                    {it.v === 'tickets' && (
+                      <button
+                        className={'twist' + (inboxOpen ? ' open' : '')}
+                        aria-label={inboxOpen ? 'Collapse ticket types' : 'Expand ticket types'}
+                        onClick={(e) => { e.stopPropagation(); setInboxOpen(!inboxOpen) }}
+                      ><ChevronDown size={13} /></button>
+                    )}
+                  </a>
+                  {it.v === 'tickets' && inboxOpen && (() => {
+                    const byCat = new Map<Category, number>()
+                    for (const t of api.listTicketsSync(shopId)) byCat.set(t.category, (byCat.get(t.category) ?? 0) + 1)
+                    return (
+                      <div className="subs">
+                        {[...byCat.entries()].sort((a, b) => b[1] - a[1]).map(([cat, n]) => (
+                          <a key={cat} className={'sub' + (view === 'tickets' && catFilter === cat ? ' on' : '')}
+                            onClick={() => { setView('tickets'); setCatFilter(cat) }}>
+                            <span>{CATEGORY_LABEL[cat] ?? cat}</span><span className="n">{n}</span>
+                          </a>
+                        ))}
+                      </div>
+                    )
+                  })()}
+                </div>
               ))}
             </div>
           ))}

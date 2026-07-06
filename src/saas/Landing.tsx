@@ -163,20 +163,26 @@ function ConsoleMock() {
 
 function Hero() {
   return (
-    <>
-      <section className="hero wrap" id="top">
+    <section className="hero2 wrap" id="top">
+      <div className="hero2-copy">
+        <motion.span
+          className="eyebrow"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.2, 0.7, 0.2, 1] }}
+        >For Shopify brands</motion.span>
         <motion.h1
           initial={{ opacity: 0, y: 18, filter: 'blur(7px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.65, ease: [0.2, 0.7, 0.2, 1] }}
+          transition={{ duration: 0.65, delay: 0.06, ease: [0.2, 0.7, 0.2, 1] }}
         >
-          Your customer emails, answered from the real order.
+          Customer emails, answered from <em>the real order</em>.
         </motion.h1>
         <motion.p
           className="lede"
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.12, ease: [0.2, 0.7, 0.2, 1] }}
+          transition={{ duration: 0.6, delay: 0.16, ease: [0.2, 0.7, 0.2, 1] }}
         >
           Resolver matches every support email to the live Shopify order and drafts the
           reply in the customer&rsquo;s language, ready to approve, or to send on its own
@@ -186,24 +192,27 @@ function Hero() {
           className="ctas"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.22 }}
+          transition={{ duration: 0.5, delay: 0.24 }}
         >
           <a className="btn pri" href={START}>Start free</a>
           <a className="btn soft" href={DEMO}>Book a demo</a>
         </motion.div>
-      </section>
-      <div className="stage">
-        <div className="wrap">
-          <motion.div
-            initial={{ opacity: 0, y: 48 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.28, ease: [0.2, 0.7, 0.2, 1] }}
-          >
-            <ConsoleMock />
-          </motion.div>
-        </div>
+        <motion.span
+          className="hero2-note"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.34 }}
+        >Starts in draft-only mode. Nothing sends until a lane earns it.</motion.span>
       </div>
-    </>
+      <motion.div
+        className="hero2-vis"
+        initial={{ opacity: 0, x: 44 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.22, ease: [0.2, 0.7, 0.2, 1] }}
+      >
+        <ConsoleMock />
+      </motion.div>
+    </section>
   );
 }
 
@@ -372,7 +381,7 @@ function Rows({ rows }: { rows: [ReactNode, ReactNode][] }) {
 }
 const ACC_ITEMS = [
   {
-    t: 'Shadow mode first',
+    t: 'Draft-only mode first',
     p: 'Resolver drafts silently alongside your team while you compare its answers to yours. Nothing sends until a lane earns it.',
     viz: (
       <div className="acc-shot" key="a">
@@ -380,7 +389,7 @@ const ACC_ITEMS = [
           ['Where is my order? · #4471', <span className="st draft" key="1">Draft ready</span>],
           ['Refund request · #4468', <span className="st draft" key="2">Draft ready</span>],
           ['Address change · #4465', <span className="st draft" key="3">Draft ready</span>],
-          [<span key="l">Sent automatically</span>, <b key="4">0, shadow mode</b>],
+          [<span key="l">Sent automatically</span>, <b key="4">0, draft-only mode</b>],
         ]} />
       </div>
     ),
@@ -392,8 +401,8 @@ const ACC_ITEMS = [
       <div className="acc-shot" key="b">
         <Rows rows={[
           ['WISMO lane', <span className="st live" key="1">Live · 30s window</span>],
-          ['Returns lane', <span className="st shadow" key="2">Shadow</span>],
-          ['Order changes', <span className="st shadow" key="3">Shadow</span>],
+          ['Returns lane', <span className="st shadow" key="2">Draft only</span>],
+          ['Order changes', <span className="st shadow" key="3">Draft only</span>],
           ['Disputes', <span className="st human" key="4">Human only</span>],
         ]} />
       </div>
@@ -494,7 +503,7 @@ function Money() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap', width: '100%' }}>
             <div style={{ flex: 1, minWidth: 240 }}>
               <h3>Ready to stop losing money to slow support?</h3>
-              <p style={{ marginTop: 6 }}>Put Resolver in shadow mode tonight and judge it on its drafts.</p>
+              <p style={{ marginTop: 6 }}>Put Resolver in draft-only mode tonight and judge it on its drafts.</p>
             </div>
             <a className="btn" href={START} style={{ background: '#fff', color: 'var(--ink)' }}>Start free</a>
           </div>
@@ -556,7 +565,7 @@ function BeforeAfter() {
 function Stats() {
   const stats = [
     { v: '40+', k: 'languages detected, replies drafted directly in the customer’s own language' },
-    { v: '3', k: 'send lanes per store: off, shadow, live, switched per request category' },
+    { v: '3', k: 'send lanes per store: off, draft-only, live, switched per request category' },
     { v: '30s', k: 'cancel window on every automated send, one click pulls it back' },
   ];
   return (
@@ -604,7 +613,7 @@ function Platform() {
   ];
   const control = [
     { ic: <Eye size={17} strokeWidth={2} />, t: 'Approval queue', p: 'Every draft reviewable before anything leaves the building.' },
-    { ic: <GitBranch size={17} strokeWidth={2} />, t: 'Send lanes', p: 'Off, shadow, live, switched per category, per store.' },
+    { ic: <GitBranch size={17} strokeWidth={2} />, t: 'Send lanes', p: 'Off, draft-only, live, switched per category, per store.' },
     { ic: <Undo2 size={17} strokeWidth={2} />, t: 'Cancel window', p: 'Auto-sends wait out a delay you set; one click pulls them back.' },
     { ic: <BellRing size={17} strokeWidth={2} />, t: 'Escalation rules', p: 'Chargeback and legal language always routes to a human.' },
     { ic: <SlidersHorizontal size={17} strokeWidth={2} />, t: 'Kill switch', p: 'One setting stops all automated sending, immediately.' },
@@ -638,7 +647,7 @@ function Platform() {
           <div className="gs-l">
             <h3>One control plane. Nothing sends without your rules.</h3>
             <p>Autonomy is granted lane by lane, and revocable in one click.</p>
-            <a href={START}>Start in shadow mode <ArrowRight size={15} strokeWidth={2.2} /></a>
+            <a href={START}>Start in draft-only mode <ArrowRight size={15} strokeWidth={2.2} /></a>
           </div>
           <div className="gs-grid">
             {control.map((f) => (
@@ -660,7 +669,7 @@ function Setup() {
     { when: 'Today', t: 'Install the Shopify app', p: 'One-click install from the App Store. Read-only scopes.' },
     { when: '+5 min', t: 'Connect Gmail', p: 'Your existing support mailbox, replies send as you.' },
     { when: '+10 min', t: 'Upload your SOP', p: 'Policies, refund windows, tone. Every draft follows it.' },
-    { when: 'Week 1', t: 'Flip your first lane live', p: 'After watching drafts in shadow mode, turn on WISMO.' },
+    { when: 'Week 1', t: 'Flip your first lane live', p: 'After watching drafts in draft-only mode, turn on WISMO.' },
   ];
   return (
     <section className="setup wrap">
@@ -860,7 +869,7 @@ function Pricing() {
   const plans = [
     {
       name: 'Solo', blurb: 'One store, one seat.', price: '$59', vol: 'Up to 300 tickets / mo',
-      feats: ['Order-grounded drafts', 'Shadow + auto-send lanes', '40+ languages', 'Chargeback & legal flags'],
+      feats: ['Order-grounded drafts', 'Draft-only + auto-send lanes', '40+ languages', 'Chargeback & legal flags'],
       cta: 'Start free', href: START, rec: false,
     },
     {
@@ -919,7 +928,7 @@ function Pricing() {
 const FAQS = [
   {
     q: 'Does it start sending emails as soon as I install it?',
-    a: 'No. Every store starts in shadow mode: Resolver drafts, nothing sends. You review drafts against what your team would have written, then enable sending one lane at a time. The default state of every lane is off.',
+    a: 'No. Every store starts in draft-only mode: Resolver drafts, nothing sends. You review drafts against what your team would have written, then enable sending one lane at a time. The default state of every lane is off.',
   },
   {
     q: 'What happens when a customer threatens a chargeback?',
@@ -939,7 +948,7 @@ const FAQS = [
   },
   {
     q: 'How long does setup take?',
-    a: 'Installing the Shopify app, connecting Gmail, and uploading your SOP is about ten minutes. Drafting starts right after, in shadow mode, where it stays until you decide otherwise.',
+    a: 'Installing the Shopify app, connecting Gmail, and uploading your SOP is about ten minutes. Drafting starts right after, in draft-only mode, where it stays until you decide otherwise.',
   },
 ];
 

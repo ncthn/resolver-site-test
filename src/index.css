@@ -13,7 +13,7 @@
   --color-ink:#16181C;
   --font-body:'Inter Tight',system-ui,sans-serif;
 }
-:root{
+:root{--acc:#2F6B45;--accbg:#E9F1EB;
   --indigo:#2A2FB8; --indigo-d:#23278F; --indigo-h:#4046E3;
   --ink:#16181C; --paper:#FFFFFF;
   --band:#F5F5F4; --card:#FAFAF9;
@@ -37,7 +37,7 @@ img{max-width:100%}
 :where(a,button,input,summary):focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:8px}
 
 h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
-.eyebrow{display:inline-block;font-size:13.5px;font-weight:500;color:var(--tx-soft);background:var(--band);border-radius:999px;padding:6px 14px}
+.eyebrow{display:inline-block;font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--acc);background:var(--accbg);border-radius:999px;padding:6px 14px}
 .sec-h2{font-size:clamp(30px,3.6vw,44px);line-height:1.08}
 .sec-sub{color:var(--tx-soft);font-size:16.5px;line-height:1.6;margin-top:16px;max-width:52ch}
 .center{text-align:center}
@@ -1120,3 +1120,77 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 .c-tmplcard .d{font-size:12.5px}
 .c-tmplgrid{gap:12px}
 .c-compose2.sent{min-height:280px;justify-content:center}
+
+/* rail sub-tabs by ticket type */
+.c-nav .item{position:relative}
+.console2 .c-nav .twist{margin-left:auto;display:flex;padding:3px;border-radius:6px;color:var(--tx-faint);transition:transform .18s ease}
+.console2 .c-nav .twist:hover{color:var(--ink);background:rgba(22,24,28,.06)}
+.console2 .c-nav .twist svg{transition:transform .18s ease;transform:rotate(-90deg)}
+.console2 .c-nav .twist.open svg{transform:rotate(0)}
+.c-nav .item .twist + .n, .c-nav .item span.n{margin-left:auto}
+.c-nav .item:has(.twist) span.n{margin-left:0}
+.c-nav .subs{display:flex;flex-direction:column;margin:1px 0 3px}
+.c-nav .subs .sub{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 10px 5px 38px;border-radius:8px;font-size:12.5px;color:var(--tx-soft);cursor:pointer}
+.c-nav .subs .sub:hover{background:rgba(22,24,28,.05);color:var(--ink)}
+.c-nav .subs .sub.on{background:rgba(22,24,28,.08);color:var(--ink);font-weight:600}
+.c-nav .subs .sub .n{font-size:10.5px;color:var(--tx-faint);font-variant-numeric:tabular-nums}
+.console2 .c-catclear{display:inline-flex;align-items:center;gap:4px;margin-left:10px;font-size:11px;font-weight:600;color:var(--tx-faint);border:1px solid var(--line);border-radius:999px;padding:3px 9px;background:#fff}
+.console2 .c-catclear:hover{color:var(--ink);background:var(--band)}
+.collapsed .c-nav .subs{display:none}
+
+/* onboarding v2: side rail with vertical stepper, left-aligned step cards */
+.ob2{flex-direction:row}
+.ob2-side{width:320px;flex:none;background:#fff;border-right:1px solid var(--line);padding:26px 26px 22px;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh}
+.ob2-side .brand{display:flex;align-items:center;gap:8px}
+.ob2-side .brand img{height:22px}
+.ob2-side .brand .wm{font-weight:600;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
+.ob2-sub{font-size:12.5px;line-height:1.6;color:var(--tx-faint);margin:16px 0 26px;max-width:24ch}
+.ob-vsteps{display:flex;flex-direction:column;gap:0;flex:1}
+.vstep{display:flex;gap:12px}
+.vstep .rail{display:flex;flex-direction:column;align-items:center}
+.vstep .dot{width:24px;height:24px;border-radius:50%;background:#EFEFED;color:var(--tx-soft);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex:none}
+.vstep.on .dot{background:var(--ink);color:#fff}
+.vstep.done .dot{background:#E8F0EB;color:#3D7A50}
+.vstep .ln{width:1.5px;flex:1;min-height:18px;background:#E7E7E4;margin:4px 0}
+.vstep.done .ln{background:#CFE0D4}
+.vstep .tx{display:flex;flex-direction:column;padding-bottom:18px}
+.vstep .lb{font-size:13px;font-weight:600;color:var(--tx-faint);line-height:24px}
+.vstep.on .lb,.vstep.done .lb{color:var(--ink)}
+.vstep .ds{font-size:11.5px;color:var(--tx-faint);margin-top:1px;max-width:22ch}
+.vstep.on .ds{color:var(--tx-soft)}
+.ob2-foot{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx-faint);border-top:1px solid var(--line);padding-top:16px}
+.ob2-body{max-width:none;flex:1;padding:22px 56px 80px;display:flex;flex-direction:column;align-items:center}
+.ob2-topbar{width:100%;display:flex;justify-content:flex-end;margin-bottom:26px}
+.ob2 .ob-card{width:100%;max-width:600px;text-align:left;padding:34px 38px}
+.ob2 .ob-card h1{margin-top:16px;font-size:24px}
+.ob2 .ob-card .btn{align-self:flex-start;margin-top:22px}
+.ob2 .ob-fine{text-align:left;margin-top:10px}
+.ob2 .ob-skip{align-self:flex-start;margin-top:10px}
+.ob2 .ob-perm{border:1px solid var(--line);border-radius:11px;padding:4px 14px;margin-top:18px}
+.ob2 .ob-perm > div{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--tx-soft);padding:9px 0;border-top:1px solid var(--line)}
+.ob2 .ob-perm > div:first-child{border-top:none}
+@media (max-width:920px){
+  .ob2{flex-direction:column}
+  .ob2-side{width:100%;height:auto;min-height:0;position:static;border-right:none;border-bottom:1px solid var(--line);padding:18px 20px}
+  .ob2-sub,.ob2-foot{display:none}
+  .ob-vsteps{flex-direction:row;overflow-x:auto;gap:14px}
+  .vstep .ln{display:none}
+  .vstep .ds{display:none}
+  .vstep .tx{padding-bottom:0}
+  .ob2-body{padding:18px 20px 60px}
+}
+
+/* hero v2: asymmetric split, framed console on the right, one green moment */
+.hero2{display:grid;grid-template-columns:minmax(0,470px) minmax(0,1fr);gap:60px;align-items:center;padding:74px 0 92px}
+.hero2-copy .eyebrow{margin-bottom:20px}
+.hero2 h1{font-size:clamp(36px,3.7vw,54px);line-height:1.07;letter-spacing:-.033em}
+.hero2 h1 em{font-style:normal;color:var(--acc)}
+.hero2 .lede{color:var(--tx-soft);font-size:16.5px;line-height:1.65;margin-top:20px;max-width:44ch}
+.hero2 .ctas{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
+.hero2-note{display:block;margin-top:16px;font-size:12.5px;color:var(--tx-faint)}
+.hero2-vis{min-width:0;overflow:clip;border-radius:18px;border:1px solid var(--line);box-shadow:0 24px 64px -32px rgba(22,24,28,.25);background:#fff}
+.hero2-vis > *{width:128%;max-width:none;pointer-events:none}
+@media (max-width:960px){
+  .hero2{grid-template-columns:1fr;gap:36px;padding:56px 0 64px}
+  .hero2-vis > *{width:100%}
+}

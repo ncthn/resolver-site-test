@@ -233,6 +233,10 @@ const log = (ev: string, detail: string, kind: ActivityEvent['kind']) => {
 
 /* --------------------------------------------------------------- client */
 /** GET /api/tickets, list with shop + status-bucket + text filters. */
+/** Synchronous read for rail badges/sub-tabs (the mock store is in memory). */
+export function listTicketsSync(shopId?: string) {
+  return TICKETS.filter((t) => !t.is_deleted && (!shopId || shopId === 'all' || t.shop_id === shopId))
+}
 export async function listTickets(opts: { shopId?: string; q?: string } = {}) {
   await delay(0)
   return TICKETS.filter((t) =>

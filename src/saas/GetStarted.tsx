@@ -1,7 +1,7 @@
 // Resolver, onboarding welcome flow (/get-started), the new-brand version of
 // the production wizard (rsvlr src/saas/Onboarding.tsx): Install the Shopify
 // app → create your login → SOP upload + policy extraction → connect Gmail →
-// shadow mode. Demo-functional: each step advances with realistic states; the
+// draft-only mode. Demo-functional: each step advances with realistic states; the
 // SOP step shows the policy-extraction concept (structured fields distilled
 // from the uploaded document) that personalization is built on.
 import { useEffect, useState } from 'react';
@@ -12,17 +12,31 @@ import {
 const LOGO = '/logo/recolor/oct-black-t.png';
 const STEPS = ['Store', 'Account', 'Policies', 'Inbox', 'History', 'Done'] as const;
 
+const STEP_DESC: Record<typeof STEPS[number], string> = {
+  Store: 'One click from the App Store, read-only',
+  Account: 'Your login for every store',
+  Policies: 'Your SOP becomes the rules',
+  Inbox: 'Replies send from your address',
+  History: 'Learn from your last 30 days',
+  Done: 'Draft-only mode, you approve',
+};
+
 function Stepper({ at }: { at: number }) {
   return (
-    <div className="ob-stepper" aria-label="Setup progress">
+    <nav className="ob-vsteps" aria-label="Setup progress">
       {STEPS.map((s, i) => (
-        <div className={'ob-step' + (i < at ? ' done' : i === at ? ' on' : '')} key={s}>
-          <span className="dot">{i < at ? <Check size={11} strokeWidth={3} /> : i + 1}</span>
-          <span className="lb">{s}</span>
-          {i < STEPS.length - 1 && <span className="ln" />}
+        <div className={'vstep' + (i < at ? ' done' : i === at ? ' on' : '')} key={s}>
+          <span className="rail">
+            <span className="dot">{i < at ? <Check size={11} strokeWidth={3} /> : i + 1}</span>
+            {i < STEPS.length - 1 && <span className="ln" />}
+          </span>
+          <span className="tx">
+            <span className="lb">{s}</span>
+            <span className="ds">{STEP_DESC[s]}</span>
+          </span>
         </div>
       ))}
-    </div>
+    </nav>
   );
 }
 
@@ -107,13 +121,15 @@ export function GetStarted() {
   };
 
   return (
-    <div className="ob">
-      <header className="ob-head">
+    <div className="ob ob2">
+      <aside className="ob2-side">
         <a className="brand" href="/"><img src={LOGO} alt="" /><span className="wm">resolver.chat</span></a>
-        <span className="ob-exit"><a href="/">Exit setup</a></span>
-      </header>
-      <main className="ob-main">
+        <div className="ob2-sub">Setup takes about ten minutes. Nothing sends to a customer until you say so.</div>
         <Stepper at={at} />
+        <div className="ob2-foot"><Lock size={12} /> Read-only Shopify scopes · your data stays yours</div>
+      </aside>
+      <main className="ob-main ob2-body">
+        <div className="ob2-topbar"><span className="ob-exit"><a href="/">Exit setup</a></span></div>
 
         {at === 0 && (
           <section className="ob-card">
@@ -203,14 +219,14 @@ export function GetStarted() {
         {at === 5 && (
           <section className="ob-card">
             <span className="ob-ic" style={{ background: '#E8F0EB', color: '#3D7A50' }}><Eye size={22} strokeWidth={1.9} /></span>
-            <h1>You&rsquo;re in shadow mode.</h1>
+            <h1>You&rsquo;re in draft-only mode.</h1>
             <p>
               Resolver is now reading new tickets and drafting silently. Nothing sends. Compare its drafts to what you would have written, then turn on your first
               lane when they&rsquo;ve earned it.
             </p>
             <div className="ob-extract" style={{ marginTop: 4 }}>
               {[
-                ['Every lane', 'Shadow, drafts only'],
+                ['Every lane', 'Draft only, nothing sends'],
                 ['Chargebacks & legal', 'Human only, always'],
                 ['Your next step', 'Review drafts for a few days, then flip WISMO live'],
               ].map(([k, v]) => (

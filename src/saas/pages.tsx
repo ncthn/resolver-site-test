@@ -32,7 +32,7 @@ function Page({ title, sub, children }: { title: string; sub?: string; children:
 export function PricingPage() {
   const [annual, setAnnual] = useState(false);
   const plans = [
-    { name: 'Solo', m: 59, a: 47, vol: '300 tickets / mo', blurb: 'One store, one seat.', feats: ['1 store · 1 seat', 'Order-grounded drafts', 'Shadow + auto-send lanes', '40+ languages', 'Chargeback & legal flags'], rec: false },
+    { name: 'Solo', m: 59, a: 47, vol: '300 tickets / mo', blurb: 'One store, one seat.', feats: ['1 store · 1 seat', 'Order-grounded drafts', 'Draft-only + auto-send lanes', '40+ languages', 'Chargeback & legal flags'], rec: false },
     { name: 'Team', m: 249, a: 199, vol: '2,500 tickets / mo', blurb: 'Growing operations.', feats: ['Everything in Solo', '3 stores · 3 seats', 'Per-store voice & policies', 'Lane analytics', 'Priority email support'], rec: true },
     { name: 'Portfolio', m: 599, a: 479, vol: '6,000 tickets / mo', blurb: 'Multi-brand operators.', feats: ['Everything in Team', 'Unlimited stores · 10 seats', 'Cross-store insights', 'Priority support'], rec: false },
   ];
@@ -130,7 +130,7 @@ export function AboutPage() {
           </p>
           <p>
             We don&rsquo;t publish invented customer counts or ROI multiples. The product
-            starts in shadow mode precisely so you can judge it on its drafts, on your
+            starts in draft-only mode precisely so you can judge it on its drafts, on your
             real tickets, before a single email sends.
           </p>
         </div>
@@ -279,12 +279,12 @@ export function IntegrationsPage() {
 
 /* ================================= faq ================================== */
 const FAQ_ALL: [string, string][] = [
-  ['Does it start sending emails as soon as I install it?', 'No. Every store starts in shadow mode: Resolver drafts, nothing sends. You review drafts against what your team would have written, then enable sending one lane at a time. The default state of every lane is off.'],
+  ['Does it start sending emails as soon as I install it?', 'No. Every store starts in draft-only mode: Resolver drafts, nothing sends. You review drafts against what your team would have written, then enable sending one lane at a time. The default state of every lane is off.'],
   ['What happens when a customer threatens a chargeback?', 'The ticket is flagged, pulled out of every automated lane, and pushed to the top of the human queue. This routing is enforced in the pipeline itself, no setting can auto-reply to dispute or legal language.'],
   ['How does it know my store’s policies?', 'During setup you provide your support SOP and policies. Every draft is constrained by them, refund windows, reshipment rules, tone. Change the policy and the next draft follows it.'],
   ['What about emails it can’t match to an order?', 'Unmatched or low-confidence tickets are held for a human with everything Resolver could find attached. It never guesses an order match to force an automated reply.'],
   ['Which data does Resolver access?', 'Read-only Shopify scopes (orders, customers, products, fulfillments, returns, disputes) and the support mailbox you connect. Customer data is processed under a signed DPA and never used to train AI models.'],
-  ['How long does setup take?', 'Installing the Shopify app, connecting Gmail, and uploading your SOP is about ten minutes. Drafting starts right after, in shadow mode, where it stays until you decide otherwise.'],
+  ['How long does setup take?', 'Installing the Shopify app, connecting Gmail, and uploading your SOP is about ten minutes. Drafting starts right after, in draft-only mode, where it stays until you decide otherwise.'],
   ['Can I run multiple stores?', 'Yes, every store carries its own voice, SOP, and lane configuration, and the inbox can be viewed per-store or across all stores. Team runs 3 stores; Portfolio is unlimited.'],
   ['What languages does it support?', 'Detection and native drafting in 40+ languages. Your team reviews an English mirror of every non-English draft, so you can supervise conversations you couldn’t read otherwise.'],
   ['Can one teammate take over a ticket completely?', 'Yes, every ticket has its own AI switch. Turn it off and Resolver stops drafting and sending for that conversation entirely, until you turn it back on.'],
