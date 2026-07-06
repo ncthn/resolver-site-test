@@ -2202,6 +2202,180 @@ function LiveLanes() {
   )
 }
 
+/* Live compose: the staged flow against the real endpoints — find the order
+   on the actual store, AI-draft with the production composer (native language
+   + subject), review, send from the shop mailbox. Creates a real ticket. */
+function LiveCompose() {
+  useStore()
+  const shops = api.SHOPS.filter((x) => x.id !== 'all')
+  const [shopId, setShopId] = useState('')
+  const [stage, setStage] = useState<'search' | 'template' | 'review' | 'sent'>('search')
+  const [q, setQ] = useState('')
+  const [order, setOrder] = useState<api.LiveOrder | null>(null)
+  const [searched, setSearched] = useState(false)
+  const [to, setTo] = useState('')
+  const [tmpl, setTmpl] = useState<ComposeTemplateId | null>(null)
+  const [intent, setIntent] = useState('')
+  const [draft, setDraft] = useState<{ draft: string; english: string; language: string; subject: string } | null>(null)
+  const [busy, setBusy] = useState<'' | 'search' | 'draft' | 'send'>('')
+  const [err, setErr] = useState('')
+  useEffect(() => { if (!shopId && shops.length) setShopId(shops[0].id) })
+  const search = async () => {
+    if (!q.trim() || !shopId) return
+    setBusy('search'); setErr(''); setSearched(false)
+    try {
+      const r = await api.composeSearchOrder(q.trim(), shopId)
+      setOrder(r.order)
+      if (r.order?.customer_email) setTo(String(r.order.customer_email))
+      setSearched(true)
+    } catch (e) { setErr((e as Error).message) }
+    setBusy('')
+  }
+  const doDraft = async (id: ComposeTemplateId) => {
+    const base = COMPOSE_TEMPLATES.find((x) => x.id === id)!
+    const text = id === 'custom' ? intent : base.intent
+    if (!text.trim()) return
+    setBusy('draft'); setErr('')
+    try {
+      const r = await api.composeGenerateDraft(order, text, shopId)
+      setDraft(r)
+      setStage('review')
+    } catch (e) { setErr((e as Error).message) }
+    setBusy('')
+  }
+  const doSend = async () => {
+    if (!draft || !to.trim()) return
+    setBusy('send'); setErr('')
+    try {
+      await api.composeSendLive({
+        to: to.trim(),
+        subject: draft.subject || `About your order ${order?.order_name ?? ''}`.trim(),
+        body: draft.draft,
+        order_snapshot: (order as Record<string, unknown>) ?? undefined,
+        order_id: order?.order_id ? String(order.order_id) : undefined,
+        language: draft.language,
+        shop_id: shopId,
+      })
+      setStage('sent')
+    } catch (e) { setErr((e as Error).message) }
+    setBusy('')
+  }
+  const reset = () => { setStage('search'); setQ(''); setOrder(null); setSearched(false); setTo(''); setTmpl(null); setIntent(''); setDraft(null); setErr('') }
+  return (
+    <div className="c-page">
+      <div className="c-cwrap">
+        <header className="c-page-h" style={{ marginBottom: 0 }}>
+          <div><h1>Compose</h1><p><b>Live:</b> sends a real email from the store mailbox and opens a ticket.</p></div>
+        </header>
+        {err && <p className="c-note" style={{ margin: 0, color: '#B4472F' }}>{err}</p>}
+        {stage === 'search' && (
+          <div className="c-card c-compose2">
+            <div className="c-cp-row">
+              <label className="grow">Store
+                <select value={shopId} onChange={(e) => setShopId(e.target.value)}>
+                  {shops.map((sh) => <option key={sh.id} value={sh.id}>{sh.name}</option>)}
+                </select>
+              </label>
+            </div>
+            <label>Find the order
+              <span className="c-cp-search"><Search size={14} /><input autoFocus placeholder="Order number, customer email or name…" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void search() }} /></span>
+            </label>
+            <div className="row" style={{ display: 'flex', gap: 10 }}>
+              <button className="c-act prim" disabled={!q.trim() || busy === 'search'} onClick={() => void search()}>
+                {busy === 'search' ? <Loader2 size={14} className="c-spin" /> : <Search size={14} />} Search
+              </button>
+            </div>
+            {searched && (order ? (
+              <div className="c-cp-orders">
+                <button onClick={() => setStage('template')}>
+                  <Package size={14} />
+                  <span className="o"><b>{order.order_name ?? 'Order'}</b> · {String(order.shipping_name ?? order.customer_display_name ?? order.customer_email ?? '')}</span>
+                  <span className="i">{(order.line_items ?? []).map((li: { title: string; quantity: number }) => `${li.quantity}× ${li.title}`).join(', ').slice(0, 60)}</span>
+                  <ChevronDown size={13} style={{ transform: 'rotate(-90deg)' }} />
+                </button>
+              </div>
+            ) : (
+              <p className="c-note" style={{ margin: 0 }}>No order matched. Try the order number or the customer email.</p>
+            ))}
+            <button className="c-cp-skip" onClick={() => { setOrder(null); setStage('template') }}>Continue without an order</button>
+          </div>
+        )}
+        {stage === 'template' && (
+          <div className="c-card c-compose2">
+            <div className="c-cp-row">
+              {order ? (
+                <span className="c-orderchip"><Package size={13} /> {order.order_name} · {String(order.shipping_name ?? order.customer_email ?? '')}
+                  <button onClick={() => setStage('search')} aria-label="change order"><X size={12} /></button>
+                </span>
+              ) : (
+                <button className="c-cp-skip" style={{ margin: 0 }} onClick={() => setStage('search')}>No order attached · find one</button>
+              )}
+            </div>
+            {!order && (
+              <label>Send to
+                <span className="c-cp-search"><input placeholder="customer@email.com" value={to} onChange={(e) => setTo(e.target.value)} /></span>
+              </label>
+            )}
+            <div className="c-tmplgrid">
+              {COMPOSE_TEMPLATES.map((x) => (
+                <button key={x.id} className={'c-tmplcard' + (tmpl === x.id ? ' on' : '')} onClick={() => { setTmpl(x.id); if (x.id !== 'custom') void doDraft(x.id) }}>
+                  <span className="ic"><x.icon size={15} /></span>
+                  <b>{x.label}</b>
+                  <span className="d">{x.desc}</span>
+                </button>
+              ))}
+            </div>
+            {tmpl === 'custom' && (
+              <>
+                <label>What do you need to say?
+                  <textarea rows={3} autoFocus value={intent} onChange={(e) => setIntent(e.target.value)} />
+                </label>
+                <div className="row">
+                  <button className="c-act prim" disabled={!intent.trim() || busy === 'draft'} onClick={() => void doDraft('custom')}>
+                    {busy === 'draft' ? <Loader2 size={14} className="c-spin" /> : <Sparkles size={14} />} Draft with AI
+                  </button>
+                </div>
+              </>
+            )}
+            {busy === 'draft' && tmpl !== 'custom' && <p className="c-note" style={{ margin: 0 }}><Loader2 size={13} className="c-spin" /> Writing the draft…</p>}
+          </div>
+        )}
+        {stage === 'review' && draft && (
+          <div className="c-card c-compose2">
+            <div className="c-cp-row meta">
+              <span className="k">To</span><span className="v">{to || '(missing recipient)'}</span>
+              <span className="sp" />
+              {order?.order_name && <span className="c-chip ink">{order.order_name}</span>}
+              <span className="c-chip mut"><Languages size={11} /> {draft.language}</span>
+            </div>
+            {draft.subject && <div className="c-cp-row meta"><span className="k">Subject</span><span className="v">{draft.subject}</span></div>}
+            <p className="body editable" title="Click to edit" style={{ fontSize: 13.5, lineHeight: 1.65, cursor: 'text' }}
+              contentEditable suppressContentEditableWarning
+              onBlur={(e) => setDraft({ ...draft, draft: e.currentTarget.textContent ?? draft.draft })}
+            >{draft.draft}</p>
+            {draft.english && draft.english !== draft.draft && <p className="c-native-p">{draft.english}</p>}
+            <div className="c-cfoot" style={{ marginTop: 14 }}>
+              <button className="c-act" onClick={() => setStage('template')}>Back</button>
+              <span className="sp" />
+              <button className="c-act prim" disabled={busy === 'send' || !to.trim()} onClick={() => void doSend()}>
+                {busy === 'send' ? <Loader2 size={14} className="c-spin" /> : <Send size={14} />} Send for real
+              </button>
+            </div>
+          </div>
+        )}
+        {stage === 'sent' && (
+          <div className="c-card c-compose2 sent">
+            <span className="ok"><Check size={18} strokeWidth={2.6} /></span>
+            <b>Sent to {to}</b>
+            <p className="c-note" style={{ margin: 0 }}>Delivered from the store mailbox. A ticket now tracks the conversation.</p>
+            <button className="c-act" onClick={reset}>Compose another</button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ---------------------------------------------------------------- shell */
 const TOUR: { sel: string; title: string; body: string; place: 'right' | 'bottom' | 'left' | 'top' }[] = [
   { sel: '.c-store', title: 'All your stores, one inbox', body: 'Switch between stores or work across all of them at once. Counts follow.', place: 'right' },
@@ -2282,7 +2456,7 @@ export function AppConsole() {
       ['Newsletter · Shopify Weekly', 'marketing filter', '2h'],
       ['Auto-reply · Out of office', 'loop protection', '3h'],
     ]} />,
-    compose: () => <Compose />,
+    compose: () => (api.LIVE ? <LiveCompose /> : <Compose />),
     sent: () => <SentView />,
     tasks: () => <TasksView />,
     customs: () => <StaticList title="Customs" sub="Clearance requests detected in tracking" rows={[

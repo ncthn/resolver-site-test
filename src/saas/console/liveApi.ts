@@ -200,3 +200,15 @@ export async function setAutoSendMode(shopId: string, mode: 'off' | 'shadow' | '
 export async function laneReadiness(shopId: string) {
   return await apiFetch(`/lanes/readiness?shop_id=${encodeURIComponent(shopId)}`) as { needed: number; lanes: { category: string; reviewed: number; clean: number; clean_rate: number; ready: boolean }[] }
 }
+
+/* --------------------------------------------------------- live compose --- */
+export interface LiveOrder { order_name?: string; order_id?: string; customer_email?: string; shipping_name?: string; customer_display_name?: string; shipping_country?: string; total_price?: string; currency?: string; line_items?: { title: string; quantity: number }[]; [k: string]: unknown }
+export async function composeSearchOrder(query: string, shopId: string) {
+  return await apiFetch('/compose/search-order', { method: 'POST', body: JSON.stringify({ query, shop_id: shopId }) }) as { order: LiveOrder | null; confidence?: number; reason?: string }
+}
+export async function composeGenerateDraft(order: LiveOrder | null, instructions: string, shopId: string) {
+  return await apiFetch('/compose/generate-draft', { method: 'POST', body: JSON.stringify({ order, instructions, shop_id: shopId }) }) as { draft: string; english: string; language: string; subject: string }
+}
+export async function composeSendLive(data: { to: string; subject: string; body: string; order_snapshot?: Record<string, unknown>; order_id?: string; language?: string; shop_id: string }) {
+  return await apiFetch('/compose/send', { method: 'POST', body: JSON.stringify(data) })
+}

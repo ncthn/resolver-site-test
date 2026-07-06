@@ -44,3 +44,7 @@ export const getLiveSettings = live.getLiveSettings
 export const refreshLiveSettings = live.refreshSettings
 export const setAutoSendMode = live.setAutoSendMode
 export const liveLaneReadiness = live.laneReadiness
+export const composeSearchOrder = live.composeSearchOrder
+export const composeGenerateDraft = live.composeGenerateDraft
+export const composeSendLive = live.composeSendLive
+export type { LiveOrder } from './liveApi'

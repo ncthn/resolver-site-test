@@ -76,3 +76,8 @@ production. Live shops populate the store chips automatically.
 Phase 3 (same day): live Lanes — per-shop auto-send modes drive the real
 POST /api/admin/auto-send-mode, with the real graduation metric per category
 from GET /api/lanes/readiness under each shop. Demo lanes unchanged.
+
+Phase 4 (same day): live Compose — order search (compose/search-order),
+AI drafting with native language + translated subject (compose/generate-draft)
+and real sending that opens a ticket (compose/send), per store, with a manual
+recipient when no order is attached. Demo compose unchanged.
