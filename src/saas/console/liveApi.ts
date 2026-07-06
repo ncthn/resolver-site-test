@@ -106,6 +106,7 @@ export function startPolling() {
   polling = true
   void refresh()
   void refreshBinAndSent()
+  void refreshMacros()
   setInterval(() => { void refresh() }, 12_000)
   setInterval(() => { void refreshBinAndSent() }, 30_000)
 }
@@ -299,4 +300,21 @@ export async function advanceReturn(ticketId: string, choice?: 'A' | 'B') {
   const t = TICKETS.find((x) => x.id === ticketId) as (Ticket & { returns?: unknown }) | undefined
   if (t) t.returns = r.returns
   notify(); void refresh()
+}
+
+/* ---------------------------------------------------------- live macros --- */
+let LIVE_MACROS: { id: string; label: string; body: string }[] = []
+export function getMacros() { return LIVE_MACROS }
+export async function refreshMacros() {
+  try { LIVE_MACROS = await apiFetch('/macros') as typeof LIVE_MACROS } catch { /* keep last */ }
+  notify()
+}
+export async function createMacro(label: string, body: string) {
+  await apiFetch('/macros', { method: 'POST', body: JSON.stringify({ label, body }) })
+  await refreshMacros()
+}
+export async function deleteMacro(id: string) {
+  await apiFetch(`/macros/${id}`, { method: 'DELETE' })
+  LIVE_MACROS = LIVE_MACROS.filter((m) => m.id !== id)
+  notify()
 }

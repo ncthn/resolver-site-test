@@ -487,9 +487,22 @@ function Composer({ t }: { t: Ticket }) {
           </button>
           {macros && (
             <div className="c-menu" style={{ right: 0, left: 'auto' }}>
-              {api.MACROS.map((m) => (
-                <button key={m.id} onClick={() => insertMacro(m)}>{m.label}</button>
+              {(api.LIVE ? api.getLiveMacros() : api.MACROS).map((m) => (
+                <button key={m.id} onClick={() => insertMacro(m)}>
+                  <span className="mi">{m.label}</span>
+                  {api.LIVE && <small onClick={(e) => { e.stopPropagation(); void api.deleteLiveMacro(m.id) }} title="Delete this saved reply">remove</small>}
+                </button>
               ))}
+              {api.LIVE && api.getLiveMacros().length === 0 && <button disabled style={{ opacity: .6 }}>No saved replies yet</button>}
+              {api.LIVE && editing && editBody.trim() && (
+                <button onClick={() => {
+                  const label = window.prompt('Name this saved reply:', '')
+                  if (label && label.trim()) void api.createLiveMacro(label.trim(), editBody)
+                  setMacros(false)
+                }}>
+                  <span className="mi"><Plus size={13} /> Save current draft as a reply</span>
+                </button>
+              )}
             </div>
           )}
         </div>

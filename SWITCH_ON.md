@@ -25,7 +25,8 @@ actual cutover takes.
 
 - Overview: WIRED (live KPIs, daily volume, categories, backlog from /api/stats); trend Insights still need their production endpoint
 - Returns flow: WIRED (server-side state machine live on resolver.chat)
-- Tasks, Chargebacks workbench, CSAT, inbox rules, macros
+- Macros: WIRED (company-scoped CRUD live; insert, save-from-draft, remove)
+- Tasks, Chargebacks workbench, CSAT, inbox rules
   (features that do not exist server-side yet — each needs its production
   model before wiring)
 - Settings > Filters / Emails / Stores / Notifications / Billing (config

@@ -38,6 +38,9 @@ export const listBinSync = () => (LIVE ? live.listBinSync() : [])
 export const getReturn = LIVE ? live.getReturn : mock.getReturn
 export const startReturn = LIVE ? live.startReturn : mock.startReturn
 export const advanceReturn = LIVE ? live.advanceReturn : mock.advanceReturn
+export const getLiveMacros = () => (LIVE ? live.getMacros() : [])
+export const createLiveMacro = live.createMacro
+export const deleteLiveMacro = live.deleteMacro
 
 // Live-only plumbing (no-ops in demo mode)
 export const setTokenProvider = live.setTokenProvider
