@@ -851,3 +851,32 @@ export function notifyMentions(body: string, ticketSubject: string) {
   for (const m of hits) log('Teammate notified', `@${m.name} mentioned on "${ticketSubject}"`, 'ok')
   if (hits.length) notify()
 }
+
+/* ------------------------------- inbox rules (non-AI automation, demo) --- */
+export interface InboxRule {
+  id: string
+  if_field: 'sender' | 'subject' | 'category' | 'language'
+  if_value: string
+  action: 'close' | 'assign' | 'skip_ai' | 'bin'
+  target: string | null
+  enabled: boolean
+  hits30d: number
+}
+export const INBOX_RULES: InboxRule[] = [
+  { id: 'ir1', if_field: 'sender', if_value: '@klaviyo.com', action: 'close', target: null, enabled: true, hits30d: 41 },
+  { id: 'ir2', if_field: 'subject', if_value: 'out of office', action: 'close', target: null, enabled: true, hits30d: 17 },
+  { id: 'ir3', if_field: 'category', if_value: 'PARTNERSHIP', action: 'assign', target: 'nathan', enabled: true, hits30d: 5 },
+  { id: 'ir4', if_field: 'language', if_value: 'IT', action: 'assign', target: 'mia', enabled: false, hits30d: 12 },
+]
+export async function addInboxRule(r: Omit<InboxRule, 'id' | 'enabled' | 'hits30d'>) {
+  await delay(100)
+  INBOX_RULES.push({ ...r, id: 'ir' + Date.now(), enabled: true, hits30d: 0 })
+  log('Inbox rule added', `${r.if_field} contains "${r.if_value}"`, 'ok')
+  notify()
+}
+export function toggleInboxRule(id: string) {
+  const r = INBOX_RULES.find((x) => x.id === id); if (r) r.enabled = !r.enabled; notify()
+}
+export function deleteInboxRule(id: string) {
+  const i = INBOX_RULES.findIndex((x) => x.id === id); if (i >= 0) INBOX_RULES.splice(i, 1); notify()
+}

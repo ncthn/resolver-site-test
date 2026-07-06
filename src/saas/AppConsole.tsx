@@ -1500,9 +1500,75 @@ function FilterList({ kind, title, hint }: { kind: 'keywords' | 'senders' | 'all
     </div>
   )
 }
+const RULE_IF_LABEL: Record<api.InboxRule['if_field'], string> = { sender: 'sender contains', subject: 'subject contains', category: 'category is', language: 'language is' }
+const RULE_ACT_LABEL: Record<api.InboxRule['action'], string> = { close: 'close as filtered', assign: 'assign to', skip_ai: 'skip AI drafting', bin: 'move to bin' }
+
+/* Non-AI inbox automation: condition -> action rows, evaluated before any
+   drafting. The seeded rules cover the daily patterns (marketing blasts,
+   out-of-office loops, partnership routing, language routing). */
+function InboxRules() {
+  useStore()
+  const [adding, setAdding] = useState(false)
+  const [nw, setNw] = useState<{ if_field: api.InboxRule['if_field']; if_value: string; action: api.InboxRule['action']; target: string }>({ if_field: 'sender', if_value: '', action: 'close', target: 'nathan' })
+  const save = async () => {
+    if (!nw.if_value.trim()) return
+    await api.addInboxRule({ if_field: nw.if_field, if_value: nw.if_value.trim(), action: nw.action, target: nw.action === 'assign' ? nw.target : null })
+    setNw({ ...nw, if_value: '' }); setAdding(false)
+  }
+  return (
+    <div className="c-filterblock">
+      <div className="hd">Rules</div>
+      <p className="c-note" style={{ margin: '4px 0 10px' }}>Run on every inbound email before drafting. Conditions are simple on purpose; the AI playbook handles anything that needs judgment.</p>
+      <div className="c-rows" style={{ gap: 6 }}>
+        {api.INBOX_RULES.map((r) => (
+          <div className={'c-inboxrule' + (r.enabled ? '' : ' off')} key={r.id}>
+            <button className={'c-switch sm' + (r.enabled ? ' on green' : '')} onClick={() => api.toggleInboxRule(r.id)} aria-label="toggle rule"><span className="k" /></button>
+            <span className="tx">
+              If <b>{RULE_IF_LABEL[r.if_field]}</b> <code>{r.if_value}</code> then <b>{RULE_ACT_LABEL[r.action]}</b>
+              {r.action === 'assign' && r.target && <> <span className="c-avatar sm" style={{ margin: '0 3px', verticalAlign: '-3px' }}>{api.TEAM.find((m) => m.id === r.target)?.initials}</span><b>{api.TEAM.find((m) => m.id === r.target)?.name}</b></>}
+            </span>
+            <span className="hits">{r.hits30d}× / 30d</span>
+            <button className="del" title="Delete rule" onClick={() => api.deleteInboxRule(r.id)}><Trash2 size={12} /></button>
+          </div>
+        ))}
+      </div>
+      {!adding ? (
+        <button className="c-act" style={{ marginTop: 10 }} onClick={() => setAdding(true)}><Plus size={14} /> Add rule</button>
+      ) : (
+        <div className="c-rulebuilder">
+          <span className="lbl">If</span>
+          <select value={nw.if_field} onChange={(e) => setNw({ ...nw, if_field: e.target.value as api.InboxRule['if_field'] })}>
+            <option value="sender">sender contains</option>
+            <option value="subject">subject contains</option>
+            <option value="category">category is</option>
+            <option value="language">language is</option>
+          </select>
+          <input autoFocus placeholder={nw.if_field === 'sender' ? '@domain.com' : nw.if_field === 'subject' ? 'phrase…' : nw.if_field === 'category' ? 'PARTNERSHIP' : 'IT'} value={nw.if_value} onChange={(e) => setNw({ ...nw, if_value: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter') void save() }} />
+          <span className="lbl">then</span>
+          <select value={nw.action} onChange={(e) => setNw({ ...nw, action: e.target.value as api.InboxRule['action'] })}>
+            <option value="close">close as filtered</option>
+            <option value="assign">assign to</option>
+            <option value="skip_ai">skip AI drafting</option>
+            <option value="bin">move to bin</option>
+          </select>
+          {nw.action === 'assign' && (
+            <select value={nw.target} onChange={(e) => setNw({ ...nw, target: e.target.value })}>
+              {api.TEAM.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          )}
+          <span className="sp" />
+          <button className="c-act" onClick={() => setAdding(false)}>Cancel</button>
+          <button className="c-act prim" disabled={!nw.if_value.trim()} onClick={() => void save()}><Check size={13} /> Save</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function FilterSettings() {
   return (
     <div className="c-rows" style={{ gap: 22 }}>
+      <InboxRules />
       <FilterList kind="keywords" title="Blocked keywords" hint="Inbound mail containing these goes to Filtered instead of the inbox." />
       <FilterList kind="senders" title="Blocked senders" hint="Matched against the from address. Prefixes and domains both work." />
       <FilterList kind="allow" title="Always allow" hint="These senders always reach the inbox, whatever the rules above say." />

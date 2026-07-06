@@ -1296,3 +1296,19 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 .c-presence i{width:7px;height:7px;border-radius:50%;background:#D9A62E;animation:pulse-dot 1.6s infinite}
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.35}}
 .c-mention{font-weight:700;color:var(--acc,#2F6B45);background:#E9F1EB;border-radius:4px;padding:0 4px}
+
+/* inbox rules builder */
+.c-inboxrule{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff}
+.c-inboxrule.off .tx{opacity:.45}
+.c-inboxrule .tx{flex:1;font-size:12.5px;color:var(--tx-soft);min-width:0}
+.c-inboxrule .tx b{color:var(--ink);font-weight:600}
+.c-inboxrule .tx code{background:var(--band);border-radius:5px;padding:1px 6px;font-size:11.5px;color:var(--ink)}
+.c-inboxrule .hits{font-size:10.5px;color:var(--tx-faint);font-variant-numeric:tabular-nums;white-space:nowrap}
+.console2 .c-inboxrule .del{color:var(--tx-faint);padding:4px;border-radius:6px}
+.console2 .c-inboxrule .del:hover{color:#B4472F;background:#FBEFEC}
+.c-rulebuilder{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px dashed var(--line);border-radius:11px;padding:11px 13px;margin-top:10px}
+.c-rulebuilder .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx-faint)}
+.c-rulebuilder select,.c-rulebuilder input{border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-family:var(--pj);font-size:12.5px;background:#fff;outline:none}
+.c-rulebuilder input{min-width:160px;flex:1}
+.c-rulebuilder input:focus{border-color:var(--ink)}
+.c-rulebuilder .sp{flex:1}

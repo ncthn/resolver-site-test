@@ -19,7 +19,7 @@ What they ship that Resolver does not, ranked by how well it fits our wedge
 | Gap | Who has it | Notes |
 |---|---|---|
 | Assignment + collision detection — SHIPPED in test app 2026-07-06 | Gorgias | "Sarah is viewing" presence, assignee per ticket, @mentions in internal notes (notes exist, mentions don't). |
-| Non-AI rules builder | Gorgias | Auto-tag, auto-close spam, routing by condition. Our Filters tab is a start; no actions. |
+| Non-AI rules builder — SHIPPED in test app 2026-07-06 | Gorgias | Auto-tag, auto-close spam, routing by condition. Our Filters tab is a start; no actions. |
 | Pre-sales / revenue AI | Gorgias (AI converts pre-purchase questions, revenue attribution stats) | Different wedge (sales, not ops). Later. |
 | Help center + deflection | Gorgias | Self-service article portal; our Knowledge tab could publish outward eventually. |
 
