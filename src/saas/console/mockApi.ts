@@ -780,3 +780,21 @@ export const INSIGHTS: Insight[] = [
   { id: 'i3', severity: 'info', label: 'Refund requests mention "quality" 40% more than last month', detail: 'Concentrated on the Aurora Throw. Customer photos show loose stitching on what looks like one production batch.', count: 8, action: 'Flag the batch to the supplier and consider a proactive outreach rule' },
   { id: 'i4', severity: 'good', label: 'Where-is-my-order volume down 18%', detail: 'Since drafts started leading with the live tracking link, most shipping questions resolve without a human touch.', count: 0, action: 'Nothing to do, keep the shipping lane live' },
 ]
+
+/* --------------------------------- saved replies (macros, demo) ---------- */
+export interface Macro { id: string; label: string; body: string }
+export const MACROS: Macro[] = [
+  { id: 'mc1', label: 'Tracking follow-up', body: 'Hi {first_name}, quick update on {order}: the latest tracking status is "{tracking_status}". You can follow it live here: {tracking}. I will keep an eye on it and write again the moment anything changes.' },
+  { id: 'mc2', label: 'Return address', body: 'Hi {first_name}, here is the return address for {order}:\n\nReturns Dept, 2477 Harbor Blvd, Unit 14, Costa Mesa CA 92626\n\nPlease include your order number inside the parcel and send us the tracking number once shipped. The refund is issued the day the return arrives.' },
+  { id: 'mc3', label: 'Ask for a photo', body: 'Hi {first_name}, sorry about the trouble with {order}. Could you send one photo showing the issue? That is all we need to unlock the fastest resolution for you.' },
+  { id: 'mc4', label: 'Delay apology', body: 'Hi {first_name}, you are right that {order} is taking longer than it should. It is moving again and the current estimate is a few more business days. As an apology, the next order ships free with code ONUS.' },
+]
+/** Fill macro variables from the ticket. Unknown fields degrade gracefully. */
+export function fillMacro(body: string, t: Ticket): string {
+  const first = (t.customer_name ?? '').split(' ')[0] || 'there'
+  return body
+    .replace(/\{first_name\}/g, first)
+    .replace(/\{order\}/g, t.order_name ?? 'your order')
+    .replace(/\{tracking\}/g, t.order_snapshot?.tracking_urls?.[0] && t.order_snapshot.tracking_numbers[0] ? t.order_snapshot.tracking_numbers[0] : 'the tracking link')
+    .replace(/\{tracking_status\}/g, t.order_snapshot?.tracking_status?.[0] ?? 'in transit')
+}

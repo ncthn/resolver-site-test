@@ -437,12 +437,32 @@ function Composer({ t }: { t: Ticket }) {
   }
   const doRegen = async () => { setBusy('regen'); await api.postRegenerate(t.id); setBusy('') }
   const saveNote = () => { if (note.trim()) { api.addNote(t.id, note.trim()); setNote(''); setTab('reply') } }
+  const [macros, setMacros] = useState(false)
+  useOutsideClose(macros, () => setMacros(false))
+  const insertMacro = (m: api.Macro) => {
+    setTab('reply')
+    setEditing(true)
+    setEditBody(api.fillMacro(m.body, t))
+    setMacros(false)
+  }
   return (
     <div className="c-composer" ref={rootRef}>
       <div className="c-tabs" role="tablist">
         <button className={tab === 'reply' ? 'on' : ''} onClick={() => setTab('reply')} role="tab" aria-selected={tab === 'reply'}><Send size={11} /> Reply</button>
         <button className={'note' + (tab === 'note' ? ' on' : '')} onClick={() => setTab('note')} role="tab" aria-selected={tab === 'note'}><StickyNote size={11} /> Internal note</button>
         <span className="sp" />
+        <div className="c-status-wrap" onClick={(e) => e.stopPropagation()}>
+          <button className="c-macrobtn" onClick={() => setMacros(!macros)} title="Insert a saved reply">
+            <FileText size={11} /> Saved replies <ChevronDown size={11} />
+          </button>
+          {macros && (
+            <div className="c-menu" style={{ right: 0, left: 'auto' }}>
+              {api.MACROS.map((m) => (
+                <button key={m.id} onClick={() => insertMacro(m)}>{m.label}</button>
+              ))}
+            </div>
+          )}
+        </div>
         {tab === 'reply' && t.draft_body && <span className="meta">drafted {timeAgo(t.draft_generated_at!)} ago</span>}
       </div>
       {tab === 'reply' ? (
@@ -475,6 +495,12 @@ function Composer({ t }: { t: Ticket }) {
                   <Route size={11} /> {t.trace.length} checks{t.trace.filter((x) => !x.ok).length > 0 ? ` · ${t.trace.filter((x) => !x.ok).length} flag` : ''} <ChevronDown size={11} className={expand === 'trace' ? 'r' : ''} />
                 </button>
               )}
+              {t.trace && (() => {
+                const flags = t.trace.filter((x) => !x.ok).length
+                return flags === 0
+                  ? <span className="c-sanity ok" title="Facts, commitments and offers were checked against the order and your rules before this draft reached you."><ShieldCheck size={11} /> Checks passed</span>
+                  : <span className="c-sanity warn" title="At least one pre-send check flagged this conversation, so it is held for a human."><ShieldCheck size={11} /> Held on a flag</span>
+              })()}
               {!held && t.auto_send_queued_at && autoMs > 0 && (
                 <span className="c-autosend"><Clock size={12} /> Auto-sends in {mm}:{ss} · <button onClick={() => api.cancelAutoSend(t.id)}>Cancel</button></span>
               )}

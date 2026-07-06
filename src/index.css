@@ -1266,3 +1266,10 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 .c-insight .ct{font-size:10.5px;color:var(--tx-faint);font-variant-numeric:tabular-nums;white-space:nowrap}
 .c-insight p{font-size:12.5px;color:var(--tx-soft);line-height:1.55;margin-top:3px;max-width:74ch}
 .c-insight .act{display:block;font-size:12px;font-weight:600;color:var(--acc,#2F6B45);margin-top:5px}
+
+/* saved replies menu + pre-send check chip */
+.console2 .c-macrobtn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--tx-faint);border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:#fff;margin-right:10px}
+.console2 .c-macrobtn:hover{color:var(--ink);background:var(--band)}
+.c-sanity{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;cursor:help;white-space:nowrap}
+.c-sanity.ok{color:#3D7A50}
+.c-sanity.warn{color:#B4472F}
