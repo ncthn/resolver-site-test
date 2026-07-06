@@ -24,7 +24,7 @@ actual cutover takes.
 
 ## Still demo in live mode (honest gaps)
 
-- Overview: WIRED (live KPIs, daily volume, categories, backlog from /api/stats); trend Insights still need their production endpoint
+- Overview: FULLY WIRED (live KPIs, volume, categories, backlog, and AI trend insights from /api/insights, per store, 1h cache)
 - Returns flow: WIRED (server-side state machine live on resolver.chat)
 - Macros: WIRED (company-scoped CRUD live; insert, save-from-draft, remove)
 - Tasks, Chargebacks workbench, CSAT, inbox rules

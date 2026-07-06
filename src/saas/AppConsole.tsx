@@ -2491,7 +2491,7 @@ function LiveOverview({ shopId }: { shopId: string }) {
   const [days, setDays] = useState<7 | 30 | 90>(7)
   const key = `${shopId || 'all'}:${days}`
   const st = api.getLiveStats(key)
-  useEffect(() => { void api.refreshLiveStats(shopId, days) }, [shopId, days])
+  useEffect(() => { void api.refreshLiveStats(shopId, days); if (shopId && shopId !== 'all') void api.refreshLiveInsights(shopId) }, [shopId, days])
   const counts = api.getCounts(shopId)
   const fmtH = (h: number | null | undefined) => (h == null ? '—' : h < 1 ? Math.round(h * 60) + 'm' : h.toFixed(1) + 'h')
   const daily = Object.entries(st?.dailyCreated ?? {}).sort((a, b) => a[0].localeCompare(b[0])).slice(-14)
@@ -2570,7 +2570,31 @@ function LiveOverview({ shopId }: { shopId: string }) {
           )}
         </div>
       </div>
-      <p className="c-note" style={{ margin: 0 }}>Trend insights and lane analytics arrive here once their production endpoints ship; nothing on this page is demo data.</p>
+      {shopId !== 'all' && (() => {
+        const ins = api.getLiveInsights(shopId)
+        return (
+          <div className="c-card">
+            <div className="c-card-h">Insights <span className="c-chip mut" style={{ marginLeft: 8 }}>mined from your last 60 days</span></div>
+            {!ins ? <p className="c-note" style={{ margin: 0 }}>Analyzing recent tickets…</p>
+              : ins.insights.length === 0 ? <p className="c-note" style={{ margin: 0 }}>No trend stands out across {ins.tickets} recent tickets. That is a good sign.</p>
+              : (
+                <div className="c-rows" style={{ gap: 2 }}>
+                  {ins.insights.map((x, i) => (
+                    <div className="c-insight" key={i}>
+                      <span className={'dot ' + x.severity} />
+                      <div className="bd">
+                        <div className="hd"><b>{x.label}</b>{x.count > 0 && <span className="ct">{x.count} tickets</span>}</div>
+                        <p>{x.detail}</p>
+                        <span className="act">Suggested: {x.action}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+          </div>
+        )
+      })()}
+      {shopId === 'all' && <p className="c-note" style={{ margin: 0 }}>Pick a single store for trend insights; everything else on this page is live data.</p>}
     </div>
   )
 }

@@ -375,3 +375,13 @@ export async function addRuleV2(shopId: string, rule: Omit<SopRuleV2, 'id' | 'hi
   list.push({ ...rule, id: 'r' + Math.random().toString(36).slice(2, 10), hits30d: 0, enabled: true })
   scheduleRulesSave(shopId)
 }
+
+/* --------------------------------------------------------- live insights -- */
+export interface LiveInsight { severity: 'warn' | 'info' | 'good'; label: string; detail: string; count: number; action: string }
+const INSIGHTS_LIVE: Record<string, { tickets: number; insights: LiveInsight[] } | undefined> = {}
+export function getLiveInsights(shopId: string) { return INSIGHTS_LIVE[shopId] }
+export async function refreshInsights(shopId: string) {
+  if (!shopId || shopId === 'all') return
+  try { INSIGHTS_LIVE[shopId] = await apiFetch(`/insights?shop_id=${encodeURIComponent(shopId)}`) as { tickets: number; insights: LiveInsight[] } } catch { /* keep last */ }
+  notify()
+}

@@ -68,4 +68,6 @@ export const createLiveUser = live.createUser
 export const updateLiveUser = live.updateUser
 export const getLiveStats = live.getLiveStats
 export const refreshLiveStats = live.refreshStats
+export const getLiveInsights = (shopId: string) => (LIVE ? live.getLiveInsights(shopId) : undefined)
+export const refreshLiveInsights = live.refreshInsights
 export type { LiveOrder, LiveUser, LiveStats } from './liveApi'
