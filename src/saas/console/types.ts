@@ -91,6 +91,8 @@ export interface Ticket {
   messages: ThreadMessage[]
   trace?: TraceStep[]
   notes?: { id: string; author: string; body: string; at: string; ai?: boolean }[]
+  /** Team member id this conversation is assigned to (null = unassigned). */
+  assignee?: string | null
   created_at: string
 }
 

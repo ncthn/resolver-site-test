@@ -465,7 +465,7 @@ function Composer({ t }: { t: Ticket }) {
     setBusy('')
   }
   const doRegen = async () => { setBusy('regen'); await api.postRegenerate(t.id); setBusy('') }
-  const saveNote = () => { if (note.trim()) { api.addNote(t.id, note.trim()); setNote(''); setTab('reply') } }
+  const saveNote = () => { if (note.trim()) { api.addNote(t.id, note.trim()); api.notifyMentions(note, t.subject); setNote(''); setTab('reply') } }
   const [macros, setMacros] = useState(false)
   useOutsideClose(macros, () => setMacros(false))
   const insertMacro = (m: api.Macro) => {
@@ -560,7 +560,7 @@ function Composer({ t }: { t: Ticket }) {
         <>
           <textarea
             className="c-notearea" rows={3} autoFocus value={note}
-            placeholder="Context for your team — never sent to the customer…"
+            placeholder="Context for your team, @Name to notify a teammate — never sent to the customer…"
             onChange={(e) => setNote(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveNote() }
@@ -592,6 +592,46 @@ function SummarizePill({ t }: { t: Ticket }) {
         {busy ? <Loader2 size={12} className="c-spin" /> : <Sparkles size={12} />} Summarize {t.messages.length} messages as a note
       </button>
     </div>
+  )
+}
+
+/* Assignment: who owns this conversation. Unassigned is a first-class state. */
+function AssigneeMenu({ t }: { t: Ticket }) {
+  const [open, setOpen] = useState(false)
+  useOutsideClose(open, () => setOpen(false))
+  const cur = api.TEAM.find((m) => m.id === t.assignee)
+  return (
+    <div className="c-status-wrap" onClick={(e) => e.stopPropagation()}>
+      <button className={'c-chip-btn' + (cur ? '' : ' mutst')} onClick={() => setOpen(!open)} title={cur ? `Assigned to ${cur.name}` : 'Assign this conversation'}>
+        {cur ? <span className="c-avatar sm">{cur.initials}</span> : <User size={13} />} {cur ? cur.name : 'Assign'} <ChevronDown size={12} />
+      </button>
+      {open && (
+        <div className="c-menu">
+          {api.TEAM.map((m) => (
+            <button key={m.id} onClick={() => { void api.assignTicket(t.id, m.id); setOpen(false) }}>
+              <span className="mi"><span className="c-avatar sm">{m.initials}</span> {m.name}</span>
+              {t.assignee === m.id && <Check size={13} />}
+            </button>
+          ))}
+          {t.assignee && (
+            <button onClick={() => { void api.assignTicket(t.id, null); setOpen(false) }}>
+              <span className="mi"><X size={13} /> Unassign</span>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* Internal-note body with @mentions highlighted. */
+function NoteBody({ body }: { body: string }) {
+  const names = api.TEAM.map((m) => m.name).join('|')
+  const parts = body.split(new RegExp(`(@(?:${names}))`, 'g'))
+  return (
+    <>
+      {parts.map((p, i) => (p.startsWith('@') ? <b className="c-mention" key={i}>{p}</b> : <span key={i}>{p}</span>))}
+    </>
   )
 }
 
@@ -757,10 +797,17 @@ function TicketsView({ shopId, catFilter = null, onClearCat }: { shopId: string;
           <div className="who">
             <div>
               <div className="nm">{t.customer_name ?? t.customer_email}{t.chargeback_status === 'warning' && <span className="c-chip red" style={{ marginLeft: 8 }}>Chargeback risk</span>}</div>
-              <div className="meta">{t.customer_email} · {t.shop_id} · {t.message_count} message{t.message_count > 1 ? 's' : ''}</div>
+              <div className="meta">
+                {t.customer_email} · {t.shop_id} · {t.message_count} message{t.message_count > 1 ? 's' : ''}
+                {(api.VIEWERS[t.id] ?? []).map((v) => {
+                  const m = api.TEAM.find((x) => x.id === v)
+                  return m ? <span className="c-presence" key={v}><i /> {m.name} is viewing</span> : null
+                })}
+              </div>
             </div>
           </div>
           <div className="acts">
+            <AssigneeMenu t={t} />
             <StatusDropdown t={t} />
             <CategoryDropdown t={t} />
             <button className={'c-aiswitch' + (t.ai_disabled ? ' off' : '')} onClick={() => api.postAiToggle(t.id)} title={t.ai_disabled ? 'AI is off for this ticket: no drafting, no auto-send. Click to re-enable.' : 'AI is drafting on this ticket. Click to take over by hand.'}>
@@ -789,7 +836,7 @@ function TicketsView({ shopId, catFilter = null, onClearCat }: { shopId: string;
                 <b>{n.ai ? 'Resolver AI' : n.author}</b> · Internal note{n.ai ? ' · summary' : ''}
                 <span className="at">{timeAgo(n.at)} ago</span>
               </span>
-              {n.body}
+              <NoteBody body={n.body} />
             </div>
           ))}
           {(() => {

@@ -72,7 +72,7 @@ const TICKETS: Ticket[] = [
     draft_body: 'Hallo, es tut mir sehr leid, dass es so weit gekommen ist. Ich habe Ihren Fall soeben persönlich übernommen und melde mich innerhalb von 24 Stunden mit einer Lösung.',
     draft_body_english: 'Hello, I am very sorry it has come to this. I have just personally taken over your case and will get back to you within 24 hours with a resolution.',
     draft_generated_at: iso(10 * 60_000),
-    chargeback_status: 'warning', auto_resolved: false,
+    chargeback_status: 'warning', auto_resolved: false, assignee: 'nathan',
     supplier_status: null, supplier_request_type: null, is_stuck: false,
     customer_history: '1 order · first contact',
     notes: [
@@ -823,4 +823,31 @@ export function csatSummary() {
   const mean = (xs: CsatEntry[]) => xs.length ? xs.reduce((a, c) => a + c.score, 0) / xs.length : 0
   const dist = [5, 4, 3, 2, 1].map((sc) => [sc, rated.filter((c) => c.score === sc).length] as const)
   return { avg, count: rated.length, autoAvg: mean(autoRated), humanAvg: mean(humanRated), dist, comments: rated.filter((c) => c.comment) }
+}
+
+/* ----------------------- team: assignment, presence, mentions (demo) ----- */
+export interface TeamMember { id: string; name: string; initials: string }
+export const TEAM: TeamMember[] = [
+  { id: 'nathan', name: 'Nathan', initials: 'N' },
+  { id: 'chandan', name: 'Chandan', initials: 'C' },
+  { id: 'mia', name: 'Mia', initials: 'M' },
+]
+/** Who has the conversation open right now (collision detection). */
+export const VIEWERS: Record<string, string[]> = {
+  't-4455': ['chandan'],
+}
+export async function assignTicket(id: string, memberId: string | null) {
+  await delay(90)
+  const t = TICKETS.find((x) => x.id === id)
+  if (!t) return
+  t.assignee = memberId
+  const who = TEAM.find((m) => m.id === memberId)?.name
+  log(memberId ? 'Assigned' : 'Unassigned', `${t.subject} ${memberId ? '→ ' + who : ''}`, 'ok')
+  notify()
+}
+/** Mentions in a note body notify the teammate (demo: log entry). */
+export function notifyMentions(body: string, ticketSubject: string) {
+  const hits = TEAM.filter((m) => body.includes('@' + m.name))
+  for (const m of hits) log('Teammate notified', `@${m.name} mentioned on "${ticketSubject}"`, 'ok')
+  if (hits.length) notify()
 }
