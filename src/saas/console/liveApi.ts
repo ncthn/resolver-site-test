@@ -105,7 +105,9 @@ export function startPolling() {
   if (polling) return
   polling = true
   void refresh()
+  void refreshBinAndSent()
   setInterval(() => { void refresh() }, 12_000)
+  setInterval(() => { void refreshBinAndSent() }, 30_000)
 }
 
 /* ------------------------------------------------------------- reads ----- */
@@ -223,4 +225,39 @@ export async function createUser(data: { email: string; name: string; role: 'adm
 }
 export async function updateUser(id: string, patch: Record<string, unknown>) {
   return await apiFetch(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(patch) })
+}
+
+/* -------------------------------------------------------- live bin/sent --- */
+let BIN: Ticket[] = []
+let SENT: { at: string; to: string; subject: string; from: string }[] = []
+export function listBinSync() { return BIN }
+export function getOutbound() { return SENT }
+export async function refreshBinAndSent() {
+  try {
+    const bin = await apiFetch('/tickets/bin')
+    BIN = (Array.isArray(bin) ? bin : []).map((x) => mapTicket(x as Record<string, unknown>))
+  } catch { /* keep last */ }
+  try {
+    const sentRaw = await apiFetch('/sent?limit=100') as unknown[]
+    SENT = (Array.isArray(sentRaw) ? sentRaw : []).map((r) => {
+      const x = r as Record<string, unknown>
+      return {
+        at: String(x.created_at ?? x.at ?? ''),
+        to: String(x.customer_email ?? x.to ?? ''),
+        subject: String(x.details ?? x.subject ?? 'Outbound email'),
+        from: String(x.shop_id ?? x.performed_by ?? ''),
+      }
+    }).filter((x) => x.at)
+  } catch { /* keep last */ }
+  notify()
+}
+export async function deleteTicket(id: string) {
+  await apiFetch(`/tickets/${id}`, { method: 'DELETE' })
+  const t = TICKETS.find((x) => x.id === id); if (t) t.is_deleted = true
+  notify(); void refresh(); void refreshBinAndSent()
+}
+export async function restoreTicket(id: string) {
+  await apiFetch(`/tickets/${id}/restore`, { method: 'POST' })
+  BIN = BIN.filter((x) => x.id !== id)
+  notify(); void refresh(); void refreshBinAndSent()
 }

@@ -1253,9 +1253,11 @@ function AiLog() {
 
 function BinView({ onOpen }: { onOpen: (id: string) => void }) {
   useStore()
-  const rows = ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
-    .map((id) => api.getTicket(id))
-    .filter((t): t is Ticket => !!t && !!t.is_deleted)
+  const rows = api.LIVE
+    ? api.listBinSync()
+    : ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
+      .map((id) => api.getTicket(id))
+      .filter((t): t is Ticket => !!t && !!t.is_deleted)
   return (
     <div className="c-page">
       <header className="c-page-h"><div><h1>Bin</h1><p>Nothing here is deleted yet. Open or restore any conversation; items are removed for good after 30 days.</p></div></header>
@@ -1368,7 +1370,7 @@ function TasksView() {
 
 function SentView() {
   useStore()
-  const fromTickets = ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440']
+  const fromTickets = (api.LIVE ? [] : ['t-4471', 't-4468', 't-4462', 't-4455', 't-4449', 't-4440'])
     .map((id) => api.getTicket(id))
     .filter((t): t is Ticket => !!t)
     .flatMap((t) => t.messages.filter((m) => !m.is_customer).map((m) => ({ at: m.date, to: t.customer_email, subject: 'Re: ' + t.subject, from: m.from })))

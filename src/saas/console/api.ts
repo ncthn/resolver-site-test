@@ -31,6 +31,10 @@ export const postRegenerate = LIVE ? live.postRegenerate : mock.postRegenerate
 export const postAiToggle = LIVE ? live.postAiToggle : mock.postAiToggle
 export const addNote = LIVE ? live.addNote : mock.addNote
 export const summarizeThread = LIVE ? live.summarizeThread : mock.summarizeThread
+export const deleteTicket = LIVE ? live.deleteTicket : mock.deleteTicket
+export const restoreTicket = LIVE ? live.restoreTicket : mock.restoreTicket
+export const getOutbound = LIVE ? live.getOutbound : mock.getOutbound
+export const listBinSync = () => (LIVE ? live.listBinSync() : [])
 
 // Live-only plumbing (no-ops in demo mode)
 export const setTokenProvider = live.setTokenProvider
