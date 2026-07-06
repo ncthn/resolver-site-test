@@ -1504,98 +1504,267 @@ function EmailsSettings() {
   )
 }
 
-const SOP_CATEGORIES = ['Refunds & returns', 'Shipping', 'Tone & voice', 'Escalation', 'Other'] as const
-/* Per-store rules: every rule Resolver follows for this store, editable in
-   place, with an AI assist that turns plain words into a crisp rule. */
+const SOP2_TABS = ['Rules', 'Variables', 'Voice', 'Knowledge', 'Abilities'] as const
+const RULE_CATS = ['Refunds & returns', 'Shipping', 'Order changes', 'Escalation', 'Other'] as const
+
+/* Render {variable} tokens inside rule text as live value chips. */
+function VarText({ text, vars }: { text: string; vars: api.SopVar[] }) {
+  const parts = text.split(/(\{[a-z_]+\})/g)
+  return (
+    <>
+      {parts.map((p, i) => {
+        const m = p.match(/^\{([a-z_]+)\}$/)
+        if (!m) return <span key={i}>{p}</span>
+        const v = vars.find((x) => x.key === m[1])
+        return <b className="c-varchip" key={i} title={v ? v.label + ' · change it in Variables' : m[1]}>{v ? v.value : m[1]}</b>
+      })}
+    </>
+  )
+}
+
+function EditableLine({ value, onSave, disabled, vars = [] }: { value: string; onSave: (v: string) => void; disabled?: boolean; vars?: api.SopVar[] }) {
+  const [editing, setEditing] = useState(false)
+  const [v, setV] = useState(value)
+  if (disabled) return <span className="tx lock"><VarText text={value} vars={vars} /></span>
+  if (!editing) return <span className="tx" title="Click to edit" onClick={() => { setV(value); setEditing(true) }}><VarText text={value} vars={vars} /></span>
+  return (
+    <textarea
+      autoFocus rows={2} value={v}
+      onChange={(e) => setV(e.target.value)}
+      onBlur={() => { onSave(v.trim() || value); setEditing(false) }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSave(v.trim() || value); setEditing(false) }
+        if (e.key === 'Escape') setEditing(false)
+      }}
+    />
+  )
+}
+
+/* The per-store playbook, Gorgias-depth: structured WHEN / IF / THEN rules,
+   policy variables the rules reference, voice controls, knowledge sources,
+   and what Resolver is allowed to do. */
 function SopSettings() {
   useStore()
   const [shopId, setShopId] = useState('aurora')
-  const [editing, setEditing] = useState<string | null>(null)
-  const [editText, setEditText] = useState('')
-  const [adding, setAdding] = useState(false)
-  const [newText, setNewText] = useState('')
-  const [newCat, setNewCat] = useState<typeof SOP_CATEGORIES[number]>('Refunds & returns')
-  const [busy, setBusy] = useState<'' | 'polish' | 'save'>('')
-  const rules = api.SOP_RULES[shopId] ?? []
-  const byCat = SOP_CATEGORIES.map((cat) => ({ cat, items: rules.filter((r) => r.category === cat) })).filter((g) => g.items.length > 0)
-  const startEdit = (r: api.SopRule) => { setEditing(r.id); setEditText(r.text) }
-  const saveEdit = async () => {
-    if (editing && editText.trim()) { await api.updateSopRule(shopId, editing, editText.trim()) }
-    setEditing(null)
-  }
-  const polish = async () => {
-    if (!newText.trim()) return
-    setBusy('polish')
-    setNewText(await api.aiPolishRule(newText))
-    setBusy('')
-  }
-  const addRule = async () => {
-    if (!newText.trim()) return
-    setBusy('save')
-    await api.addSopRule(shopId, newCat, newText.trim())
-    setNewText(''); setAdding(false); setBusy('')
-  }
+  const [tab, setTab] = useState<typeof SOP2_TABS[number]>('Rules')
+  const rules = api.SOP_RULES_V2[shopId] ?? []
+  const vars = api.SOP_VARS[shopId] ?? []
   return (
     <div className="c-rows" style={{ gap: 14 }}>
       <div className="c-sopshops">
         {api.SHOPS.filter((x) => x.id !== 'all').map((x) => (
-          <button key={x.id} className={shopId === x.id ? 'on' : ''} onClick={() => { setShopId(x.id); setEditing(null); setAdding(false) }}>{x.name}</button>
+          <button key={x.id} className={shopId === x.id ? 'on' : ''} onClick={() => setShopId(x.id)}>{x.name}</button>
         ))}
       </div>
-      <div className="c-ev" style={{ borderTop: 'none', paddingTop: 0 }}>
-        <span className="ic ok"><FileText size={13} /></span>
-        <span className="t"><b>support-sop-v3.pdf</b>, uploaded Jun 12 · the source document these rules were extracted from</span>
-        <span className="at" style={{ display: 'inline-flex', gap: 10 }}><a className="link">Replace</a><a className="link">Re-extract</a></span>
+      <div className="c-sop2tabs">
+        {SOP2_TABS.map((t2) => (
+          <button key={t2} className={tab === t2 ? 'on' : ''} onClick={() => setTab(t2)}>
+            {t2}
+            {t2 === 'Rules' && <span className="n">{rules.length}</span>}
+          </button>
+        ))}
       </div>
+      {tab === 'Rules' && <SopRules shopId={shopId} rules={rules} vars={vars} />}
+      {tab === 'Variables' && <SopVars shopId={shopId} vars={vars} rules={rules} />}
+      {tab === 'Voice' && <SopVoice shopId={shopId} />}
+      {tab === 'Knowledge' && <SopKnowledge shopId={shopId} />}
+      {tab === 'Abilities' && <SopAbilities shopId={shopId} />}
+    </div>
+  )
+}
+
+function SopRules({ shopId, rules, vars }: { shopId: string; rules: api.SopRuleV2[]; vars: api.SopVar[] }) {
+  const [adding, setAdding] = useState(false)
+  const [nw, setNw] = useState({ category: 'Refunds & returns' as typeof RULE_CATS[number], when: '', cond: '', then: '' })
+  const [busy, setBusy] = useState<'' | 'polish' | 'save'>('')
+  const byCat = RULE_CATS.map((cat) => ({ cat, items: rules.filter((r) => r.category === cat) })).filter((g) => g.items.length > 0)
+  const polish = async () => { if (nw.then.trim()) { setBusy('polish'); setNw({ ...nw, then: await api.aiPolishRule(nw.then) }); setBusy('') } }
+  const save = async () => {
+    if (!nw.when.trim() || !nw.then.trim()) return
+    setBusy('save')
+    await api.addRuleV2(shopId, { category: nw.category, when: nw.when.trim(), conds: nw.cond.trim() ? [nw.cond.trim()] : [], then: nw.then.trim() })
+    setNw({ category: nw.category, when: '', cond: '', then: '' }); setAdding(false); setBusy('')
+  }
+  return (
+    <>
       {byCat.map((g) => (
         <div className="c-sopgroup" key={g.cat}>
           <div className="gh">{g.cat}</div>
           {g.items.map((r) => (
-            <div className={'c-soprule' + (r.enabled ? '' : ' off')} key={r.id}>
-              <button className={'c-switch sm' + (r.enabled ? ' on green' : '')} onClick={() => void api.toggleSopRule(shopId, r.id)} aria-label="toggle rule"><span className="k" /></button>
-              {editing === r.id ? (
-                <textarea
-                  autoFocus rows={2} value={editText}
-                  onChange={(e) => setEditText(e.target.value)}
-                  onBlur={() => void saveEdit()}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void saveEdit() } if (e.key === 'Escape') setEditing(null) }}
-                />
-              ) : (
-                <span className="tx" title="Click to edit" onClick={() => startEdit(r)}>{r.text}</span>
-              )}
-              <button className="del" title="Delete rule" onClick={() => void api.deleteSopRule(shopId, r.id)}><Trash2 size={12} /></button>
+            <div className={'c-rule2' + (r.enabled ? '' : ' off') + (r.locked ? ' locked' : '')} key={r.id}>
+              <div className="side">
+                <button
+                  className={'c-switch sm' + (r.enabled ? ' on green' : '')}
+                  disabled={r.locked}
+                  title={r.locked ? 'Safety rule, always on' : 'Toggle rule'}
+                  onClick={() => api.toggleRuleV2(shopId, r.id)}
+                ><span className="k" /></button>
+              </div>
+              <div className="body">
+                <div className="line"><span className="kw when">When</span><EditableLine value={r.when} disabled={r.locked} vars={vars} onSave={(v) => api.updateRulePartV2(shopId, r.id, 'when', v)} /></div>
+                {r.conds.map((c, i) => (
+                  <div className="line" key={i}><span className="kw iff">If</span><EditableLine value={c} disabled={r.locked} vars={vars} onSave={(v) => api.updateRuleCondV2(shopId, r.id, i, v)} /></div>
+                ))}
+                <div className="line"><span className="kw then">Then</span><span className="tx thenline" style={{ cursor: r.locked ? 'default' : 'text' }}>
+                  <ThenEditable r={r} shopId={shopId} vars={vars} />
+                </span></div>
+              </div>
+              <div className="meta">
+                <span className="hits" title="Tickets this rule shaped in the last 30 days · demo data">{r.hits30d}× / 30d</span>
+                {r.locked ? <span className="lockchip"><ShieldCheck size={11} /> Always on</span> : (
+                  <button className="del" title="Delete rule" onClick={() => api.deleteRuleV2(shopId, r.id)}><Trash2 size={12} /></button>
+                )}
+              </div>
             </div>
           ))}
         </div>
       ))}
-      {rules.length === 0 && <p className="c-note" style={{ margin: 0 }}>No rules for this store yet. Add the first one below or upload an SOP document.</p>}
       {!adding ? (
         <button className="c-act" style={{ alignSelf: 'flex-start' }} onClick={() => setAdding(true)}><Plus size={14} /> Add rule</button>
       ) : (
         <div className="c-sopadd">
-          <div className="row" style={{ marginBottom: 8 }}>
-            <select value={newCat} onChange={(e) => setNewCat(e.target.value as typeof SOP_CATEGORIES[number])}>
-              {SOP_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+          <div className="row" style={{ marginBottom: 10 }}>
+            <select value={nw.category} onChange={(e) => setNw({ ...nw, category: e.target.value as typeof RULE_CATS[number] })}>
+              {RULE_CATS.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
-          <textarea
-            autoFocus rows={2} value={newText}
-            placeholder="Describe the policy in plain words, e.g. if the customer ordered the wrong size we exchange it for free once"
-            onChange={(e) => setNewText(e.target.value)}
-          />
-          <div className="row" style={{ marginTop: 8 }}>
-            <button className="c-act" disabled={!newText.trim() || busy !== ''} onClick={() => void polish()}>
+          <div className="c-addline"><span className="kw when">When</span><input placeholder="a customer asks to change the delivery address" value={nw.when} onChange={(e) => setNw({ ...nw, when: e.target.value })} autoFocus /></div>
+          <div className="c-addline"><span className="kw iff">If</span><input placeholder="optional condition, e.g. the order has not shipped yet" value={nw.cond} onChange={(e) => setNw({ ...nw, cond: e.target.value })} /></div>
+          <div className="c-addline"><span className="kw then">Then</span><input placeholder="what Resolver should do or say" value={nw.then} onChange={(e) => setNw({ ...nw, then: e.target.value })} /></div>
+          <div className="row" style={{ marginTop: 10 }}>
+            <button className="c-act" disabled={!nw.then.trim() || busy !== ''} onClick={() => void polish()}>
               {busy === 'polish' ? <Loader2 size={13} className="c-spin" /> : <Sparkles size={13} />} Tighten with AI
             </button>
             <span className="sp" />
-            <button className="c-act" onClick={() => { setAdding(false); setNewText('') }}>Cancel</button>
-            <button className="c-act prim" disabled={!newText.trim() || busy !== ''} onClick={() => void addRule()}>
+            <button className="c-act" onClick={() => setAdding(false)}>Cancel</button>
+            <button className="c-act prim" disabled={!nw.when.trim() || !nw.then.trim() || busy !== ''} onClick={() => void save()}>
               {busy === 'save' ? <Loader2 size={13} className="c-spin" /> : <Check size={13} />} Save rule
             </button>
           </div>
         </div>
       )}
-      <p className="c-note" style={{ margin: 0 }}>Every enabled rule constrains every draft for this store. Disabled rules stay here but are ignored.</p>
+      <p className="c-note" style={{ margin: 0 }}>Every enabled rule constrains every draft for this store. Values in green come from Variables. Usage counts are demo data.</p>
+    </>
+  )
+}
+
+function ThenEditable({ r, shopId, vars }: { r: api.SopRuleV2; shopId: string; vars: api.SopVar[] }) {
+  const [editing, setEditing] = useState(false)
+  const [v, setV] = useState(r.then)
+  if (r.locked) return <VarText text={r.then} vars={vars} />
+  if (!editing) return <span title="Click to edit" onClick={() => { setV(r.then); setEditing(true) }}><VarText text={r.then} vars={vars} /></span>
+  return (
+    <textarea
+      autoFocus rows={2} value={v} className="theneditor"
+      onChange={(e) => setV(e.target.value)}
+      onBlur={() => { api.updateRulePartV2(shopId, r.id, 'then', v.trim() || r.then); setEditing(false) }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); api.updateRulePartV2(shopId, r.id, 'then', v.trim() || r.then); setEditing(false) }
+        if (e.key === 'Escape') setEditing(false)
+      }}
+    />
+  )
+}
+
+function SopVars({ shopId, vars, rules }: { shopId: string; vars: api.SopVar[]; rules: api.SopRuleV2[] }) {
+  const usage = (key: string) => rules.filter((r) => (r.then + ' ' + r.conds.join(' ')).includes('{' + key + '}')).length
+  return (
+    <div className="c-rows" style={{ gap: 8 }}>
+      {vars.map((v) => (
+        <div className="c-varrow" key={v.key}>
+          <div className="l">
+            <b>{v.label}</b>
+            <span className="d">{v.desc}</span>
+          </div>
+          <span className="use">{usage(v.key)} rule{usage(v.key) === 1 ? '' : 's'}</span>
+          <input defaultValue={v.value} onBlur={(e) => api.setSopVar(shopId, v.key, e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} />
+        </div>
+      ))}
+      {vars.length === 0 && <p className="c-note" style={{ margin: 0 }}>No variables for this store yet. They appear when a rule references one.</p>}
+      <p className="c-note" style={{ margin: 0 }}>Change a value once, every rule that references it updates. These map 1:1 to the production per-shop policy.</p>
+    </div>
+  )
+}
+
+function SopVoice({ shopId }: { shopId: string }) {
+  useStore()
+  const v = api.SOP_VOICE[shopId]
+  const [phrase, setPhrase] = useState('')
+  if (!v) return <p className="c-note">No voice profile yet.</p>
+  return (
+    <div className="c-rows" style={{ gap: 14 }}>
+      <label className="c-voicefield">Tone
+        <textarea rows={2} defaultValue={v.tone} onBlur={(e) => api.updateVoice(shopId, { tone: e.target.value })} />
+      </label>
+      <label className="c-voicefield">Sign-off
+        <input defaultValue={v.signoff} onBlur={(e) => api.updateVoice(shopId, { signoff: e.target.value })} />
+      </label>
+      <div className="c-voicefield">
+        <span style={{ fontWeight: 600, fontSize: 12.5 }}>Never say</span>
+        <div className="c-bannedwrap">
+          {v.banned.map((b) => (
+            <span className="fchip" key={b}>{b}<button onClick={() => api.removeBanned(shopId, b)} aria-label={'remove ' + b}><X size={11} /></button></span>
+          ))}
+          <input
+            className="addphrase" placeholder="Add a banned phrase…" value={phrase}
+            onChange={(e) => setPhrase(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && phrase.trim()) { api.addBanned(shopId, phrase); setPhrase('') } }}
+          />
+        </div>
+      </div>
+      {v.sample && (
+        <div className="c-voicefield">
+          <span style={{ fontWeight: 600, fontSize: 12.5 }}>Reference reply, learned from your history</span>
+          <p className="c-voicesample">{v.sample}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SopKnowledge({ shopId }: { shopId: string }) {
+  useStore()
+  const list = api.SOP_KNOWLEDGE[shopId] ?? []
+  const KIND_IC: Record<api.SopSource['kind'], LucideIcon> = { document: FileText, history: RotateCcw, url: ArrowUpRight }
+  return (
+    <div className="c-rows" style={{ gap: 8 }}>
+      {list.map((k) => {
+        const Ic = KIND_IC[k.kind]
+        return (
+          <div className={'c-srcrow' + (k.enabled ? '' : ' off')} key={k.id}>
+            <span className="ic"><Ic size={14} /></span>
+            <div className="l"><b>{k.name}</b><span className="d">{k.detail}</span></div>
+            <a className="link">{k.kind === 'url' ? 'Re-crawl' : k.kind === 'history' ? 'Re-analyze' : 'Re-extract'}</a>
+            <button className={'c-switch sm' + (k.enabled ? ' on green' : '')} onClick={() => api.toggleKnowledge(shopId, k.id)} aria-label="toggle source"><span className="k" /></button>
+          </div>
+        )
+      })}
+      {list.length === 0 && <p className="c-note" style={{ margin: 0 }}>No knowledge sources yet. Upload an SOP or connect the inbox history.</p>}
+      <button className="c-act" style={{ alignSelf: 'flex-start', marginTop: 4 }}><Plus size={14} /> Add a source</button>
+      <p className="c-note" style={{ margin: 0 }}>Sources ground the drafts. Disable one and its content stops influencing replies immediately.</p>
+    </div>
+  )
+}
+
+function SopAbilities({ shopId }: { shopId: string }) {
+  useStore()
+  const list = api.SOP_ABILITIES[shopId] ?? []
+  if (list.length === 0) return <p className="c-note" style={{ margin: 0 }}>Abilities are configured on the primary store for now.</p>
+  return (
+    <div className="c-rows" style={{ gap: 8 }}>
+      {list.map((a) => (
+        <div className={'c-srcrow' + (a.on ? '' : ' off')} key={a.id}>
+          <span className={'riskchip ' + a.risk}>{a.risk === 'locked' ? 'always on' : a.risk}</span>
+          <div className="l"><b>{a.label}</b><span className="d">{a.desc}</span></div>
+          <button
+            className={'c-switch sm' + (a.on ? ' on green' : '')}
+            disabled={a.risk === 'locked'}
+            onClick={() => api.toggleAbility(shopId, a.id)}
+            aria-label="toggle ability"
+          ><span className="k" /></button>
+        </div>
+      ))}
+      <p className="c-note" style={{ margin: 0 }}>Abilities cap what any rule can make Resolver do. Money never moves without a human.</p>
     </div>
   )
 }

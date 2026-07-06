@@ -608,3 +608,114 @@ export async function aiPolishRule(text: string): Promise<string> {
   const capped = stripped.charAt(0).toUpperCase() + stripped.slice(1)
   return capped.endsWith('.') ? capped : capped + '.'
 }
+
+/* ------------------------- per-store SOP v2: Gorgias-depth model ----- */
+export interface SopRuleV2 {
+  id: string
+  category: 'Refunds & returns' | 'Shipping' | 'Order changes' | 'Escalation' | 'Other'
+  when: string
+  conds: string[]
+  then: string
+  enabled: boolean
+  hits30d: number
+  locked?: boolean
+}
+export const SOP_RULES_V2: Record<string, SopRuleV2[]> = {
+  aurora: [
+    { id: 'v1', category: 'Refunds & returns', when: 'A customer asks for a refund, return or exchange', conds: ['Order delivered less than 30 days ago', 'No damage mentioned'], then: 'Offer two options: return at their cost for a full refund, or keep the item for a {partial_refund_pct} partial refund. Never open with the refund.', enabled: true, hits30d: 23 },
+    { id: 'v2', category: 'Refunds & returns', when: 'A customer reports a damaged or defective item', conds: ['Photo of the damage provided'], then: 'Apologize once, confirm a free reshipment. Never ask the customer to return the damaged item.', enabled: true, hits30d: 9 },
+    { id: 'v3', category: 'Refunds & returns', when: 'A customer reports a damaged item without a photo', conds: [], then: 'Ask for one photo of the damage before promising anything. Explain it unlocks the fastest resolution.', enabled: true, hits30d: 6 },
+    { id: 'v4', category: 'Shipping', when: 'A customer asks where their order is', conds: ['Tracking shows no movement for {no_movement_days} business days'], then: 'Treat the shipment as lost. Offer a free reshipment or a full refund, their choice.', enabled: true, hits30d: 31 },
+    { id: 'v5', category: 'Shipping', when: 'A customer asks where their order is', conds: ['Tracking is moving normally'], then: 'Give the live tracking status and the honest delivery estimate ({delivery_estimate}). Do not suggest checking with neighbors unless tracking says delivered.', enabled: true, hits30d: 54 },
+    { id: 'v6', category: 'Order changes', when: 'A customer wants to change the address or cancel', conds: ['Order not yet fulfilled'], then: 'Confirm the change or cancellation will be processed and the refund timeline ({refund_timeline}) when money moves.', enabled: true, hits30d: 12 },
+    { id: 'v7', category: 'Escalation', when: 'Any message mentions a bank, dispute, lawyer, chargeback or the press', conds: [], then: 'Stop drafting. Pull the ticket from every automated lane and hold it for a human.', enabled: true, hits30d: 3, locked: true },
+  ],
+  harbor: [
+    { id: 'v8', category: 'Refunds & returns', when: 'A customer asks to return an item', conds: ['Within 14 days of delivery'], then: 'Accept the return; the customer pays return shipping unless the error was ours.', enabled: true, hits30d: 7 },
+  ],
+  northbound: [
+    { id: 'v9', category: 'Shipping', when: 'An order ships outside the EU', conds: [], then: 'Mention customs handling proactively before the customer asks.', enabled: true, hits30d: 4 },
+  ],
+}
+export interface SopVar { key: string; label: string; value: string; desc: string }
+export const SOP_VARS: Record<string, SopVar[]> = {
+  aurora: [
+    { key: 'partial_refund_pct', label: 'Keep-the-item partial refund', value: '30%', desc: 'Option B percentage when a return is not worth the shipping.' },
+    { key: 'delivery_estimate', label: 'Delivery estimate', value: '5-10 business days', desc: 'The honest customer-facing estimate for standard shipping.' },
+    { key: 'tracking_issue_window', label: 'Tracking number delay', value: '24-48h', desc: 'How long carriers typically take to issue a tracking number.' },
+    { key: 'refund_timeline', label: 'Refund settlement time', value: '5-10 business days', desc: 'What customers are told about when money lands back.' },
+    { key: 'no_movement_days', label: 'Lost-shipment threshold', value: '8', desc: 'Business days of tracking silence before a shipment counts as lost.' },
+  ],
+  harbor: [
+    { key: 'partial_refund_pct', label: 'Keep-the-item partial refund', value: '25%', desc: 'Option B percentage when a return is not worth the shipping.' },
+    { key: 'delivery_estimate', label: 'Delivery estimate', value: '3-6 business days', desc: 'The honest customer-facing estimate for standard shipping.' },
+  ],
+  northbound: [
+    { key: 'delivery_estimate', label: 'Delivery estimate', value: '7-12 business days', desc: 'The honest customer-facing estimate for standard shipping.' },
+  ],
+}
+export const SOP_VOICE: Record<string, { tone: string; signoff: string; banned: string[]; sample: string }> = {
+  aurora: {
+    tone: 'Warm and plain. Short sentences, no corporate phrases, no exclamation marks. Lead with the answer.',
+    signoff: 'Diana',
+    banned: ['We apologize for any inconvenience', 'Please do not hesitate', 'Valued customer', 'As per our policy'],
+    sample: 'Hi Maria, your order shipped and cleared customs this morning. It should arrive within 2 to 3 days. Here is the live tracking: CP998341US. I will follow up the moment it is delivered.',
+  },
+  harbor: { tone: 'Concise and practical. Lead with the answer, one line of context after.', signoff: 'Harbor Goods Support', banned: ['Kindly'], sample: '' },
+  northbound: { tone: 'Friendly, outdoorsy, plain words.', signoff: 'The Northbound team', banned: [], sample: '' },
+}
+export interface SopSource { id: string; name: string; kind: 'document' | 'history' | 'url'; detail: string; enabled: boolean }
+export const SOP_KNOWLEDGE: Record<string, SopSource[]> = {
+  aurora: [
+    { id: 'k1', name: 'support-sop-v3.pdf', kind: 'document', detail: 'Uploaded Jun 12 · 7 rules and 5 variables extracted', enabled: true },
+    { id: 'k2', name: 'Inbox history, last 30 days', kind: 'history', detail: '412 conversations analyzed · tone + 5 voice references', enabled: true },
+    { id: 'k3', name: 'aurora.com/faq', kind: 'url', detail: 'Re-crawled weekly · sizing, shipping zones, materials', enabled: false },
+  ],
+  harbor: [{ id: 'k4', name: 'returns-policy.docx', kind: 'document', detail: 'Uploaded May 28 · 1 rule extracted', enabled: true }],
+  northbound: [],
+}
+export interface SopAbility { id: string; label: string; desc: string; risk: 'safe' | 'guarded' | 'locked'; on: boolean }
+export const SOP_ABILITIES: Record<string, SopAbility[]> = {
+  aurora: [
+    { id: 'a1', label: 'Read orders, fulfillments and tracking', desc: 'The grounding for every draft. Read-only, always on.', risk: 'locked', on: true },
+    { id: 'a2', label: 'Give live tracking links and delivery estimates', desc: 'Uses the honest estimate variable, never invents dates.', risk: 'safe', on: true },
+    { id: 'a3', label: 'Offer the SOP resolution options', desc: 'Only the options your rules allow (return, reship, partial refund). Never processes money.', risk: 'guarded', on: true },
+    { id: 'a4', label: 'Ask the supplier about stock or reshipments', desc: 'Sends the supplier template and holds the ticket as waiting.', risk: 'guarded', on: false },
+    { id: 'a5', label: 'Escalate risk to a human', desc: 'Chargebacks, legal language, press. Cannot be turned off.', risk: 'locked', on: true },
+  ],
+  harbor: [], northbound: [],
+}
+const bump = () => notify()
+export function updateRulePartV2(shopId: string, id: string, part: 'when' | 'then', text: string) {
+  const r = (SOP_RULES_V2[shopId] ?? []).find((x) => x.id === id); if (r && !r.locked) { r[part] = text; log('SOP rule updated', text.slice(0, 50), 'ok') } bump()
+}
+export function updateRuleCondV2(shopId: string, id: string, idx: number, text: string) {
+  const r = (SOP_RULES_V2[shopId] ?? []).find((x) => x.id === id)
+  if (r && !r.locked) { if (text.trim()) r.conds[idx] = text; else r.conds.splice(idx, 1) } bump()
+}
+export function addRuleCondV2(shopId: string, id: string, text: string) {
+  const r = (SOP_RULES_V2[shopId] ?? []).find((x) => x.id === id); if (r && !r.locked && text.trim()) r.conds.push(text); bump()
+}
+export function toggleRuleV2(shopId: string, id: string) {
+  const r = (SOP_RULES_V2[shopId] ?? []).find((x) => x.id === id); if (r && !r.locked) r.enabled = !r.enabled; bump()
+}
+export function deleteRuleV2(shopId: string, id: string) {
+  const list = SOP_RULES_V2[shopId] ?? []; const i = list.findIndex((x) => x.id === id)
+  if (i >= 0 && !list[i].locked) { list.splice(i, 1); log('SOP rule removed', id, 'ok') } bump()
+}
+export async function addRuleV2(shopId: string, rule: Omit<SopRuleV2, 'id' | 'hits30d' | 'enabled'>) {
+  await delay(120)
+  const list = (SOP_RULES_V2[shopId] = SOP_RULES_V2[shopId] ?? [])
+  list.push({ ...rule, id: 'v' + Date.now(), hits30d: 0, enabled: true })
+  log('SOP rule added', rule.then.slice(0, 50), 'ok'); bump()
+}
+export function setSopVar(shopId: string, key: string, value: string) {
+  const v = (SOP_VARS[shopId] ?? []).find((x) => x.key === key); if (v && value.trim()) v.value = value.trim(); bump()
+}
+export function updateVoice(shopId: string, patch: Partial<{ tone: string; signoff: string; sample: string }>) {
+  Object.assign(SOP_VOICE[shopId] ?? {}, patch); bump()
+}
+export function addBanned(shopId: string, phrase: string) { const v = SOP_VOICE[shopId]; if (v && phrase.trim()) v.banned.push(phrase.trim()); bump() }
+export function removeBanned(shopId: string, phrase: string) { const v = SOP_VOICE[shopId]; if (v) v.banned = v.banned.filter((x) => x !== phrase); bump() }
+export function toggleKnowledge(shopId: string, id: string) { const k = (SOP_KNOWLEDGE[shopId] ?? []).find((x) => x.id === id); if (k) k.enabled = !k.enabled; bump() }
+export function toggleAbility(shopId: string, id: string) { const a = (SOP_ABILITIES[shopId] ?? []).find((x) => x.id === id); if (a && a.risk !== 'locked') a.on = !a.on; bump() }
