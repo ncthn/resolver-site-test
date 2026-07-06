@@ -1249,3 +1249,6 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 .riskchip.safe{background:#E9F1EB;color:#2F6B45}
 .riskchip.guarded{background:#F7F0DC;color:#8A6D1F}
 .riskchip.locked{background:var(--band);color:var(--tx-soft)}
+
+/* guided returns card */
+.c-return .c-tl .e.now span{color:var(--ink);font-weight:600}

@@ -8,7 +8,7 @@ What they ship that Resolver does not, ranked by how well it fits our wedge
 | Gap | Who has it | Notes |
 |---|---|---|
 | Carrier tracking layer | Repline (ParcelWILL), Humane (DHL/DPD/Hermes/UPS) | Already researched: 17TRACK webhooks (TRACKING_RESEARCH.md). Unlocks proactive drafts on "delivery failed". |
-| Guided returns flow (RMA) | Humane (their killer feature) | Not just drafting ABOUT a return: a return state machine per ticket (request → approved → label/address sent → received → refund options). We stop at the draft today. |
+| Guided returns flow (RMA) — SHIPPED in test app 2026-07-06 | Humane (their killer feature) | Not just drafting ABOUT a return: a return state machine per ticket (request → approved → label/address sent → received → refund options). We stop at the draft today. |
 | Support insights / trends | Repline ("recurring issues, delivery problems, refund trends") | Overview shows volume; it should mine topics: "sizing complaints doubled on product X". We have the data (categories + corpus). |
 | Macros / saved replies | Gorgias (macros with variables) | Compose has templates; the ticket view has none. Small feature, daily-use value. |
 | CSAT survey | Gorgias | One-click rating appended after resolution; feeds lane trust and the marketing site (honest numbers eventually). |

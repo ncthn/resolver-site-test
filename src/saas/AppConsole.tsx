@@ -553,6 +553,74 @@ function MoreMenu({ t }: { t: Ticket }) {
   )
 }
 
+/* Guided returns (RMA): a per-ticket state machine, not just a draft about
+   the return. Every step writes an AI note into the thread; option B (keep
+   the item, partial refund) skips the logistics legs entirely. */
+const RETURN_STAGES: { key: api.ReturnStage[]; label: string }[] = [
+  { key: ['requested'], label: 'Return requested' },
+  { key: ['options_sent'], label: 'Options sent, awaiting choice' },
+  { key: ['return_approved'], label: 'Approved, address sent' },
+  { key: ['item_received'], label: 'Item received' },
+  { key: ['refunded', 'partial_refunded'], label: 'Refund issued' },
+]
+function ReturnCard({ t }: { t: Ticket }) {
+  useStore()
+  const [busy, setBusy] = useState(false)
+  const r = api.getReturn(t.id)
+  const act = async (choice?: 'A' | 'B') => { setBusy(true); await api.advanceReturn(t.id, choice); setBusy(false) }
+  if (!r) {
+    return (
+      <div>
+        <p style={{ fontSize: 12.5, color: 'var(--tx-soft)', lineHeight: 1.5, margin: 0 }}>No return in progress for this conversation.</p>
+        <button className="c-act" style={{ marginTop: 10, padding: '7px 13px', fontSize: 12 }} disabled={busy} onClick={async () => { setBusy(true); await api.startReturn(t.id); setBusy(false) }}>
+          {busy ? <Loader2 size={13} className="c-spin" /> : <RotateCcw size={13} />} Start a return
+        </button>
+      </div>
+    )
+  }
+  const doneIdx = RETURN_STAGES.findIndex((st) => st.key.includes(r.stage))
+  const isPartial = r.stage === 'partial_refunded'
+  return (
+    <div className="c-return">
+      <div className="c-tl">
+        {RETURN_STAGES.map((st, i) => {
+          if (isPartial && (i === 2 || i === 3)) return null
+          const state = i < doneIdx ? ' done' : i === doneIdx ? ' done now' : ''
+          return <div className={'e' + state} key={st.label}><i /><span>{i === 4 && isPartial ? 'Partial refund issued (kept item)' : st.label}</span></div>
+        })}
+      </div>
+      {r.option && <div className="c-kv" style={{ marginTop: 8 }}><span>Path</span><b>{r.option === 'A' ? 'A · return for full refund' : 'B · keep item, partial refund'}</b></div>}
+      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {r.stage === 'requested' && (
+          <button className="c-act prim" style={{ padding: '7px 13px', fontSize: 12, alignSelf: 'flex-start' }} disabled={busy} onClick={() => void act()}>
+            {busy ? <Loader2 size={13} className="c-spin" /> : <Send size={13} />} Send options A / B
+          </button>
+        )}
+        {r.stage === 'options_sent' && (
+          <>
+            <button className="c-act" style={{ padding: '7px 13px', fontSize: 12, alignSelf: 'flex-start' }} disabled={busy} onClick={() => void act('A')}>Customer chose A · full return</button>
+            <button className="c-act" style={{ padding: '7px 13px', fontSize: 12, alignSelf: 'flex-start' }} disabled={busy} onClick={() => void act('B')}>Customer chose B · keep + partial</button>
+          </>
+        )}
+        {r.stage === 'return_approved' && (
+          <button className="c-act prim" style={{ padding: '7px 13px', fontSize: 12, alignSelf: 'flex-start' }} disabled={busy} onClick={() => void act()}>
+            {busy ? <Loader2 size={13} className="c-spin" /> : <Package size={13} />} Mark item received
+          </button>
+        )}
+        {r.stage === 'item_received' && (
+          <button className="c-act prim" style={{ padding: '7px 13px', fontSize: 12, alignSelf: 'flex-start' }} disabled={busy} onClick={() => void act()}>
+            {busy ? <Loader2 size={13} className="c-spin" /> : <Check size={13} />} Confirm refund issued
+          </button>
+        )}
+        {(r.stage === 'refunded' || r.stage === 'partial_refunded') && (
+          <span style={{ fontSize: 12, color: '#3D7A50', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}><Check size={13} strokeWidth={2.6} /> Closed {isPartial ? '· partial refund' : '· full refund'}</span>
+        )}
+      </div>
+      <p style={{ fontSize: 11, color: 'var(--tx-faint)', marginTop: 10, lineHeight: 1.5 }}>Each step writes an internal note and keeps the thread in sync. Refunds are issued in Shopify, never by Resolver.</p>
+    </div>
+  )
+}
+
 let PENDING_OPEN: string | null = null
 function openTicketById(id: string) { PENDING_OPEN = id }
 
@@ -660,6 +728,12 @@ function TicketsView({ shopId, catFilter = null, onClearCat }: { shopId: string;
       </main>
 
       <aside className="c-ctx2">
+        {['REFUND', 'DAMAGED'].includes(t.category) && (
+          <div className="sec">
+            <div className="h">Return</div>
+            <div className="card"><ReturnCard t={t} /></div>
+          </div>
+        )}
         <div className="sec">
           <div className="h">Order match</div>
           <div className="card">

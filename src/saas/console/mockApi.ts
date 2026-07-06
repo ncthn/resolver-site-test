@@ -719,3 +719,55 @@ export function addBanned(shopId: string, phrase: string) { const v = SOP_VOICE[
 export function removeBanned(shopId: string, phrase: string) { const v = SOP_VOICE[shopId]; if (v) v.banned = v.banned.filter((x) => x !== phrase); bump() }
 export function toggleKnowledge(shopId: string, id: string) { const k = (SOP_KNOWLEDGE[shopId] ?? []).find((x) => x.id === id); if (k) k.enabled = !k.enabled; bump() }
 export function toggleAbility(shopId: string, id: string) { const a = (SOP_ABILITIES[shopId] ?? []).find((x) => x.id === id); if (a && a.risk !== 'locked') a.on = !a.on; bump() }
+
+/* ----------------------------- guided returns flow (RMA, demo) ----------- */
+export type ReturnStage = 'requested' | 'options_sent' | 'return_approved' | 'item_received' | 'refunded' | 'partial_refunded'
+export interface ReturnFlow { stage: ReturnStage; option: 'A' | 'B' | null; updated_at: string }
+export const RETURNS: Record<string, ReturnFlow> = {
+  't-4462': { stage: 'requested', option: null, updated_at: iso(20 * 60_000) },
+}
+export function getReturn(ticketId: string): ReturnFlow | null {
+  return RETURNS[ticketId] ?? null
+}
+export async function startReturn(ticketId: string) {
+  await delay(120)
+  RETURNS[ticketId] = { stage: 'requested', option: null, updated_at: new Date().toISOString() }
+  log('Return flow started', ticketId, 'ok')
+  notify()
+}
+/** Advance the RMA state machine. Option A = return for full refund,
+ *  option B = keep the item for a partial refund (skips the logistics legs). */
+export async function advanceReturn(ticketId: string, choice?: 'A' | 'B') {
+  await delay(160)
+  const r = RETURNS[ticketId]
+  if (!r) return
+  const t = TICKETS.find((x) => x.id === ticketId)
+  const note = (body: string) => {
+    if (!t) return
+    t.notes = t.notes ?? []
+    t.notes.push({ id: 'n' + Date.now(), author: 'Resolver AI', body, at: new Date().toISOString(), ai: true })
+  }
+  if (r.stage === 'requested') {
+    r.stage = 'options_sent'
+    note('Return options sent: A) return at customer cost for a full refund, B) keep the item for a partial refund. Waiting on the customer.')
+  } else if (r.stage === 'options_sent' && choice) {
+    r.option = choice
+    if (choice === 'A') {
+      r.stage = 'return_approved'
+      note('Customer chose option A. Return approved, address sent, waiting for the parcel.')
+    } else {
+      r.stage = 'partial_refunded'
+      note('Customer chose option B. Keep-the-item partial refund confirmed to the customer; refund to be issued in Shopify.')
+    }
+  } else if (r.stage === 'return_approved') {
+    r.stage = 'item_received'
+    note('Return received in good condition. Ready to issue the full refund in Shopify.')
+  } else if (r.stage === 'item_received') {
+    r.stage = 'refunded'
+    note('Full refund confirmed to the customer. Conversation can be resolved.')
+    if (t) t.status = 'RESOLVED'
+  }
+  r.updated_at = new Date().toISOString()
+  log('Return flow advanced', `${ticketId} → ${r.stage}`, 'ok')
+  notify()
+}
