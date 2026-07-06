@@ -505,7 +505,7 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-set-link{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;color:var(--tx-soft);font-weight:500;font-size:13px;cursor:pointer}
 .c-set-link:hover{background:#ECECEA}
 .c-set-link.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(22,24,28,.06);font-weight:600}
-.c-brand img{height:13px}
+.c-brand img{height:13.5px;display:block;transform:translateY(-0.5px)}
 .c-store-wrap{position:relative}
 .c-store{display:flex;align-items:center;gap:9px;width:100%;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;text-align:left}
 .c-store .dot{width:26px;height:26px;border-radius:7px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex:none}
@@ -1141,8 +1141,8 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 /* onboarding v2: side rail with vertical stepper, left-aligned step cards */
 .ob2{flex-direction:row}
 .ob2-side{width:320px;flex:none;background:#fff;border-right:1px solid var(--line);padding:26px 26px 22px;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh}
-.ob2-side .brand{display:flex;align-items:center;gap:8px}
-.ob2-side .brand img{height:22px}
+.ob2-side .brand{display:flex;align-items:center;gap:6px}
+.ob2-side .brand img{height:14px;display:block;transform:translateY(-0.5px)}
 .ob2-side .brand .wm{font-weight:600;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
 .ob2-sub{font-size:12.5px;line-height:1.6;color:var(--tx-faint);margin:16px 0 26px;max-width:24ch}
 .ob-vsteps{display:flex;flex-direction:column;gap:0;flex:1}
