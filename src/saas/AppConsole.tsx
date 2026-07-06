@@ -2446,6 +2446,97 @@ function LiveTeam() {
   )
 }
 
+/* Live overview: only real numbers from /api/stats — no demo garnish. The
+   trend/insight cards return once their production endpoints exist. */
+function LiveOverview({ shopId }: { shopId: string }) {
+  useStore()
+  const [days, setDays] = useState<7 | 30 | 90>(7)
+  const key = `${shopId || 'all'}:${days}`
+  const st = api.getLiveStats(key)
+  useEffect(() => { void api.refreshLiveStats(shopId, days) }, [shopId, days])
+  const counts = api.getCounts(shopId)
+  const fmtH = (h: number | null | undefined) => (h == null ? '—' : h < 1 ? Math.round(h * 60) + 'm' : h.toFixed(1) + 'h')
+  const daily = Object.entries(st?.dailyCreated ?? {}).sort((a, b) => a[0].localeCompare(b[0])).slice(-14)
+  const maxDaily = Math.max(1, ...daily.map(([, n]) => n))
+  const cats = Object.entries(st?.categoryBreakdown ?? {}).sort((a, b) => b[1] - a[1]).slice(0, 7)
+  const maxCat = Math.max(1, ...cats.map(([, n]) => n))
+  const buckets = Object.entries(st?.backlogAge?.buckets ?? {})
+  const maxBucket = Math.max(1, ...buckets.map(([, n]) => Number(n)))
+  const KPIS = [
+    { label: 'Open tickets', v: String(counts.open), sub: shopId === 'all' ? 'across your stores' : 'this store' },
+    { label: 'Created this week', v: st ? String(st.createdThisWeek) : '…', sub: `${st?.createdToday ?? '…'} today` },
+    { label: 'Resolution rate', v: st?.resolutionRate != null ? Math.round(st.resolutionRate * 100) + '%' : '…', sub: `of tickets created in ${days}d` },
+    { label: 'Median first reply', v: st ? fmtH(st.p50FrtHours) : '…', sub: 'inbound to first response' },
+    { label: 'Queued to auto-send', v: String(counts.queued), sub: 'cancel window running' },
+    { label: 'Escalated', v: String(counts.escalated), sub: 'held for a human' },
+  ]
+  return (
+    <div className="c-page">
+      <header className="c-page-h">
+        <div><h1>Overview</h1><p><b>Live</b> · real numbers from your stores</p></div>
+        <div className="c-seg">
+          {([7, 30, 90] as const).map((d) => (
+            <button key={d} className={days === d ? 'on' : ''} onClick={() => setDays(d)}>{d === 7 ? 'Last 7 days' : d + ' days'}</button>
+          ))}
+        </div>
+      </header>
+      <div className="c-kpis six">
+        {KPIS.map((k) => (
+          <div className="c-kpi" key={k.label}>
+            <div className="n">{k.v}</div>
+            <div className="l">{k.label}</div>
+            <div className="s">{k.sub}</div>
+          </div>
+        ))}
+      </div>
+      <div className="c-grid2">
+        <div className="c-card">
+          <div className="c-card-h">Tickets created, last 14 days</div>
+          {daily.length === 0 ? <p className="c-note" style={{ margin: 0 }}>No tickets in range yet.</p> : (
+            <div className="c-bars">
+              {daily.map(([d, n]) => (
+                <div className="col" key={d}>
+                  <div className="vwrap"><i style={{ height: (n / maxDaily) * 100 + '%' }} /></div>
+                  <span>{d.slice(5).replace('-', '/')}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="c-card">
+          <div className="c-card-h">Top categories</div>
+          {cats.length === 0 ? <p className="c-note" style={{ margin: 0 }}>Nothing categorized yet.</p> : (
+            <div className="c-rows">
+              {cats.map(([name, n]) => (
+                <div className="c-lane-row wide" key={name}>
+                  <span className="nm">{name}</span>
+                  <span className="bar"><i style={{ width: (n / maxCat) * 100 + '%' }} /></span>
+                  <span className="pct">{n}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {buckets.length > 0 && (
+            <>
+              <div className="c-card-h" style={{ marginTop: 24 }}>Backlog by age</div>
+              <div className="c-rows">
+                {buckets.map(([b, n]) => (
+                  <div className="c-lane-row" key={b}>
+                    <span className="nm">{b}</span>
+                    <span className="bar"><i style={{ width: (Number(n) / maxBucket) * 100 + '%' }} /></span>
+                    <span className="pct">{String(n)}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+      <p className="c-note" style={{ margin: 0 }}>Trend insights and lane analytics arrive here once their production endpoints ship; nothing on this page is demo data.</p>
+    </div>
+  )
+}
+
 /* ---------------------------------------------------------------- shell */
 const TOUR: { sel: string; title: string; body: string; place: 'right' | 'bottom' | 'left' | 'top' }[] = [
   { sel: '.c-store', title: 'All your stores, one inbox', body: 'Switch between stores or work across all of them at once. Counts follow.', place: 'right' },
@@ -2518,7 +2609,7 @@ export function AppConsole() {
   }
 
   const CONTENT: Record<View, () => React.ReactElement> = {
-    overview: () => <Overview shopId={shopId} />,
+    overview: () => (api.LIVE ? <LiveOverview shopId={shopId} /> : <Overview shopId={shopId} />),
     tickets: () => <TicketsView shopId={shopId} catFilter={catFilter} onClearCat={() => setCatFilter(null)} />,
     resolved: () => <DerivedList title="Resolved" sub="Closed conversations" filterFn={(t) => t.status === 'RESOLVED'} empty="Nothing resolved yet today." />,
     bin: () => <BinView onOpen={(id) => { openTicketById(id); setView('tickets') }} />,

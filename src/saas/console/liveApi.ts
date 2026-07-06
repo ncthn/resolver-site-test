@@ -261,3 +261,26 @@ export async function restoreTicket(id: string) {
   BIN = BIN.filter((x) => x.id !== id)
   notify(); void refresh(); void refreshBinAndSent()
 }
+
+/* ----------------------------------------------------------- live stats --- */
+export interface LiveStats {
+  total: number; open: number; resolved: number; escalated: number
+  createdToday: number; createdThisWeek: number; resolvedThisWeek: number
+  categoryBreakdown: Record<string, number>
+  dailyCreated: Record<string, number>
+  avgResponseTimeHours: number | null
+  p50FrtHours: number | null
+  resolutionRate: number | null
+  backlogAge?: { open_total?: number; oldest_hours?: number; buckets?: Record<string, number> }
+  [k: string]: unknown
+}
+const STATS: Record<string, LiveStats | undefined> = {}
+export function getLiveStats(key: string) { return STATS[key] }
+export async function refreshStats(shopId: string | undefined, days: number) {
+  const key = `${shopId ?? 'all'}:${days}`
+  try {
+    const q = new URLSearchParams({ days: String(days), ...(shopId && shopId !== 'all' ? { shop_id: shopId } : {}) })
+    STATS[key] = await apiFetch(`/stats?${q}`) as LiveStats
+  } catch { /* keep last */ }
+  notify()
+}

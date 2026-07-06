@@ -54,4 +54,6 @@ export const composeSendLive = live.composeSendLive
 export const listLiveUsers = live.listUsers
 export const createLiveUser = live.createUser
 export const updateLiveUser = live.updateUser
-export type { LiveOrder, LiveUser } from './liveApi'
+export const getLiveStats = live.getLiveStats
+export const refreshLiveStats = live.refreshStats
+export type { LiveOrder, LiveUser, LiveStats } from './liveApi'

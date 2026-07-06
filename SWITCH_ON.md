@@ -23,8 +23,7 @@ actual cutover takes.
 
 ## Still demo in live mode (honest gaps)
 
-- Overview charts and Insights (counts are real; the charts/trends need the
-  production stats endpoints wired)
+- Overview: WIRED (live KPIs, daily volume, categories, backlog from /api/stats); trend Insights still need their production endpoint
 - Tasks, Chargebacks workbench, Returns flow, CSAT, inbox rules, macros
   (features that do not exist server-side yet — each needs its production
   model before wiring)
