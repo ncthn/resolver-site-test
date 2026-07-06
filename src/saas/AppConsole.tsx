@@ -1820,8 +1820,11 @@ function EditableLine({ value, onSave, disabled, vars = [] }: { value: string; o
    and what Resolver is allowed to do. */
 function SopSettings() {
   useStore()
-  const [shopId, setShopId] = useState('aurora')
-  const [tab, setTab] = useState<typeof SOP2_TABS[number]>('Rules')
+  const [shopId, setShopId] = useState(api.LIVE ? '' : 'aurora')
+  const [tab, setTab] = useState<typeof SOP2_TABS[number]>(api.LIVE ? 'Variables' : 'Rules')
+  useEffect(() => {
+    if (api.LIVE && !shopId && api.SHOPS.length > 1) setShopId(api.SHOPS[1].id)
+  })
   const rules = api.SOP_RULES_V2[shopId] ?? []
   const vars = api.SOP_VARS[shopId] ?? []
   return (
@@ -1839,8 +1842,8 @@ function SopSettings() {
           </button>
         ))}
       </div>
-      {tab === 'Rules' && <SopRules shopId={shopId} rules={rules} vars={vars} />}
-      {tab === 'Variables' && <SopVars shopId={shopId} vars={vars} rules={rules} />}
+      {tab === 'Rules' && (api.LIVE ? <LiveSopText shopId={shopId} /> : <SopRules shopId={shopId} rules={rules} vars={vars} />)}
+      {tab === 'Variables' && (api.LIVE ? <LiveSopVars shopId={shopId} /> : <SopVars shopId={shopId} vars={vars} rules={rules} />)}
       {tab === 'Voice' && <SopVoice shopId={shopId} />}
       {tab === 'Knowledge' && <SopKnowledge shopId={shopId} />}
       {tab === 'Abilities' && <SopAbilities shopId={shopId} />}
@@ -2040,6 +2043,96 @@ function SopAbilities({ shopId }: { shopId: string }) {
         </div>
       ))}
       <p className="c-note" style={{ margin: 0 }}>Abilities cap what any rule can make Resolver do. Money never moves without a human.</p>
+    </div>
+  )
+}
+
+/* Live mode: the Variables tab edits the REAL per-shop policy knobs
+   (shop.policy on resolver.chat) and the Rules tab edits the raw SOP text —
+   the structured-rules model ships to production later. */
+const LIVE_POLICY_FIELDS = [
+  { key: 'partialRefundPct', label: 'Keep-the-item partial refund (%)', desc: 'Option B percentage when a return is not worth the shipping.', ph: '30', numeric: true },
+  { key: 'deliveryEstimate', label: 'Delivery estimate', desc: 'The honest customer-facing estimate for standard shipping.', ph: '5-10 business days', numeric: false },
+  { key: 'trackingIssueWindow', label: 'Tracking number delay', desc: 'How long carriers typically take to issue a tracking number.', ph: '24-48h', numeric: false },
+  { key: 'refundTimeline', label: 'Refund settlement time', desc: 'What customers are told about when refunds land back.', ph: '5-10 business days', numeric: false },
+  { key: 'noMovementDays', label: 'Lost-shipment threshold (days)', desc: 'Days of tracking silence before a shipment counts as stuck.', ph: '15', numeric: true },
+] as const
+
+function LiveSopVars({ shopId }: { shopId: string }) {
+  useStore()
+  const raw = api.getShopRaw(shopId)
+  const policy = ((raw?.policy ?? {}) as Record<string, unknown>)
+  const [vals, setVals] = useState<Record<string, string>>({})
+  const [err, setErr] = useState('')
+  useEffect(() => {
+    setVals(Object.fromEntries(LIVE_POLICY_FIELDS.map((f) => [f.key, policy[f.key] != null ? String(policy[f.key]) : ''])))
+    setErr('')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shopId, raw ? 1 : 0])
+  const save = async () => {
+    const next: Record<string, string | number> = {}
+    for (const f of LIVE_POLICY_FIELDS) {
+      const v = (vals[f.key] ?? '').trim()
+      if (!v) continue
+      next[f.key] = f.numeric ? Number(v) : v
+    }
+    try { await api.saveShopPolicy(shopId, Object.keys(next).length ? next : null); setErr('') }
+    catch (e) { setErr((e as Error).message) }
+  }
+  if (!raw) return <p className="c-note" style={{ margin: 0 }}>Loading live shop…</p>
+  return (
+    <div className="c-rows" style={{ gap: 8 }}>
+      <p className="c-note" style={{ margin: 0 }}><b>Live:</b> these are the real policy knobs on resolver.chat for this store. Blank keeps the default shown in grey; saving applies to the next draft.</p>
+      {LIVE_POLICY_FIELDS.map((f) => (
+        <div className="c-varrow" key={f.key}>
+          <div className="l"><b>{f.label}</b><span className="d">{f.desc}</span></div>
+          <input
+            value={vals[f.key] ?? ''} placeholder={f.ph}
+            onChange={(e) => setVals((v) => ({ ...v, [f.key]: e.target.value }))}
+            onBlur={() => void save()}
+            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+          />
+        </div>
+      ))}
+      {err && <p className="c-note" style={{ margin: 0, color: '#B4472F' }}>{err}</p>}
+    </div>
+  )
+}
+
+function LiveSopText({ shopId }: { shopId: string }) {
+  useStore()
+  const raw = api.getShopRaw(shopId)
+  const [text, setText] = useState('')
+  const [dirty, setDirty] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  useEffect(() => {
+    setText(String(raw?.ai_support_sop ?? ''))
+    setDirty(false)
+    setErr('')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shopId, raw ? 1 : 0])
+  const save = async () => {
+    setBusy(true)
+    try { await api.saveShopSop(shopId, text); setDirty(false); setErr('') }
+    catch (e) { setErr((e as Error).message) }
+    setBusy(false)
+  }
+  if (!raw) return <p className="c-note" style={{ margin: 0 }}>Loading live shop…</p>
+  return (
+    <div className="c-rows" style={{ gap: 10 }}>
+      <p className="c-note" style={{ margin: 0 }}><b>Live:</b> the real SOP text every draft for this store follows. The structured rule builder arrives here once the production model ships; suggestions from your edits land in Settings → Policy on resolver.chat.</p>
+      <textarea
+        className="c-livesop" rows={16} value={text}
+        onChange={(e) => { setText(e.target.value); setDirty(true) }}
+        placeholder="No SOP yet. Write the rules drafts must follow, one per line."
+      />
+      <div className="row" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <button className="c-act prim" disabled={!dirty || busy} onClick={() => void save()}>
+          {busy ? <Loader2 size={13} className="c-spin" /> : <Check size={13} />} {busy ? 'Saving…' : dirty ? 'Save SOP' : 'Saved'}
+        </button>
+        {err && <span className="c-note" style={{ margin: 0, color: '#B4472F' }}>{err}</span>}
+      </div>
     </div>
   )
 }

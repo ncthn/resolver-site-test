@@ -18,6 +18,8 @@ export function getVersion() { return version }
 
 let TICKETS: Ticket[] = []
 export const SHOPS: Shop[] = [{ id: 'all', name: 'All stores', domain: '', open_count: 0 }]
+/** Raw production shop docs (policy, ai_support_sop, …) keyed by id. */
+const RAW_SHOPS: Record<string, Record<string, unknown>> = {}
 export let LAST_ERROR = ''
 
 async function apiFetch(path: string, init?: RequestInit) {
@@ -92,6 +94,7 @@ export async function refresh() {
     SHOPS.splice(1, SHOPS.length - 1, ...(list as Record<string, unknown>[]).map((s) => ({
       id: String(s.id), name: String(s.name ?? s.id), domain: String(s.shopify_domain ?? ''), open_count: 0,
     })))
+    for (const sh of list as Record<string, unknown>[]) RAW_SHOPS[String(sh.id)] = sh
     LAST_ERROR = ''
   } catch (e) {
     LAST_ERROR = (e as Error).message
@@ -164,5 +167,20 @@ export async function summarizeThread(id: string) {
   const r = await apiFetch(`/tickets/${id}/summarize`, { method: 'POST' }) as { note: NonNullable<Ticket['notes']>[number] }
   const t = TICKETS.find((x) => x.id === id)
   if (t) { t.notes = [...(t.notes ?? []), r.note] }
+  notify()
+}
+
+/* -------------------------------------------- live shop policy + SOP ----- */
+export function getShopRaw(shopId: string): Record<string, unknown> | null {
+  return RAW_SHOPS[shopId] ?? null
+}
+export async function saveShopPolicy(shopId: string, policy: Record<string, string | number> | null) {
+  await apiFetch(`/shops/${shopId}`, { method: 'PATCH', body: JSON.stringify({ policy }) })
+  if (RAW_SHOPS[shopId]) RAW_SHOPS[shopId].policy = policy
+  notify()
+}
+export async function saveShopSop(shopId: string, sop: string) {
+  await apiFetch(`/shops/${shopId}`, { method: 'PATCH', body: JSON.stringify({ ai_support_sop: sop }) })
+  if (RAW_SHOPS[shopId]) RAW_SHOPS[shopId].ai_support_sop = sop
   notify()
 }

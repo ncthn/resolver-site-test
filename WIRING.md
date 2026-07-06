@@ -67,3 +67,8 @@ Firebase project (Google or email) and feeds ID tokens to the adapter.
 Production CORS allows the test-site origin + localhost:5195 via CORS_ORIGIN.
 Everything not yet wired (tasks, chargebacks, SOP editor, settings) stays on
 the demo store in live mode.
+
+Phase 2 (same day): live mode also covers Settings > Policies & SOP —
+Variables edits the real shop.policy knobs (PATCH /api/shops/:id) and Rules
+becomes a raw ai_support_sop editor until the structured-rules model ships to
+production. Live shops populate the store chips automatically.

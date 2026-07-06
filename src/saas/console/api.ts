@@ -37,3 +37,6 @@ export const setTokenProvider = live.setTokenProvider
 export const startPolling = live.startPolling
 export const liveError = () => (LIVE ? live.LAST_ERROR : '')
 export const liveTicketIds = () => (LIVE ? live.liveTicketIds() : [])
+export const getShopRaw = (shopId: string) => (LIVE ? live.getShopRaw(shopId) : null)
+export const saveShopPolicy = live.saveShopPolicy
+export const saveShopSop = live.saveShopSop
