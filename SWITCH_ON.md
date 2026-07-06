@@ -13,8 +13,9 @@ actual cutover takes.
 - Resolved: real resolved tickets
 - Compose: order search, AI draft (native + translated subject), real send
   that opens a tracking ticket
-- Settings > Policies & SOP: real per-shop policy knobs (Variables) and raw
-  SOP text (Rules)
+- Settings > Policies & SOP: FULL structured WHEN/IF/THEN rules editor live
+  (shop.sop_rules, rendered into the drafting prompt with policy tokens),
+  plus policy knobs (Variables) and raw SOP text
 - Settings > Lanes: real per-shop auto-send modes + the real graduation
   metric per category
 - Settings > Team: real users, roles, read-only, activate, invites

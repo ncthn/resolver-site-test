@@ -95,6 +95,7 @@ export async function refresh() {
       id: String(s.id), name: String(s.name ?? s.id), domain: String(s.shopify_domain ?? ''), open_count: 0,
     })))
     for (const sh of list as Record<string, unknown>[]) RAW_SHOPS[String(sh.id)] = sh
+    for (const sh of list as Record<string, unknown>[]) seedLiveRules(String(sh.id), sh.sop_rules)
     LAST_ERROR = ''
   } catch (e) {
     LAST_ERROR = (e as Error).message
@@ -317,4 +318,60 @@ export async function deleteMacro(id: string) {
   await apiFetch(`/macros/${id}`, { method: 'DELETE' })
   LIVE_MACROS = LIVE_MACROS.filter((m) => m.id !== id)
   notify()
+}
+
+/* ------------------------------------------------- live structured rules -- */
+import type { SopRuleV2 } from './mockApi'
+export const SOP_RULES_LIVE: Record<string, SopRuleV2[]> = {}
+const rulesDirty = new Set<string>()
+const saveTimers: Record<string, ReturnType<typeof setTimeout>> = {}
+
+export function seedLiveRules(shopId: string, raw: unknown) {
+  if (rulesDirty.has(shopId)) return
+  const arr = Array.isArray(raw) ? raw : []
+  SOP_RULES_LIVE[shopId] = (arr as Record<string, unknown>[]).map((r) => ({
+    id: String(r.id ?? 'r' + Math.abs(JSON.stringify(r).length)),
+    category: (r.category as SopRuleV2['category']) ?? 'Other',
+    when: String(r.when ?? ''),
+    conds: Array.isArray(r.conds) ? (r.conds as string[]) : [],
+    then: String(r.then ?? ''),
+    enabled: r.enabled !== false,
+    hits30d: 0,
+    locked: !!r.locked,
+  }))
+}
+
+function scheduleRulesSave(shopId: string) {
+  rulesDirty.add(shopId)
+  notify()
+  clearTimeout(saveTimers[shopId])
+  saveTimers[shopId] = setTimeout(() => {
+    const rules = (SOP_RULES_LIVE[shopId] ?? []).map(({ hits30d, ...r }) => { void hits30d; return r })
+    apiFetch(`/shops/${shopId}`, { method: 'PATCH', body: JSON.stringify({ sop_rules: rules }) })
+      .then(() => { rulesDirty.delete(shopId); if (RAW_SHOPS[shopId]) RAW_SHOPS[shopId].sop_rules = rules })
+      .catch(() => { LAST_ERROR = 'Saving rules failed — retrying on next edit'; notify() })
+  }, 700)
+}
+
+export function updateRulePartV2(shopId: string, id: string, part: 'when' | 'then', text: string) {
+  const r = (SOP_RULES_LIVE[shopId] ?? []).find((x) => x.id === id)
+  if (r && !r.locked) { r[part] = text; scheduleRulesSave(shopId) }
+}
+export function updateRuleCondV2(shopId: string, id: string, idx: number, text: string) {
+  const r = (SOP_RULES_LIVE[shopId] ?? []).find((x) => x.id === id)
+  if (r && !r.locked) { if (text.trim()) r.conds[idx] = text; else r.conds.splice(idx, 1); scheduleRulesSave(shopId) }
+}
+export function toggleRuleV2(shopId: string, id: string) {
+  const r = (SOP_RULES_LIVE[shopId] ?? []).find((x) => x.id === id)
+  if (r && !r.locked) { r.enabled = !r.enabled; scheduleRulesSave(shopId) }
+}
+export function deleteRuleV2(shopId: string, id: string) {
+  const list = SOP_RULES_LIVE[shopId] ?? []
+  const i = list.findIndex((x) => x.id === id)
+  if (i >= 0 && !list[i].locked) { list.splice(i, 1); scheduleRulesSave(shopId) }
+}
+export async function addRuleV2(shopId: string, rule: Omit<SopRuleV2, 'id' | 'hits30d' | 'enabled'>) {
+  const list = (SOP_RULES_LIVE[shopId] = SOP_RULES_LIVE[shopId] ?? [])
+  list.push({ ...rule, id: 'r' + Math.random().toString(36).slice(2, 10), hits30d: 0, enabled: true })
+  scheduleRulesSave(shopId)
 }

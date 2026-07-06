@@ -41,6 +41,12 @@ export const advanceReturn = LIVE ? live.advanceReturn : mock.advanceReturn
 export const getLiveMacros = () => (LIVE ? live.getMacros() : [])
 export const createLiveMacro = live.createMacro
 export const deleteLiveMacro = live.deleteMacro
+export const SOP_RULES_V2 = LIVE ? live.SOP_RULES_LIVE : mock.SOP_RULES_V2
+export const updateRulePartV2 = LIVE ? live.updateRulePartV2 : mock.updateRulePartV2
+export const updateRuleCondV2 = LIVE ? live.updateRuleCondV2 : mock.updateRuleCondV2
+export const toggleRuleV2 = LIVE ? live.toggleRuleV2 : mock.toggleRuleV2
+export const deleteRuleV2 = LIVE ? live.deleteRuleV2 : mock.deleteRuleV2
+export const addRuleV2 = LIVE ? live.addRuleV2 : mock.addRuleV2
 
 // Live-only plumbing (no-ops in demo mode)
 export const setTokenProvider = live.setTokenProvider

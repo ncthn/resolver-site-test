@@ -1796,6 +1796,24 @@ function EmailsSettings() {
 }
 
 const SOP2_TABS = ['Rules', 'Variables', 'Voice', 'Knowledge', 'Abilities'] as const
+
+/* VarText rows for live mode: current policy values (or defaults) so
+   {tokens} inside live rules render as value chips. */
+function liveVarRows(shopId: string): api.SopVar[] {
+  const pol = ((api.getShopRaw(shopId)?.policy ?? {}) as Record<string, unknown>)
+  const defs: [string, string, string][] = [
+    ['partial_refund_pct', 'Keep-the-item partial refund', String(pol.partialRefundPct ?? '30') + '%'],
+    ['partialRefundPct', 'Keep-the-item partial refund', String(pol.partialRefundPct ?? '30') + '%'],
+    ['delivery_estimate', 'Delivery estimate', String(pol.deliveryEstimate ?? '5-10 business days')],
+    ['deliveryEstimate', 'Delivery estimate', String(pol.deliveryEstimate ?? '5-10 business days')],
+    ['tracking_issue_window', 'Tracking number delay', String(pol.trackingIssueWindow ?? '24-48h')],
+    ['refund_timeline', 'Refund settlement time', String(pol.refundTimeline ?? '5-10 business days')],
+    ['refundTimeline', 'Refund settlement time', String(pol.refundTimeline ?? '5-10 business days')],
+    ['no_movement_days', 'Lost-shipment threshold', String(pol.noMovementDays ?? '15')],
+    ['noMovementDays', 'Lost-shipment threshold', String(pol.noMovementDays ?? '15')],
+  ]
+  return defs.map(([key, label, value]) => ({ key, label, value, desc: 'Live policy value' }))
+}
 const RULE_CATS = ['Refunds & returns', 'Shipping', 'Order changes', 'Escalation', 'Other'] as const
 
 /* Render {variable} tokens inside rule text as live value chips. */
@@ -1837,7 +1855,7 @@ function EditableLine({ value, onSave, disabled, vars = [] }: { value: string; o
 function SopSettings() {
   useStore()
   const [shopId, setShopId] = useState(api.LIVE ? '' : 'aurora')
-  const [tab, setTab] = useState<typeof SOP2_TABS[number]>(api.LIVE ? 'Variables' : 'Rules')
+  const [tab, setTab] = useState<typeof SOP2_TABS[number]>('Rules')
   useEffect(() => {
     if (api.LIVE && !shopId && api.SHOPS.length > 1) setShopId(api.SHOPS[1].id)
   })
@@ -1858,7 +1876,14 @@ function SopSettings() {
           </button>
         ))}
       </div>
-      {tab === 'Rules' && (api.LIVE ? <LiveSopText shopId={shopId} /> : <SopRules shopId={shopId} rules={rules} vars={vars} />)}
+      {tab === 'Rules' && !api.LIVE && <SopRules shopId={shopId} rules={rules} vars={vars} />}
+      {tab === 'Rules' && api.LIVE && (
+        <>
+          <SopRules shopId={shopId} rules={rules} vars={liveVarRows(shopId)} />
+          <div className="c-card-h" style={{ marginTop: 10 }}>Raw SOP text</div>
+          <LiveSopText shopId={shopId} />
+        </>
+      )}
       {tab === 'Variables' && (api.LIVE ? <LiveSopVars shopId={shopId} /> : <SopVars shopId={shopId} vars={vars} rules={rules} />)}
       {tab === 'Voice' && <SopVoice shopId={shopId} />}
       {tab === 'Knowledge' && <SopKnowledge shopId={shopId} />}
