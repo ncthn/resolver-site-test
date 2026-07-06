@@ -1616,7 +1616,8 @@ function SettingsView({ lanes, setLanes, killed, setKilled }: {
           ))}
         </nav>
         <div className="c-set-body">
-          {tab === 'Lanes' && (
+          {tab === 'Lanes' && api.LIVE && <LiveLanes />}
+          {tab === 'Lanes' && !api.LIVE && (
             <>
               <div className={'c-kill' + (killed ? ' on' : '')}>
                 <div>
@@ -2134,6 +2135,70 @@ function LiveSopText({ shopId }: { shopId: string }) {
         {err && <span className="c-note" style={{ margin: 0, color: '#B4472F' }}>{err}</span>}
       </div>
     </div>
+  )
+}
+
+/* Live lanes: the real per-shop auto-send modes + the real graduation metric.
+   Production's model is per SHOP (off / draft-only / live) with category
+   readiness underneath; the per-category switches ship server-side later. */
+function LiveLanes() {
+  useStore()
+  const [readiness, setReadiness] = useState<Record<string, { needed: number; lanes: { category: string; reviewed: number; clean: number; clean_rate: number; ready: boolean }[] }>>({})
+  const [err, setErr] = useState('')
+  const shops = api.SHOPS.filter((x) => x.id !== 'all')
+  const settings = api.getLiveSettings()
+  const perShop = settings.auto_send_per_shop ?? {}
+  useEffect(() => { void api.refreshLiveSettings() }, [])
+  useEffect(() => {
+    let alive = true
+    for (const sh of shops) {
+      if (readiness[sh.id]) continue
+      api.liveLaneReadiness(sh.id)
+        .then((r) => { if (alive) setReadiness((prev) => ({ ...prev, [sh.id]: r })) })
+        .catch((e) => { if (alive) setErr((e as Error).message) })
+    }
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shops.map((x) => x.id).join(',')])
+  const setMode = async (shopId: string, mode: 'off' | 'shadow' | 'live') => {
+    try { await api.setAutoSendMode(shopId, mode); setErr('') }
+    catch (e) { setErr((e as Error).message) }
+  }
+  if (shops.length === 0) return <p className="c-note" style={{ margin: 0 }}>Loading live shops…</p>
+  return (
+    <>
+      <p className="c-note" style={{ margin: '0 0 6px' }}><b>Live:</b> these switches control the real resolver.chat pipeline. Draft only means every draft waits for a human; Auto-send uses the production cancel window and risk holds.</p>
+      {shops.map((sh) => {
+        const mode = perShop[sh.id] ?? 'off'
+        const rd = readiness[sh.id]
+        return (
+          <div className="c-lane-set grad" key={sh.id} style={{ alignItems: 'flex-start' }}>
+            <div className="nmwrap">
+              <span className="nm">{sh.name}</span>
+              {rd && rd.lanes.length > 0 && (
+                <span className="gradline" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 5 }}>
+                  {rd.lanes.slice(0, 4).map((l) => (
+                    <span key={l.category} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 92, fontSize: 10.5, color: 'var(--tx-faint)' }}>{l.category}</span>
+                      <span className="gbar"><i style={{ width: Math.min(100, (l.reviewed / rd.needed) * 100) + '%', background: l.clean_rate >= 0.85 ? '#3D7A50' : 'var(--tx-faint)' }} /></span>
+                      <span className="gtxt">{l.reviewed} reviewed · {Math.round(l.clean_rate * 100)}% clean{l.ready ? ' · ready' : ''}</span>
+                    </span>
+                  ))}
+                </span>
+              )}
+              {rd && rd.lanes.length === 0 && <span className="gtxt" style={{ marginTop: 4 }}>No reviewed drafts yet — the metric fills as your team approves or edits drafts.</span>}
+            </div>
+            <div className="modes">
+              {(['off', 'shadow', 'live'] as const).map((m) => (
+                <button key={m} className={mode === m ? 'on' : ''} onClick={() => void setMode(sh.id, m)}>{{ off: 'Off', shadow: 'Draft only', live: 'Auto-send' }[m]}</button>
+              ))}
+            </div>
+          </div>
+        )
+      })}
+      {err && <p className="c-note" style={{ margin: 0, color: '#B4472F' }}>{err}</p>}
+      <p className="c-note" style={{ margin: 0 }}>A lane earns auto-send after 25+ reviewed drafts with 85%+ sent unedited. Chargeback and legal language always routes to a human regardless of mode.</p>
+    </>
   )
 }
 

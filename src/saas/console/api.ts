@@ -40,3 +40,7 @@ export const liveTicketIds = () => (LIVE ? live.liveTicketIds() : [])
 export const getShopRaw = (shopId: string) => (LIVE ? live.getShopRaw(shopId) : null)
 export const saveShopPolicy = live.saveShopPolicy
 export const saveShopSop = live.saveShopSop
+export const getLiveSettings = live.getLiveSettings
+export const refreshLiveSettings = live.refreshSettings
+export const setAutoSendMode = live.setAutoSendMode
+export const liveLaneReadiness = live.laneReadiness

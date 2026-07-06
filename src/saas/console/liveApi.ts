@@ -184,3 +184,19 @@ export async function saveShopSop(shopId: string, sop: string) {
   if (RAW_SHOPS[shopId]) RAW_SHOPS[shopId].ai_support_sop = sop
   notify()
 }
+
+/* ------------------------------------------ live auto-send + readiness --- */
+let SETTINGS_CACHE: { auto_send_enabled?: boolean; auto_send_per_shop?: Record<string, 'off' | 'shadow' | 'live'> } = {}
+export function getLiveSettings() { return SETTINGS_CACHE }
+export async function refreshSettings() {
+  try { SETTINGS_CACHE = await apiFetch('/settings') as typeof SETTINGS_CACHE } catch { /* keep last */ }
+  notify()
+}
+export async function setAutoSendMode(shopId: string, mode: 'off' | 'shadow' | 'live') {
+  await apiFetch('/admin/auto-send-mode', { method: 'POST', body: JSON.stringify({ per_shop: { [shopId]: mode } }) })
+  SETTINGS_CACHE.auto_send_per_shop = { ...(SETTINGS_CACHE.auto_send_per_shop ?? {}), [shopId]: mode }
+  notify()
+}
+export async function laneReadiness(shopId: string) {
+  return await apiFetch(`/lanes/readiness?shop_id=${encodeURIComponent(shopId)}`) as { needed: number; lanes: { category: string; reviewed: number; clean: number; clean_rate: number; ready: boolean }[] }
+}
