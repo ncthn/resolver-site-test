@@ -39,7 +39,7 @@ export function consoleAuth() { return auth() }
    the rail uses, sized down by .lg-brand, so there is exactly one lockup in the app.
    Exported from here rather than from AppConsole because AppConsole imports this
    module, and the reverse would close the cycle. */
-export const LOGO = '/logo/recolor/oct-black-t.png'
+export const LOGO = '/logo/mark.svg'
 export function ConsoleBrand() {
   return (
     <div className="c-brand lg-brand">

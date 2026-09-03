@@ -21,7 +21,7 @@ import {
   SlidersHorizontal, BellRing, Gavel, SearchX, ShieldAlert, Power,
 } from 'lucide-react';
 
-const LOGO = '/logo/recolor/oct-black-t.png';
+const LOGO = '/logo/mark.svg';
 
 const START = '/get-started';
 const LOGIN = '/app';

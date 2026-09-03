@@ -2,9 +2,20 @@
 // The single source of truth for the identity: logo, color, type, components,
 // motion, voice, plus three accent-direction variants side by side for review,
 // and the engineering notes another session needs to continue the work.
-const LOGO_BLACK = '/logo/recolor/oct-black-t.png';
-const LOGO_BLUE = '/logo/recolor/oct-bluewhite-t.png';
-const LOGO_WHITE = '/logo/recolor/oct-whiteblue-t.png';
+const LOGO_BLACK = '/logo/mark.svg';
+
+/* The mark is one vector that paints with currentColor, so the heritage-indigo and
+   reversed treatments are a colour, not two more files. The old PNG variants also
+   padded the artwork inside a larger square canvas, which drew the mark a third too
+   small at any given height. */
+const INDIGO = '#2A2FB8';
+function Mark({ size, color }: { size: number; color?: string }) {
+  return (
+    <svg viewBox="0 0 245 261.5" style={{ height: size, width: 'auto', display: 'block', color }} aria-hidden fill="none">
+      <path fill="currentColor" fillRule="evenodd" d="M172.0 0.0L193.5 21.5L177.0 38.0L37.0 38.0L37.0 224.0L207.5 224.0L207.5 134.8L245.0 97.3L245.0 189.0L172.5 261.5L72.0 261.5L0.0 189.5L0.0 73.0L73.0 0.0ZM238.8 66.8L116.0 189.5L56.0 129.5L82.2 103.2L115.8 136.8L212.2 40.2Z" />
+    </svg>
+  );
+}
 
 const COLORS = [
   { name: 'Ink', hex: '#16181C', use: 'Text, primary buttons, dark cards. The brand carries in black.' },
@@ -87,11 +98,11 @@ export function BrandPage() {
             <div className="cap">Primary, ink on paper. Nav, footer, documents.</div>
           </div>
           <div className="bp-card">
-            <div className="bp-logo-row"><img src={LOGO_BLUE} alt="" style={{ height: 64 }} /></div>
+            <div className="bp-logo-row"><Mark size={64} color={INDIGO} /></div>
             <div className="cap">Indigo mark, app icon, favicon, small square contexts.</div>
           </div>
           <div className="bp-card oninkbg">
-            <div className="bp-logo-row"><img src={LOGO_WHITE} alt="" style={{ height: 64 }} /></div>
+            <div className="bp-logo-row"><Mark size={64} color="#FFFFFF" /></div>
             <div className="cap" style={{ color: 'rgba(255,255,255,.55)' }}>Reversed, dark surfaces only.</div>
           </div>
         </div>
@@ -215,7 +226,7 @@ export function BrandPage() {
           <div className="li"><b>Stack</b><span>Vite + React 19 + TypeScript. Marketing site is src/saas/Landing.tsx (single file, one function per section); this page is src/saas/BrandPage.tsx; the app demo is src/saas/AppConsole.tsx at /app.</span></div>
           <div className="li"><b>Styling</b><span>plain CSS in src/index.css, design tokens as CSS custom properties in :root, purpose-named classes per section. Tailwind is imported for preflight only; don&rsquo;t add utility soup.</span></div>
           <div className="li"><b>Animation</b><span>motion/react for scroll reveals (the Reveal component) and SVG path draws; CSS keyframes for loops; rAF only for the dot globe. Everything guarded by prefers-reduced-motion.</span></div>
-          <div className="li"><b>Assets</b><span>logo PNGs in public/logo/recolor (oct-black-t is primary). Fonts: Google Fonts, Inter Tight 400/500/600, the only family.</span></div>
+          <div className="li"><b>Assets</b><span>the mark is one SVG at public/logo/mark.svg, painted with currentColor. Fonts: Google Fonts, Inter Tight 400/500/600, the only family.</span></div>
           <div className="li"><b>Honesty rule</b><span>no fabricated metrics, customers, or testimonials anywhere. Product facts and clearly-labeled demo data only. This is a hard constraint, not a preference.</span></div>
           <div className="li"><b>Deploy</b><span>repo ncthn/resolver-site-test → Render (Docker). The GitHub webhook does NOT fire: after pushing, trigger via Render API POST /v1/services/&#123;id&#125;/deploys. Full details in BRAND.md at the repo root.</span></div>
         </div>

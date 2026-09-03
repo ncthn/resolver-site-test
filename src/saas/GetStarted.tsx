@@ -9,7 +9,7 @@ import {
   ShoppingBag, Mail, FileText, Check, ArrowRight, Loader2, Eye, Lock, FileSearch,
 } from 'lucide-react';
 
-const LOGO = '/logo/recolor/oct-black-t.png';
+const LOGO = '/logo/mark.svg';
 const STEPS = ['Store', 'Account', 'Policies', 'Inbox', 'History', 'Done'] as const;
 
 const STEP_DESC: Record<typeof STEPS[number], string> = {
