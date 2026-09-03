@@ -60,11 +60,11 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 /* Lockup geometry: the mark hangs from the baseline at .675em. Inter Tight's
    ascender is .7275em, but the mark is a solid flat-topped octagon, and a dense
    shape set to the same line as a thin stem reads taller than it is, so it sits
-   ~0.9px inside the ascenders. The gap is 5px rather than the type-derived 7px
+   ~0.9px inside the ascenders. The gap is 6px rather than the type-derived 7px
    because the artwork is cropped hard to its ink and carries none of the side
-   bearing a letterform does. Was 13.5px, centred on the flex line and nudged up
+   bearing a letterform does; 5px closed it up too far. Was 13.5px, centred on the flex line and nudged up
    half a pixel: three errors stacking into a mark that matched neither edge. */
-.brand{display:inline-flex;align-items:baseline;gap:5px;font-size:17px}
+.brand{display:inline-flex;align-items:baseline;gap:6px;font-size:17px}
 .brand img{height:.675em;width:auto;display:block}
 .brand .wm{font-weight:600;font-size:1em;letter-spacing:-.025em;line-height:1}
 .nv-links{display:flex;gap:4px;justify-self:center}
@@ -543,7 +543,7 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 
 /* ---- rail ---- */
 .c-rail{display:flex;flex-direction:column;gap:10px;padding:16px 12px;background:var(--band);border-right:1px solid var(--line);overflow-y:auto}
-.c-brand{display:flex;align-items:baseline;gap:.294em;padding:2px 10px 8px;font-weight:600;font-size:15px;letter-spacing:-.025em}
+.c-brand{display:flex;align-items:baseline;gap:.3529em;padding:2px 10px 8px;font-weight:600;font-size:15px;letter-spacing:-.025em}
 .c-brand .c-collapse{align-self:center}
 .c-collapse{margin-left:auto;color:var(--tx-faint);padding:4px;border-radius:6px;display:flex}
 .c-collapse:hover{background:#ECECEA;color:var(--ink)}
@@ -1337,7 +1337,7 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 /* onboarding v2: side rail with vertical stepper, left-aligned step cards */
 .ob2{flex-direction:row}
 .ob2-side{width:320px;flex:none;background:#fff;border-right:1px solid var(--line);padding:26px 26px 22px;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh}
-.ob2-side .brand{display:flex;align-items:baseline;gap:.294em;font-size:15px}
+.ob2-side .brand{display:flex;align-items:baseline;gap:.3529em;font-size:15px}
 .ob2-side .brand img{height:.675em;width:auto;display:block}
 .ob2-side .brand .wm{font-weight:600;font-size:1em;letter-spacing:-.025em;color:var(--ink)}
 .ob2-sub{font-size:12.5px;line-height:1.6;color:var(--tx-faint);margin:16px 0 26px;max-width:24ch}
