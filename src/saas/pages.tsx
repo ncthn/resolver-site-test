@@ -2,7 +2,7 @@
 // (Nav/Foot/Reveal) so the brand is identical A-Z: pricing, about, contact,
 // integrations, faq, and the legal set. Same rules: monochrome, Inter Tight,
 // honest copy, no invented numbers.
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Nav, Foot, Reveal } from './Landing';
 import {
   Check, Plus, ShoppingBag, Mail, Timer, Languages, Lock, Send,
@@ -11,6 +11,67 @@ import {
 
 const START = '/get-started';
 const DEMO_MAIL = 'hello@resolver.chat';
+
+// Cal.com booking. The contact page owns the scheduler; every "Book a demo"
+// link on the site lands here rather than bouncing to cal.com, so the visitor
+// stays on resolver.chat and still gets a real calendar.
+const CAL_LINK = 'ops-only-upg4tp/30min';
+export const CAL_URL = `https://cal.com/${CAL_LINK}`;
+
+function loadCal(): Promise<any> {
+  const w = window as any;
+  if (w.__calReady) return w.__calReady;
+  w.__calReady = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://app.cal.com/embed/embed.js';
+    s.async = true;
+    s.onload = () => {
+      // embed.js defines window.Cal once it has run.
+      if (typeof w.Cal === 'function') resolve(w.Cal);
+      else reject(new Error('cal-embed-missing'));
+    };
+    s.onerror = () => reject(new Error('cal-embed-blocked'));
+    document.head.appendChild(s);
+  });
+  return w.__calReady;
+}
+
+/** Inline Cal.com booker with a plain-link fallback if the embed cannot load. */
+function CalBooker() {
+  const box = useRef<HTMLDivElement | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadCal()
+      .then((Cal: any) => {
+        if (cancelled || !box.current) return;
+        Cal('init', { origin: 'https://app.cal.com' });
+        Cal('inline', {
+          elementOrSelector: box.current,
+          calLink: CAL_LINK,
+          config: { layout: 'month_view' },
+        });
+        Cal('ui', { hideEventTypeDetails: false, layout: 'month_view' });
+      })
+      .catch(() => { if (!cancelled) setFailed(true); });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (failed) {
+    return (
+      <div className="pg-card cal-fallback">
+        <p style={{ color: 'var(--tx-soft)', fontSize: 13.5, lineHeight: 1.6 }}>
+          The calendar could not load here, it is usually a blocker extension.
+        </p>
+        <a className="btn pri" href={CAL_URL} target="_blank" rel="noopener noreferrer" style={{ marginTop: 14 }}>
+          Open the booking page
+        </a>
+      </div>
+    );
+  }
+  return <div className="cal-inline" ref={box} />;
+}
 
 function Page({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
@@ -154,7 +215,7 @@ export function AboutPage() {
           <h2>See it on your own tickets.</h2>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
             <a className="btn pri" href={START}>Start free</a>
-            <a className="btn soft" href="/contact" style={{ background: '#fff' }}>Book a demo</a>
+            <a className="btn soft" href="/contact#book" style={{ background: '#fff' }}>Book a demo</a>
           </div>
         </div>
       </Reveal>
@@ -165,6 +226,16 @@ export function AboutPage() {
 /* ================================ contact =============================== */
 export function ContactPage() {
   const [sent, setSent] = useState(false);
+
+  // Arriving at /contact#book from a "Book a demo" link: the anchor does not
+  // exist yet when the browser tries its native jump, so do it after render.
+  useEffect(() => {
+    if (window.location.hash !== '#book') return;
+    const t = setTimeout(() => {
+      document.getElementById('book')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <Page title="Talk to us." sub="A demo, a pricing question, or a hard support-ops problem, we read everything.">
       <Reveal>
@@ -203,6 +274,7 @@ export function ContactPage() {
                 Twenty minutes, your real ticket examples if you want. We&rsquo;ll show the
                 draft-approve-automate loop end to end.
               </p>
+              <a className="btn pri sm" href="#book" style={{ marginTop: 14 }}>Pick a time</a>
             </div>
             <div className="pg-card" style={{ marginTop: 14 }}>
               <h3 style={{ fontSize: 15 }}>Email</h3>
@@ -217,6 +289,13 @@ export function ContactPage() {
               </p>
             </div>
           </div>
+        </div>
+      </Reveal>
+      <Reveal>
+        <div className="cal-sec" id="book">
+          <h2>Pick a time.</h2>
+          <p>Thirty minutes, live, on your own inbox if you want to bring it.</p>
+          <CalBooker />
         </div>
       </Reveal>
     </Page>

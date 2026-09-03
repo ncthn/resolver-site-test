@@ -1775,3 +1775,11 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 
 /* Regenerate + prompt as ONE control: clicking regenerates, the caret opens the
    prompt. A fourth pill pushed Approve & send onto a second row. */
+
+/* cal.com booking section (contact page) */
+.cal-sec{margin-top:56px}
+.cal-sec h2{font-size:26px;letter-spacing:-.02em}
+.cal-sec>p{color:var(--tx-soft);font-size:14px;margin-top:8px;line-height:1.6}
+.cal-inline{margin-top:22px;min-height:640px;width:100%;overflow:auto;border-radius:14px;background:#fff;box-shadow:var(--cardsh)}
+.cal-fallback{margin-top:22px}
+@media (max-width:640px){.cal-inline{min-height:760px}}
