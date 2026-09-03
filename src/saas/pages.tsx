@@ -264,8 +264,6 @@ export function ContactPage() {
     <Page title="Talk to us." sub="Grab a slot below. If a form suits you better, there is one under the calendar.">
       <Reveal>
         <div className="cal-sec lead" id="book">
-          <h2>Pick a time.</h2>
-          <p>Thirty minutes, live, on your own inbox if you want to bring it.</p>
           <CalBooker />
         </div>
       </Reveal>

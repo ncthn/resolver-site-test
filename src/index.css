@@ -1780,8 +1780,8 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .cal-sec{margin-top:56px}
 .cal-sec h2{font-size:26px;letter-spacing:-.02em}
 .cal-sec>p{color:var(--tx-soft);font-size:14px;margin-top:8px;line-height:1.6}
-.cal-inline{margin-top:22px;min-height:640px;width:100%;overflow:auto;border-radius:14px;background:#fff;box-shadow:var(--cardsh)}
+.cal-inline{margin-top:0;min-height:640px;width:100%;overflow:auto;border-radius:14px;background:#fff;box-shadow:var(--cardsh)}
 .cal-fallback{margin-top:22px}
 @media (max-width:640px){.cal-inline{min-height:760px}}
-.cal-sec.lead{margin-top:30px}
+.cal-sec.lead{margin-top:12px}
 .pg-h2{font-size:26px;letter-spacing:-.02em;margin-top:64px}
