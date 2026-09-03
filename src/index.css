@@ -57,9 +57,14 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 /* ============ nav ============ */
 .nv{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.85);backdrop-filter:blur(12px)}
 .nv-in{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:26px;height:64px}
-.brand{display:inline-flex;align-items:center;gap:6px}
-.brand img{height:13.5px;display:block;transform:translateY(-0.5px)}
-.brand .wm{font-weight:600;font-size:17px;letter-spacing:-.025em;line-height:1}
+/* Lockup geometry: the mark's top edge sits on the wordmark's ascenders and its
+   bottom edge on the baseline. Inter Tight's ascender is .7275em (measured from
+   the font), and the mark PNG is cropped to its ink, so height alone does it.
+   Was 13.5px, centred on the flex line and nudged up half a pixel: three errors
+   stacking into a mark that matched neither edge of the letters. */
+.brand{display:inline-flex;align-items:baseline;gap:7px;font-size:17px}
+.brand img{height:.7275em;display:block}
+.brand .wm{font-weight:600;font-size:1em;letter-spacing:-.025em;line-height:1}
 .nv-links{display:flex;gap:4px;justify-self:center}
 .nv-links a{font-size:14.5px;font-weight:500;color:var(--ink);padding:8px 13px;border-radius:999px;transition:background .15s}
 .nv-links a:hover{background:var(--band)}
@@ -536,13 +541,14 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 
 /* ---- rail ---- */
 .c-rail{display:flex;flex-direction:column;gap:10px;padding:16px 12px;background:var(--band);border-right:1px solid var(--line);overflow-y:auto}
-.c-brand{display:flex;align-items:center;gap:6px;padding:2px 10px 8px;font-weight:600;font-size:15px;letter-spacing:-.025em}
+.c-brand{display:flex;align-items:baseline;gap:.4118em;padding:2px 10px 8px;font-weight:600;font-size:15px;letter-spacing:-.025em}
+.c-brand .c-collapse{align-self:center}
 .c-collapse{margin-left:auto;color:var(--tx-faint);padding:4px;border-radius:6px;display:flex}
 .c-collapse:hover{background:#ECECEA;color:var(--ink)}
 .c-set-link{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;color:var(--tx-soft);font-weight:500;font-size:13px;cursor:pointer}
 .c-set-link:hover{background:#ECECEA}
 .c-set-link.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(22,24,28,.06);font-weight:600}
-.c-brand img{height:11.9px;width:auto;display:block}
+.c-brand img{height:.7275em;width:auto;display:block}
 .c-store-wrap{position:relative}
 .c-store{display:flex;align-items:center;gap:9px;width:100%;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;text-align:left}
 .c-store .dot{width:26px;height:26px;border-radius:7px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex:none}
@@ -1329,9 +1335,9 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 /* onboarding v2: side rail with vertical stepper, left-aligned step cards */
 .ob2{flex-direction:row}
 .ob2-side{width:320px;flex:none;background:#fff;border-right:1px solid var(--line);padding:26px 26px 22px;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh}
-.ob2-side .brand{display:flex;align-items:center;gap:6px}
-.ob2-side .brand img{height:11.9px;display:block;transform:translateY(-0.5px)}
-.ob2-side .brand .wm{font-weight:600;font-size:15px;letter-spacing:-.025em;color:var(--ink)}
+.ob2-side .brand{display:flex;align-items:baseline;gap:.4118em;font-size:15px}
+.ob2-side .brand img{height:.7275em;display:block}
+.ob2-side .brand .wm{font-weight:600;font-size:1em;letter-spacing:-.025em;color:var(--ink)}
 .ob2-sub{font-size:12.5px;line-height:1.6;color:var(--tx-faint);margin:16px 0 26px;max-width:24ch}
 .ob-vsteps{display:flex;flex-direction:column;gap:0;flex:1}
 .vstep{display:flex;gap:12px}
@@ -1507,7 +1513,7 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
    identifiably Resolver; .lg-brand is the same .c-brand markup, sized down. */
 .lg-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--band);padding:24px}
 .c-brand.lg-brand{padding:0;font-size:13.5px;justify-content:center;color:var(--ink)}
-.c-brand.lg-brand img{height:10.5px}
+/* .lg-brand only resets the font-size, the mark is .7275em of it */
 /* Centred at the container, not per element: a narrow single-action card with a
    centred lockup above it and centred helper text below reads broken with a
    left-aligned heading in the middle. Inputs keep their own left-aligned text,
