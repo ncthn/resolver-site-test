@@ -261,8 +261,16 @@ export function ContactPage() {
     return () => clearTimeout(t);
   }, []);
   return (
-    <Page title="Talk to us." sub="A demo, a pricing question, or a hard support-ops problem, we read everything.">
+    <Page title="Talk to us." sub="Grab a slot below. If a form suits you better, there is one under the calendar.">
       <Reveal>
+        <div className="cal-sec lead" id="book">
+          <h2>Pick a time.</h2>
+          <p>Thirty minutes, live, on your own inbox if you want to bring it.</p>
+          <CalBooker />
+        </div>
+      </Reveal>
+      <Reveal>
+        <h2 className="pg-h2">Or write to us.</h2>
         <div className="pg-2col">
           <div className="pg-card">
             {sent ? (
@@ -293,14 +301,6 @@ export function ContactPage() {
           </div>
           <div>
             <div className="pg-card">
-              <h3 style={{ fontSize: 15 }}>Book a demo</h3>
-              <p style={{ color: 'var(--tx-soft)', fontSize: 13.5, marginTop: 8, lineHeight: 1.6 }}>
-                Twenty minutes, your real ticket examples if you want. We&rsquo;ll show the
-                draft-approve-automate loop end to end.
-              </p>
-              <a className="btn pri sm" href="#book" style={{ marginTop: 14 }}>Pick a time</a>
-            </div>
-            <div className="pg-card" style={{ marginTop: 14 }}>
               <h3 style={{ fontSize: 15 }}>Email</h3>
               <p style={{ color: 'var(--tx-soft)', fontSize: 13.5, marginTop: 8 }}>
                 <a href={`mailto:${DEMO_MAIL}`} style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>{DEMO_MAIL}</a>
@@ -313,13 +313,6 @@ export function ContactPage() {
               </p>
             </div>
           </div>
-        </div>
-      </Reveal>
-      <Reveal>
-        <div className="cal-sec" id="book">
-          <h2>Pick a time.</h2>
-          <p>Thirty minutes, live, on your own inbox if you want to bring it.</p>
-          <CalBooker />
         </div>
       </Reveal>
     </Page>
