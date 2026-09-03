@@ -1,14 +1,46 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <!-- App Bridge is injected ONLY inside a real embedded admin frame.
+       At top level it treats ?shop= (and ?host=) as an instruction to navigate
+       to that host, with no validation — loading it unconditionally turned every
+       page of both hosts into an unauthenticated open redirect, and bounced
+       merchants out of onboarding whose return URLs carry ?shop=.
+       document.write during head parsing is still parser-inserted, which is what
+       App Bridge requires to boot window.shopify. -->
+  <script>
+    (function () {
+      try {
+        if (window.self === window.top) return;            // not framed -> never load
+        var p = new URLSearchParams(window.location.search);
+        if (!p.get('host') && !p.get('embedded')) return;  // framed but not a Shopify admin embed
+        document.write(
+          '<meta name="shopify-api-key" content="0c5c39e22383398b6fd46380266db57f">' +
+          '<scr' + 'ipt src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></scr' + 'ipt>'
+        );
+      } catch (e) { /* never block the page */ }
+    })();
+  </script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Resolver — AI support operations for Shopify</title>
-  <meta name="description" content="Resolver matches every customer email to the live Shopify order, drafts the reply in the customer's language, and holds anything risky for a human." />
+  <title>Resolver, supervised AI support for Shopify</title>
+  <meta name="description" content="Resolver drafts every support reply from the real Shopify order, in the customer's language, and sends nothing until a lane earns it. Chargeback and legal language always goes to a human." />
   <link rel="icon" href="/logo/recolor/oct-black-t.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="canonical" href="https://resolver.chat/" />
+  <meta name="theme-color" content="#2F6B45" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Resolver" />
+  <meta property="og:title" content="Resolver, supervised AI support for Shopify" />
+  <meta property="og:description" content="Every customer email matched to the real Shopify order, answered in the customer's language, with anything risky held for a human." />
+  <meta property="og:url" content="https://resolver.chat/" />
+  <meta property="og:image" content="https://resolver.chat/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Resolver, supervised AI support for Shopify" />
+  <meta name="twitter:description" content="Every customer email matched to the real Shopify order, answered in the customer's language." />
+  <meta name="twitter:image" content="https://resolver.chat/og.png" />
 </head>
 <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
 </html>

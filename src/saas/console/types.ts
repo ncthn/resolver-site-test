@@ -42,7 +42,8 @@ export interface ThreadMessage {
   is_customer: boolean
   body_english?: string
   auto_sent?: boolean
-  attachments?: { filename: string; size: string }[]
+  /** Live Gmail attachments carry ids + numeric byte size; mock rows only filename + display size. */
+  attachments?: { filename: string; size?: string | number; mimeType?: string; attachmentId?: string; messageId?: string }[]
 }
 
 /** One step of the drafting pipeline, surfaced as the decision trace. */
@@ -54,7 +55,16 @@ export interface TraceStep {
 }
 
 export interface Ticket {
+  /** Why this ticket was pulled out of every automated lane. A lawyer, a chargeback
+   *  and a copyright claim all set ESCALATED and all need different people to do
+   *  different things, so the console names the rail instead of saying 'legal
+   *  language'. Absent on tickets escalated before this field existed. */
+  escalation_reason?: string
   id: string
+  /** Precomputed plain-text list preview (client-side, from the stripped server snippet). */
+  preview?: string
+  /** Live Shopify Returns API status for the matched order (read_returns scope). */
+  order_returns?: { id: string; name: string; status: string; total_quantity: number }[]
   shop_id: string
   customer_email: string
   customer_name: string | null
@@ -68,6 +78,9 @@ export interface Ticket {
   category: Category
   sentiment: 'neutral' | 'negative' | 'angry'
   urgency_score: number
+  /** Server-computed queue priority; the list endpoint returns it. */
+  priority_score?: number
+  next_action?: string | null
   order_id: string | null
   order_name: string | null
   order_match_confidence: number
@@ -75,6 +88,8 @@ export interface Ticket {
   order_snapshot: OrderSnapshot | null
   draft_body: string | null
   draft_body_english: string | null
+  has_draft?: boolean
+  has_draft_en?: boolean
   draft_generated_at: string | null
   chargeback_status: 'none' | 'warning' | 'chargeback' | 'won' | 'lost' | null
   auto_resolved: boolean
@@ -101,6 +116,8 @@ export interface Shop {
   name: string
   domain: string
   open_count: number
+  /** False while the store is still served by the legacy support app (cutover). */
+  served?: boolean
 }
 
 export interface ActivityEvent {
@@ -109,3 +126,63 @@ export interface ActivityEvent {
   detail: string
   kind: 'ok' | 'hold' | 'send'
 }
+
+/* ---------------------------------------------------------------------------
+   Console-side domain shapes. These used to live in mockApi.ts, which is gone:
+   they are TYPES, not fabricated data, and both the live adapter and the views
+   need them. A type has no runtime value to be wrong about. */
+
+/** Kanban column of a task. */
+export type TaskCol = 'todo' | 'doing' | 'waiting' | 'done'
+
+/** One structured SOP rule for a store (when / if / then). */
+export interface SopRuleV2 {
+  id: string
+  category: 'Refunds & returns' | 'Shipping' | 'Order changes' | 'Escalation' | 'Other'
+  when: string
+  conds: string[]
+  then: string
+  enabled: boolean
+  /** Tickets this rule shaped in the last 30 days. No server counter feeds this
+      yet, so the live adapter sets 0 and no surface renders it — a rendered 0
+      would assert something nobody measured. */
+  hits30d: number
+  locked?: boolean
+}
+
+/** A {token} a store's rules can reference, resolved from the live shop policy. */
+export interface SopVar { key: string; label: string; value: string; desc: string }
+
+/** A saved reply. */
+export interface Macro { id: string; label: string; body: string }
+
+/** A payment dispute, as the console renders it. */
+export interface Chargeback {
+  id: string
+  order_name: string
+  customer: string
+  shop_id: string
+  amount: string
+  currency: string
+  gateway: string
+  reason: string
+  evidence_due: string | null
+  ticket_id?: string
+  status: 'needs_response' | 'under_review' | 'won' | 'lost'
+  evidence: { label: string; ready: boolean }[]
+}
+
+/** An inbound triage rule, run before drafting. */
+export interface InboxRule {
+  id: string
+  if_field: 'sender' | 'subject' | 'category' | 'language'
+  if_value: string
+  action: 'close' | 'assign' | 'skip_ai' | 'bin'
+  target: string | null
+  enabled: boolean
+  hits30d: number
+}
+
+/** Where a return currently stands. */
+export type ReturnStage = 'requested' | 'options_sent' | 'return_approved' | 'item_received' | 'refunded' | 'partial_refunded'
+export interface ReturnFlow { stage: ReturnStage; option: 'A' | 'B' | null; updated_at: string }

@@ -34,7 +34,7 @@ export function PricingPage() {
   const plans = [
     { name: 'Solo', m: 59, a: 47, vol: '300 tickets / mo', blurb: 'One store, one seat.', feats: ['1 store · 1 seat', 'Order-grounded drafts', 'Draft-only + auto-send lanes', '40+ languages', 'Chargeback & legal flags'], rec: false },
     { name: 'Team', m: 249, a: 199, vol: '2,500 tickets / mo', blurb: 'Growing operations.', feats: ['Everything in Solo', '3 stores · 3 seats', 'Per-store voice & policies', 'Lane analytics', 'Priority email support'], rec: true },
-    { name: 'Portfolio', m: 599, a: 479, vol: '6,000 tickets / mo', blurb: 'Multi-brand operators.', feats: ['Everything in Team', 'Unlimited stores · 10 seats', 'Cross-store insights', 'Priority support'], rec: false },
+    { name: 'Portfolio', m: 599, a: 479, vol: '6,000 tickets / mo', blurb: 'Multi-brand operators.', feats: ['Everything in Team', 'Unlimited stores · 10 seats', 'Cross-store insights'], rec: false },
   ];
   const rows: [string, string, string, string][] = [
     ['Stores', '1', '3', 'Unlimited'],
@@ -43,8 +43,8 @@ export function PricingPage() {
     ['AI drafting & lanes', '✓', '✓', '✓'],
     ['Native-language replies', '✓', '✓', '✓'],
     ['Chargeback & legal routing', '✓', '✓', '✓'],
-    ['Per-store voice & policies', ', ', '✓', '✓'],
-    ['Cross-store insights', ', ', ', ', '✓'],
+    ['Per-store voice & policies', '—', '✓', '✓'],
+    ['Cross-store insights', '—', '—', '✓'],
   ];
   return (
     <Page title="Pay for tickets, not features." sub="Every AI feature is on every plan, tiers only change stores, seats, and monthly ticket volume.">
@@ -177,11 +177,21 @@ export function ContactPage() {
                 <p style={{ color: 'var(--tx-soft)', fontSize: 14, marginTop: 6 }}>We reply within one business day, usually faster.</p>
               </div>
             ) : (
-              <form className="pg-form" onSubmit={(e) => { e.preventDefault(); setSent(true); }}>
-                <label>Name<input required placeholder="Your name" /></label>
-                <label>Email<input required type="email" placeholder="you@store.com" /></label>
-                <label>Store (optional)<input placeholder="yourstore.com" /></label>
-                <label>What do you need?<textarea required rows={5} placeholder="A demo, a pricing question, a migration from another helpdesk…" /></label>
+              <form className="pg-form" onSubmit={(e) => {
+                e.preventDefault();
+                // No contact endpoint exists — previously this just showed
+                // "Message sent" and dropped the message. Hand off to mail.
+                const f = e.currentTarget as HTMLFormElement;
+                const get = (n: string) => (f.elements.namedItem(n) as HTMLInputElement | HTMLTextAreaElement | null)?.value ?? '';
+                const body = encodeURIComponent(`${get('message')}\n\n— ${get('name')} (${get('email')})`);
+                const subject = encodeURIComponent('Resolver enquiry');
+                window.location.href = `mailto:${DEMO_MAIL}?subject=${subject}&body=${body}`;
+                setSent(true);
+              }}>
+                <label>Name<input required name="name" autoComplete="name" placeholder="Your name" /></label>
+                <label>Email<input required name="email" type="email" autoComplete="email" placeholder="you@store.com" /></label>
+                <label>Store (optional)<input name="store" placeholder="yourstore.com" /></label>
+                <label>What do you need?<textarea required name="message" rows={5} placeholder="A demo, a pricing question, a migration from another helpdesk…" /></label>
                 <button className="btn pri" type="submit"><Send size={15} /> Send message</button>
               </form>
             )}
@@ -226,7 +236,7 @@ export function IntegrationsPage() {
     },
     {
       Ic: Timer, t: 'Carrier tracking', p: 'Live tracking events folded into every draft, including customs status, the thing long-window stores get asked about most.',
-      pts: ['14+ carriers', 'Customs clearance detection', 'Delivery-failure alerts'],
+      pts: ['Tracking status from Shopify fulfilments', 'Customs clearance detection', 'Delivery-failure alerts'],
     },
     {
       Ic: Languages, t: '40+ languages', p: 'Not an integration you configure, a property of the drafting engine. Customers get answered in their language; you review an English mirror.',
@@ -337,6 +347,29 @@ export function PrivacyPage() {
       <p>Your inbox stays in Gmail; your orders stay in Shopify. Resolver stores ticket metadata and drafts for the duration of your subscription. Uninstalling revokes access immediately and deletes stored tokens.</p>
       <h3>Your rights</h3>
       <p>Export or deletion requests: <a href="mailto:hello@resolver.chat">hello@resolver.chat</a>. We answer within 30 days, usually much faster.</p>
+
+      <h3 style={{ fontSize: 16, margin: '28px 0 10px' }}>Sub-processors</h3>
+      <p>We use the following processors to deliver the service. We will give notice before adding a new one, and you may object.</p>
+      <div style={{ overflowX: 'auto' }}>
+        <table className="pg-table">
+          <thead><tr><th>Processor</th><th>Purpose</th><th>Region</th></tr></thead>
+          <tbody>
+            <tr><td>Shopify Inc.</td><td>Order, customer and fulfilment data for the connected store</td><td>United States / EU</td></tr>
+            <tr><td>Google LLC (Gmail / Workspace)</td><td>Sending and receiving support email on your mailbox</td><td>United States / EU</td></tr>
+            <tr><td>OpenAI, L.L.C.</td><td>Drafting and translating replies. Zero-retention terms; not used for training</td><td>United States</td></tr>
+            <tr><td>Google Cloud Platform</td><td>Application hosting, database and secret storage</td><td>United States</td></tr>
+            <tr><td>Render Services, Inc.</td><td>Application hosting</td><td>United States</td></tr>
+            <tr><td>Postmark (ActiveCampaign)</td><td>Transactional email for stores using their own domain</td><td>United States</td></tr>
+            <tr><td>Stripe, Inc.</td><td>Subscription billing</td><td>United States</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3 style={{ fontSize: 16, margin: '28px 0 10px' }}>Your rights and our basis</h3>
+      <p>We process customer data as a processor on your instructions, under Art. 28 GDPR, with legitimate interest as the basis for providing support. You may request access, correction, export or deletion at any time, and we answer within 30 days. International transfers rely on Standard Contractual Clauses.</p>
+      <h3 style={{ fontSize: 16, margin: '28px 0 10px' }}>Shopify Protected Customer Data</h3>
+      <p>We request only the scopes needed to match an email to its order. Customer data is used solely to answer that customer, is never sold, never used to train any model, and is deleted on request or when you uninstall the app.</p>
+      <h3 style={{ fontSize: 16, margin: '28px 0 10px' }}>Retention and breach notice</h3>
+      <p>Tickets and message history are retained for the life of your account and deleted within 30 days of termination. We notify you without undue delay, and within 72 hours where required, of any personal-data breach affecting your data.</p>
     </Legal>
   );
 }
@@ -351,6 +384,16 @@ export function TermsPage() {
       <p>Subscriptions are billed through Shopify and can be upgraded, downgraded, or cancelled there at any time. Fees are non-refundable for the current billing period.</p>
       <h3>Liability</h3>
       <p>The service is provided as-is. Our aggregate liability is capped at the fees paid in the preceding three months.</p>
+      <h3>Who you are contracting with</h3>
+      <p>The service is provided by Resolver Ventures LLC. Notices may be sent to <a href="mailto:hello@resolver.chat">hello@resolver.chat</a>.</p>
+      <h3>Term and termination</h3>
+      <p>The agreement runs while you have an active subscription or connected store. Either party may terminate at any time: you by cancelling in the Shopify admin or uninstalling, we on 30 days&rsquo; notice except for non-payment or misuse, where we may suspend immediately. On termination we stop processing and delete your data within 30 days, and you may export it before then.</p>
+      <h3>Acceptable use</h3>
+      <p>Do not use the service to send unlawful, deceptive or unsolicited bulk email, or to process data you have no right to process. We may suspend an account that does.</p>
+      <h3>Changes</h3>
+      <p>We may change these terms; material changes are announced before they take effect and continued use is acceptance. The current version is always at this page with the date above.</p>
+      <h3>Governing law</h3>
+      <p>These terms are governed by the laws of the State of Delaware, United States, and the parties submit to its courts. Nothing here removes consumer rights that cannot be waived under your local law.</p>
     </Legal>
   );
 }
@@ -358,9 +401,57 @@ export function CookiesPage() {
   return (
     <Legal title="Cookie policy" updated="July 2026">
       <h3>What we set</h3>
-      <p>The marketing site sets no tracking cookies and runs no third-party analytics. The app sets strictly necessary cookies for authentication, session tokens, nothing else.</p>
+      <p>The marketing site sets no tracking cookies and runs no third-party analytics or advertising trackers. The app sets strictly necessary cookies for authentication, session tokens, nothing else.</p>
       <h3>What we don&rsquo;t</h3>
       <p>No advertising pixels, no cross-site tracking, no fingerprinting. This is also why there is no cookie banner: there is nothing to consent to.</p>
+    </Legal>
+  );
+}
+
+/** Data Processing Addendum. Previously a soft-200 to the homepage, so any
+ *  contract or DPIA citing resolver.chat/dpa referenced nothing. */
+export function DpaPage() {
+  return (
+    <Legal title="Data processing addendum" updated="August 2026">
+      <p>This addendum forms part of the Terms of Service and applies where Resolver Ventures LLC (&ldquo;processor&rdquo;) processes personal data on behalf of you (&ldquo;controller&rdquo;) under Art. 28 GDPR and equivalent laws.</p>
+      <h3>Subject matter and duration</h3>
+      <p>We process customer support correspondence and the Shopify order data needed to answer it, for as long as you have an active account, and delete it within 30 days of termination.</p>
+      <h3>Nature and purpose</h3>
+      <p>Matching inbound email to the correct order, drafting a reply in the customer&rsquo;s language, and sending it from your mailbox on your instruction.</p>
+      <h3>Categories of data and data subjects</h3>
+      <p>Name, email address, postal address, phone number, order and fulfilment details, and the content of the messages themselves. Data subjects are your customers and your staff.</p>
+      <h3>Our obligations</h3>
+      <p>We process only on your documented instructions; bind our personnel to confidentiality; apply the security measures described on the Security page; assist you with data-subject requests and with Art. 32&ndash;36 obligations; and delete or return the data at the end of the service.</p>
+      <h3>Sub-processors</h3>
+      <p>The current list, with purpose and region, is on the <a href="/privacy">Privacy page</a>. We give notice before adding a new sub-processor and you may object.</p>
+      <h3>International transfers</h3>
+      <p>Transfers outside the EEA and UK rely on the European Commission&rsquo;s Standard Contractual Clauses together with the UK Addendum.</p>
+      <h3>Breach notification</h3>
+      <p>We notify you without undue delay, and within 72 hours where required, of any personal-data breach affecting your data, with the information you need for your own reporting.</p>
+      <h3>Audit</h3>
+      <p>On reasonable written request, and no more than once a year, we will provide the information necessary to demonstrate compliance with this addendum.</p>
+    </Legal>
+  );
+}
+
+/** Security overview. Also previously a soft-200. */
+export function SecurityPage() {
+  return (
+    <Legal title="Security" updated="August 2026">
+      <h3>Credentials</h3>
+      <p>Shopify admin tokens and mailbox refresh tokens are stored in Google Secret Manager, never in the database and never in logs. They are never returned by any API response.</p>
+      <h3>Access to your mailbox</h3>
+      <p>Mail access uses Google Workspace domain-wide delegation or your own OAuth grant, scoped to sending and reading the connected mailbox. You can revoke it at any time from your Google admin console.</p>
+      <h3>Isolation</h3>
+      <p>Every record is keyed to the store it belongs to, and every read and write is scoped to the account that owns that store. Database access is server-side only; the browser never queries it directly.</p>
+      <h3>Encryption</h3>
+      <p>All traffic is TLS. Data at rest is encrypted by Google Cloud Firestore and Secret Manager.</p>
+      <h3>AI processing</h3>
+      <p>Drafting and translation use OpenAI under zero-retention terms. Your data is not used to train any model. Drafts are held for a human to approve unless you explicitly enable automatic sending for a category.</p>
+      <h3>Backups</h3>
+      <p>The database is exported daily to a separate storage bucket with its own retention.</p>
+      <h3>Reporting an issue</h3>
+      <p>Email <a href="mailto:hello@resolver.chat">hello@resolver.chat</a>. We acknowledge security reports within one business day.</p>
     </Legal>
   );
 }

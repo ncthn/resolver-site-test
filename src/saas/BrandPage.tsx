@@ -21,7 +21,7 @@ function Variant({ tone }: { tone: 'mono' | 'indigo' | 'ink' }) {
     mono: {
       name: 'V1 · Monochrome', note: 'current site',
       bg: '#fff', ink: '#16181C', soft: '#6B6E76', band: '#F5F5F4',
-      pri: '#16181C', priTx: '#fff', badgeBg: '#F5F5F4', badgeTx: '#6B6E76', chip: '#2A2FB8',
+      pri: '#16181C', priTx: '#fff', badgeBg: '#F5F5F4', badgeTx: '#6B6E76', chip: '#2F6B45',
     },
     indigo: {
       name: 'V2 · Indigo accent', note: 'CTAs & highlights in brand blue',
@@ -79,9 +79,9 @@ export function BrandPage() {
         <div className="bp-grid c3">
           <div className="bp-card">
             <div className="bp-logo-row">
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <img src={LOGO_BLACK} alt="" style={{ height: 24 }} />
-                <span style={{ fontWeight: 600, fontSize: 21, letterSpacing: '-.022em' }}>resolver.chat</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                <img src={LOGO_BLACK} alt="" style={{ height: 16.7 }} />
+                <span style={{ fontWeight: 600, fontSize: 21, letterSpacing: '-.025em' }}>resolver.chat</span>
               </span>
             </div>
             <div className="cap">Primary, ink on paper. Nav, footer, documents.</div>
@@ -153,7 +153,7 @@ export function BrandPage() {
               <span style={{ fontSize: 11.5, fontWeight: 500, borderRadius: 999, padding: '3px 10px', background: '#E8F0EB', color: '#3D7A50' }}>Live · 30s window</span>
               <span style={{ fontSize: 11.5, fontWeight: 500, borderRadius: 999, padding: '3px 10px', background: '#F5F5F4', color: '#6B6E76' }}>Shadow</span>
               <span style={{ fontSize: 11.5, fontWeight: 500, borderRadius: 999, padding: '3px 10px', background: '#FBEFEC', color: '#B4472F' }}>Human only</span>
-              <span style={{ fontSize: 11.5, fontWeight: 500, borderRadius: 999, padding: '3px 10px', background: '#EEEFF9', color: '#2A2FB8' }}>Draft ready</span>
+              <span style={{ fontSize: 11.5, fontWeight: 500, borderRadius: 999, padding: '3px 10px', background: '#E9F1EB', color: '#2F6B45' }}>Draft ready</span>
             </div>
             <div className="cap">Status chips: tinted bg + dark tone of the same hue. The four states above are the entire vocabulary.</div>
           </div>

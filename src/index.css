@@ -14,12 +14,12 @@
   --font-body:'Inter Tight',system-ui,sans-serif;
 }
 :root{--acc:#2F6B45;--accbg:#E9F1EB;
-  --indigo:#2A2FB8; --indigo-d:#23278F; --indigo-h:#4046E3;
+  --indigo:#2F6B45; --indigo-d:#255437; --indigo-h:#255437;
   --ink:#16181C; --paper:#FFFFFF;
   --band:#F5F5F4; --card:#FAFAF9;
-  --tint:#EEEFF9; --tint-2:#F5F5F4;
+  --tint:#E9F1EB; --tint-2:#F5F5F4;
   --tx-soft:#6B6E76; --tx-faint:#9A9DA4;
-  --teal:#4046E3; --teal-soft:#EAEBFC;   /* legacy names for the console block */
+  --teal:#2F6B45; --teal-soft:#E9F1EB;   /* legacy names for the console block */
   --red:#C43D3D; --line:rgba(22,24,28,.07);
   --br:'Inter Tight',system-ui,sans-serif;
   --pj:'Inter Tight',system-ui,sans-serif;
@@ -440,6 +440,41 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 }
 
 
+/* ============ hero mock: mode chip in the browser bar ============ */
+.shot-mode{margin-left:auto;font-size:11.5px;font-weight:500;background:#E9E9E7;color:var(--ink);border-radius:999px;padding:3px 10px;white-space:nowrap}
+
+/* ============ ledger: one ticket, every step on the record ============ */
+.ledger{padding:56px 0}
+.ledger-card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--cardsh);padding:8px 22px;font-size:13px}
+.lrow{display:grid;grid-template-columns:60px 1fr auto;gap:14px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);animation:fadeup .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*90ms)}
+.lrow:last-child{border-bottom:none}
+.lrow .t{color:var(--tx-faint);font-variant-numeric:tabular-nums;font-size:12px}
+.lrow .e{color:var(--ink);font-weight:500;min-width:0}
+.lrow .e span{display:block;color:var(--tx-soft);font-weight:400;font-size:12.5px;line-height:1.5;margin-top:2px}
+.lrow .st{font-size:11.5px;font-weight:500;border-radius:999px;padding:2.5px 10px;white-space:nowrap}
+.lrow .st.ok{background:#E8F0EB;color:#3D7A50}
+.lrow .st.draft{background:#E9E9E7;color:var(--ink)}
+.lrow .st.hold{background:#FBEFEC;color:#B4472F}
+
+/* ============ guardrails: what never gets an automated answer ============ */
+.guard{padding:56px 0}
+.guard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:48px}
+.gcard{background:var(--band);border-radius:20px;padding:30px 28px;display:flex;flex-direction:column;min-height:260px}
+.gcard .mic{width:40px;height:40px;border-radius:11px;background:#fff;box-shadow:var(--cardsh);display:flex;align-items:center;justify-content:center;color:#B4472F}
+.gcard h3{font-size:17px;letter-spacing:-.02em;line-height:1.3;margin-top:auto;padding-top:24px}
+.gcard p{color:var(--tx-soft);font-size:13.5px;line-height:1.6;margin-top:8px}
+.gcard .out{margin-top:14px;font-size:12.5px;font-weight:500;color:var(--ink);display:inline-flex;gap:7px;align-items:center}
+.guard-kill{margin-top:18px;background:var(--ink);color:#fff;border-radius:20px;padding:30px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.guard-kill h3{font-size:20px;letter-spacing:-.02em}
+.guard-kill p{color:rgba(255,255,255,.65);font-size:14px;line-height:1.6;margin-top:6px;max-width:56ch}
+@media (max-width:1020px){
+  .guard-grid{grid-template-columns:1fr 1fr}
+  .lrow{grid-template-columns:52px 1fr}
+  .lrow .st{grid-column:2;justify-self:start}
+}
+@media (max-width:620px){.guard-grid{grid-template-columns:1fr}.shot-mode{display:none}}
+@media (prefers-reduced-motion:reduce){.lrow{animation:none !important;opacity:1 !important}}
+
 /* ============ brand page (/brand) ============ */
 .bp{padding:72px 0 120px}
 .bp-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:28px}
@@ -484,7 +519,7 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
    Monochrome: ink + band; semantic green/red only.
    ============================================================ */
 .console2{position:fixed;inset:0;display:grid;grid-template-columns:232px 1fr;background:var(--band);color:var(--ink);font-family:var(--pj);overflow:hidden;font-size:13.5px;transition:grid-template-columns .2s ease}
-.console2.collapsed{grid-template-columns:60px 1fr}
+.console2.collapsed{grid-template-columns:52px 1fr}
 .console2.collapsed .c-brand .bw,.console2.collapsed .c-nav .item span,.console2.collapsed .c-nav .item .n,.console2.collapsed .c-nav .glabel,.console2.collapsed .c-store .nm,.console2.collapsed .c-store .mut,.console2.collapsed .c-me span:not(.av),.console2.collapsed .c-set-link span{width:0;overflow:hidden;white-space:nowrap;opacity:0;padding:0;margin:0}
 .console2.collapsed .c-auto{display:none}
 .console2.collapsed .c-rail{padding:16px 8px}
@@ -492,20 +527,22 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .console2.collapsed .c-store{justify-content:center;padding:8px 0}
 .console2.collapsed .c-brand{justify-content:center;padding:2px 0 8px}
 .console2.collapsed .c-brand img{display:none}
+.console2.collapsed .c-nav .item,.console2.collapsed .c-set-link,.console2.collapsed .c-store,.console2.collapsed .c-me{gap:0}
+.console2.collapsed .c-nav .twist{display:none}
 .console2 *{min-width:0}
-.console2 button{font-family:var(--pj);border:none;background:none;cursor:pointer;color:inherit}
+.console2 :where(button){font-family:var(--pj);border:none;background:none;cursor:pointer;color:inherit}
 .c-main{overflow:hidden;display:flex;min-height:0}
 .c-main > *{flex:1;min-width:0}
 
 /* ---- rail ---- */
 .c-rail{display:flex;flex-direction:column;gap:10px;padding:16px 12px;background:var(--band);border-right:1px solid var(--line);overflow-y:auto}
-.c-brand{display:flex;align-items:center;gap:6px;padding:2px 8px 8px;font-weight:600;font-size:15px;letter-spacing:-.022em}
+.c-brand{display:flex;align-items:center;gap:6px;padding:2px 10px 8px;font-weight:600;font-size:15px;letter-spacing:-.025em}
 .c-collapse{margin-left:auto;color:var(--tx-faint);padding:4px;border-radius:6px;display:flex}
 .c-collapse:hover{background:#ECECEA;color:var(--ink)}
 .c-set-link{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;color:var(--tx-soft);font-weight:500;font-size:13px;cursor:pointer}
 .c-set-link:hover{background:#ECECEA}
 .c-set-link.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(22,24,28,.06);font-weight:600}
-.c-brand img{height:13.5px;display:block;transform:translateY(-0.5px)}
+.c-brand img{height:11.9px;width:auto;display:block}
 .c-store-wrap{position:relative}
 .c-store{display:flex;align-items:center;gap:9px;width:100%;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;text-align:left}
 .c-store .dot{width:26px;height:26px;border-radius:7px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex:none}
@@ -594,7 +631,12 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-av.sm{width:24px;height:24px;font-size:10px}
 
 /* ---- tickets 3-pane ---- */
-.c-3pane{display:grid;grid-template-columns:330px 1fr 280px;min-height:0;height:100%}
+.c-3pane{display:grid;grid-template-columns:var(--q-w,330px) 1fr var(--ctx-w,280px);min-height:0;height:100%;position:relative}
+.c-split{position:absolute;top:0;bottom:0;width:8px;transform:translateX(-4px);cursor:col-resize;z-index:6;touch-action:none}
+.c-split::after{content:"";position:absolute;inset:0 3px;border-radius:2px;transition:background .12s}
+.c-split:hover::after,.c-split:active::after{background:rgba(22,24,28,.16)}
+.c-split.q{left:var(--q-w,330px);transform:none}
+.c-split.ctx{right:var(--ctx-w,280px);transform:translateX(4px)}
 .c-queue{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--band)}
 .c-q-head{padding:18px 16px 10px;display:flex;flex-direction:column;gap:10px}
 .c-q-title{font-size:17px;font-weight:600;letter-spacing:-.02em}
@@ -636,10 +678,14 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-risk.mut{background:#ECECEA;color:var(--tx-soft)}
 .c-msg{display:flex;gap:10px;align-items:flex-start}
 .c-msg .bubble{background:var(--band);border-radius:12px;padding:12px 15px;font-size:13.5px;line-height:1.55;max-width:60ch}
+.c-msg .bubble .btext{display:block;white-space:pre-wrap;word-break:break-word}
 .c-msg .at{display:block;font-size:10.5px;color:var(--tx-faint);margin-top:6px}
 /* Docked composer (Gorgias pattern): one quiet surface under the thread.
    Tabs on a hairline, To-line, editable body, meta expanders, single primary. */
-.c-composer{flex:none;border-top:1px solid var(--line);background:#fff;padding:6px 20px 16px}
+.c-composer{flex:none;position:relative;border-top:1px solid var(--line);background:#fff;padding:6px 20px 16px}
+.c-composer-grip{position:absolute;top:0;left:0;right:0;height:8px;transform:translateY(-4px);cursor:row-resize;z-index:4;touch-action:none}
+.c-composer-grip::after{content:"";position:absolute;left:0;right:0;top:3px;height:2px;background:transparent;transition:background .12s}
+.c-composer-grip:hover::after,.c-composer-grip:active::after{background:rgba(22,24,28,.18)}
 .c-tabs{display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--line);margin:0 -20px;padding:0 20px}
 .c-tabs button{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--tx-faint);padding:9px 11px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s}
 .c-tabs button:hover{color:var(--ink)}
@@ -651,20 +697,22 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-toline .k{color:var(--tx-faint);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}
 .c-toline .v{color:var(--ink);font-weight:500}
 .c-toline .held{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B4472F;background:#FBEFEC;border-radius:999px;padding:4px 10px}
-.c-composer .body{font-size:13.5px;line-height:1.6;color:#3D4046;margin-top:8px}
+.c-composer .body{font-size:13.5px;line-height:1.6;color:#3D4046;margin-top:8px;white-space:pre-wrap;word-break:break-word}
 .c-composer .body.editable{cursor:text;border-radius:8px;margin:8px -8px 0;padding:4px 8px;transition:background .15s}
 .c-composer .body.editable:hover{background:var(--band)}
+.c-composer .body.clamped{max-height:150px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 62%,transparent);mask-image:linear-gradient(#000 62%,transparent)}
+.c-showmore{background:none;border:none;color:var(--ink);font-size:11.5px;font-weight:600;cursor:pointer;padding:5px 0 2px}
 /* single bottom bar: toggles + countdown left, send right; panels open below */
-.c-cbar{display:flex;align-items:center;gap:14px;margin-top:12px;min-height:38px}
+.c-cbar{display:flex;align-items:center;gap:10px 14px;margin-top:12px;min-height:38px;flex-wrap:wrap}
 .c-cbar .sp{flex:1}
 .c-bartoggle{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--tx-faint);white-space:nowrap;border-radius:8px;padding:5px 7px;margin:-5px -7px;transition:color .15s,background .15s}
 .c-bartoggle:hover{color:var(--ink);background:var(--band)}
 .c-bartoggle.on{color:var(--ink)}
 .c-bartoggle svg.r{transform:rotate(180deg)}
-.c-native-p{margin-top:10px;padding:10px 13px;background:var(--band);border-radius:9px;font-size:12.5px;color:var(--tx-soft);font-style:italic;line-height:1.6}
+.c-native-p{margin-top:10px;padding:10px 13px;background:var(--band);border-radius:9px;font-size:12.5px;color:var(--tx-soft);font-style:italic;line-height:1.6;white-space:pre-wrap;word-break:break-word}
 .c-cfoot{display:flex;align-items:center;gap:10px;margin-top:12px}
 .c-cfoot .sp{flex:1}
-.c-autosend{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#3D7A50;font-variant-numeric:tabular-nums}
+.c-autosend{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#3D7A50;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
 .c-autosend button{color:#B4472F;font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .c-autosend button:hover{color:#8F3218}
 .c-autosend.mut{color:var(--tx-faint)}
@@ -676,7 +724,8 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .console2 .c-sum-pill:disabled{opacity:.6}
 .c-mirror{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:6px 11px;color:var(--tx-soft);white-space:nowrap}
 .c-mirror:hover,.c-mirror.on{background:var(--band);color:var(--ink)}
-.c-act{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:9px 16px;font-size:12.5px;font-weight:500;background:var(--band);color:var(--ink)}
+.c-act,.console2 .c-act{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:9px 16px;font-size:12.5px;font-weight:500;background:var(--band);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(22,24,28,.06)}
+.c-act.prim,.c-act.red{box-shadow:none}
 .c-act:hover{background:#ECECEA}
 .c-act.prim{background:var(--ink);color:#fff}
 .c-act.prim:hover{background:#000}
@@ -684,7 +733,7 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-act.ic{padding:9px 11px}
 
 /* context */
-.c-ctx2{border-left:1px solid var(--line);padding:18px 16px;background:var(--band);overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.c-ctx2{border-left:1px solid var(--line);padding:18px 16px;background:var(--band);overflow-y:auto;overflow-x:hidden;min-width:0;display:flex;flex-direction:column;gap:16px}
 .c-ctx2 .h{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--tx-faint);margin-bottom:8px}
 .c-ctx2 .card{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px 14px}
 .c-ctx2 .line{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:500;padding-bottom:6px}
@@ -704,15 +753,40 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-set-nav button:hover{background:#ECECEA}
 .c-set-nav button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(22,24,28,.06)}
 .c-set-body{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column}
+.c-set-body input[type=text],.c-set-body input:not([type]),.c-set-body input[type=email],.c-set-body textarea,.c-set-body select{border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-family:var(--pj);font-size:13px;background:#fff;outline:none;color:var(--ink)}
+.c-set-body input:focus,.c-set-body textarea:focus,.c-set-body select:focus{border-color:var(--ink)}
+.c-set-head{margin:-2px 0 16px}
+.c-set-head h3{font-size:15.5px;font-weight:600;letter-spacing:-.01em;margin:0;color:var(--ink)}
+.c-set-head p{font-size:12.5px;color:var(--tx-faint);margin:3px 0 0;max-width:62ch;line-height:1.5}
+.c-tokens{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 2px}
+.c-token{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:7px;padding:4px 9px;font-size:11.5px;cursor:pointer;font-family:ui-monospace,Menlo,monospace;color:var(--ink)}
+.c-token:hover{border-color:var(--ink);background:var(--band)}
+.c-token small{font-family:var(--pj);color:var(--tx-faint);font-size:10.5px}
 .c-kill{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--band);border-radius:11px;padding:14px 16px;margin-bottom:16px}
 .c-kill b{font-size:13.5px}
 .c-kill p{font-size:12px;color:var(--tx-soft);margin-top:2px;max-width:52ch}
 .c-kill.on{background:#FBEFEC}
 .c-kill.on b{color:#B4472F}
-.c-switch{width:40px;height:24px;border-radius:999px;background:#D9D9D6;position:relative;transition:background .15s;flex:none}
-.c-switch .k{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(22,24,28,.2)}
+/* Doubled selector, both here and on .c-tourbtn below: `.console2 button` resets
+   background and colour at 0-1-1, which outranks a bare component class, so the
+   off-state track and the round button were being drawn transparent at runtime. */
+.c-switch,.console2 .c-switch{width:40px;height:24px;border-radius:999px;background:#c0c5ca;box-shadow:inset 0 0 0 1px rgba(22,24,28,.14);position:relative;transition:background .15s;flex:none}
+.c-switch .k{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(22,24,28,.35)}
 .c-switch.on{background:#B4472F}
 .c-switch.on .k{left:19px}
+/* The same switch, worn as a settings row: label, optional description, one
+   switch language. It is a <button role="switch"> so the whole row is clickable
+   and stays keyboard operable, and .console2 button would otherwise win on
+   specificity, hence the doubled selector. */
+.c-toggle,.console2 .c-toggle{display:inline-flex;align-items:center;gap:9px;flex:none;padding:0;border:none;background:none;text-align:left;font-family:var(--pj);font-size:12.5px;line-height:1.35;color:var(--tx-soft);cursor:pointer}
+.c-toggle .c-switch{display:block}
+.c-toggle .c-switch.sm{margin-top:0}
+.c-toggle.desc{align-items:flex-start}
+.c-toggle.desc .c-switch.sm{margin-top:2px}
+.c-toggle b{display:block;font-weight:600;color:var(--ink);font-size:12.5px}
+.c-toggle small{display:block;color:var(--tx-faint);font-size:11.5px;margin-top:1px}
+.c-toggle:disabled{opacity:.5;cursor:not-allowed}
+.c-toggle:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:10px}
 .c-lane-set{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
 .c-lane-set .nm{font-size:13px;font-weight:600}
 .c-lane-set .modes{display:flex;background:var(--band);border-radius:999px;padding:3px}
@@ -720,7 +794,7 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-lane-set .modes button.on{background:var(--ink);color:#fff;font-weight:600}
 .c-lane-set .note{font-size:11.5px;color:var(--tx-faint);text-align:right}
 
-@media (max-width:1180px){.c-3pane{grid-template-columns:300px 1fr}.c-ctx2{display:none}.c-kpis{grid-template-columns:1fr 1fr}.c-grid2{grid-template-columns:1fr}}
+@media (max-width:1180px){.c-3pane{grid-template-columns:300px 1fr}.c-split{display:none}.c-ctx2{display:none}.c-kpis{grid-template-columns:1fr 1fr}.c-grid2{grid-template-columns:1fr}}
 @media (max-width:880px){.console2{grid-template-columns:1fr}.c-rail{display:none}.c-3pane{grid-template-columns:1fr}.c-queue{display:none}.c-set{grid-template-columns:1fr}}
 
 /* additions: implementable console */
@@ -788,6 +862,10 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-ev .c-act{padding:6px 12px;font-size:11.5px}
 
 /* ============ kanban + view transitions + inputs ============ */
+/* Banners stack above the view. Without this they are direct children of .c-view, which
+   is a flex ROW whose children each take flex:1, so a banner becomes a full-height column
+   beside the ticket panes instead of a strip across the top. */
+.c-stack{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
 .c-view{flex:1;min-width:0;display:flex;min-height:0;animation:viewin .25s ease-out}
 .c-view > *{flex:1;min-width:0}
 @keyframes viewin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -815,6 +893,39 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .kb-foot .mv button{font-size:10px;font-weight:600;color:var(--tx-soft);border:1px solid var(--line);border-radius:999px;padding:3px 8px;white-space:nowrap;background:#fff}
 .kb-foot .mv button:hover{background:var(--ink);border-color:var(--ink);color:#fff}
 .kb-empty{border:1.5px dashed #DDDDDA;border-radius:11px;padding:18px;text-align:center;font-size:11.5px;color:var(--tx-faint)}
+/* Raised for you (ticket-derived or generated) rather than typed by hand —
+   a neutral rail, no second accent colour. */
+.kb-card.derived{border-left:3px solid var(--tx-faint);background:var(--card)}
+.kb-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.kb-when{display:flex;flex-direction:column;gap:2px;min-width:0}
+.kb-foot .due.late{color:#B4472F}
+.kb-foot .age{font-size:10.5px;color:var(--tx-faint);letter-spacing:.02em}
+.kb-new{display:flex;flex-direction:column;gap:10px}
+.kb-newrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.kb-newrow .c-input{min-width:180px}
+.kb-duefield{display:inline-flex;align-items:center;gap:8px;flex:none;flex-wrap:wrap}
+.kb-duefield > span{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx-faint)}
+.kb-duefield .c-input{flex:none;width:158px;padding:9px 10px;font-size:12.5px}
+/* The bare date input meant a calendar trip for "tomorrow". The dates people
+   actually pick are one click; the input still handles everything else. */
+.kb-duequick{display:inline-flex;gap:4px;flex-wrap:wrap}
+.kb-duequick button{font-size:11px;font-weight:600;color:var(--tx-soft);border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:#fff;white-space:nowrap}
+.kb-duequick button:hover{background:var(--band);color:var(--ink)}
+.kb-duequick button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.kb-duefield.compact .c-input{width:140px}
+.kb-typefield{display:inline-flex;align-items:center;gap:8px;flex:none}
+.kb-typefield > span{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx-faint)}
+.kb-typefield select.c-input{flex:none;width:auto;min-width:172px;padding:9px 10px;font-size:12.5px}
+.kb-edit{display:flex;flex-direction:column;align-items:stretch;gap:8px;cursor:default}
+.kb-edit:hover{transform:none;box-shadow:0 1px 2px rgba(22,24,28,.05)}
+.kb-edit .c-input{flex:none;width:100%}
+.kb-edit .kb-duefield .c-input{width:158px}
+.kb-editact{display:flex;gap:8px}
+.kb-editact .c-act{padding:7px 14px;font-size:12px}
+.kb-rowact{display:flex;gap:6px;flex:none}
+.c-taskic{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;flex:none;color:var(--tx-faint)}
+.c-ev .at .age{color:var(--tx-faint)}
+.c-ev .at .late{color:#B4472F;font-weight:600}
 @media (max-width:1180px){.c-kanban{grid-template-columns:1fr 1fr}}
 @media (max-width:620px){.c-kanban{grid-template-columns:1fr}}
 
@@ -858,20 +969,53 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-msg .bubble .orig{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tx-faint);white-space:nowrap}
 .c-msg .bubble .orig:hover{color:var(--ink)}
 .c-msg .bubble .orig svg.r{transform:rotate(180deg)}
-.c-msg .bubble .native{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--tx-soft);font-style:italic}
+.c-msg .bubble .native{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--tx-soft);font-style:italic;white-space:pre-wrap;word-break:break-word}
 .c-msg .bubble .aichip{display:inline-block;margin-left:7px;font-size:9px;font-weight:700;letter-spacing:.06em;background:var(--ink);color:#fff;border-radius:5px;padding:1.5px 6px;vertical-align:1px}
 .c-msg.me .bubble.ai{background:#E9E9E7;border:1px solid var(--line)}
 .c-msg .bubble .atts{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
 .c-msg .bubble .att{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:500;cursor:pointer}
 .c-msg .bubble .att:hover{border-color:var(--ink)}
 .c-msg .bubble .att i{font-style:normal;color:var(--tx-faint);font-size:10.5px}
-.tr-list{margin-top:10px;display:flex;flex-direction:column;gap:2px}
-.tr-step{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:12px;color:var(--tx-soft)}
-.tr-step .ic{width:18px;height:18px;border-radius:50%;background:#E8F0EB;color:#3D7A50;display:flex;align-items:center;justify-content:center;flex:none}
-.tr-step.flag .ic{background:#FBEFEC;color:#B4472F}
-.tr-step .tx{flex:1}
-.tr-step .tx b{color:var(--ink);font-weight:600}
-.tr-step .ms{font-size:10.5px;color:var(--tx-faint);font-variant-numeric:tabular-nums}
+/* Tasks filed against the open conversation. Same neutral strip language as
+   the .c-risk banners it sits with — no second accent colour. */
+.c-tktasks{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 13px;display:flex;flex-direction:column;gap:8px}
+.c-tktasks.empty{flex-direction:row;align-items:center;gap:9px;background:transparent;border-style:dashed;color:var(--tx-faint);font-size:12px}
+.c-tktasks.empty .tx{flex:1;min-width:0}
+.c-tktasks.empty .c-act,.c-tktasks .hd .c-act{padding:5px 12px;font-size:11.5px}
+.c-tktasks .hd{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx-soft)}
+.c-tktasks .hd b{font-weight:600;color:var(--ink)}
+.c-tktasks .hd .mut{color:var(--tx-faint)}
+.c-tktasks .hd .sp{flex:1}
+.c-tktasks .row{display:flex;align-items:center;gap:9px;font-size:12.5px;padding:5px 0;border-top:1px solid var(--line)}
+.c-tktasks .row .tx{flex:1;min-width:0;color:var(--tx-soft);overflow-wrap:anywhere}
+.c-tktasks .row .tx b{color:var(--ink);font-weight:600}
+.c-tktasks .row .due{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--tx-faint);white-space:nowrap}
+.c-tktasks .row .due.late{color:#B4472F}
+.c-tktasks .row .lk{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--tx-soft);border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:#fff;white-space:nowrap}
+.c-tktasks .row .lk:hover{background:var(--band);color:var(--ink)}
+.c-tktasks .row .c-check:hover{border-color:var(--ink)}
+.c-tktasks .add{display:flex;flex-direction:column;gap:9px;border-top:1px solid var(--line);padding-top:9px}
+.c-tktasks .add .c-input{flex:none;width:100%}
+.c-tkedit{border-top:1px solid var(--line);padding-top:9px}
+
+/* Returns: the options step puts a real email in front of the customer, so it
+   asks first and says plainly what it did afterwards. */
+.c-rconfirm{background:var(--band);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:9px}
+.c-rconfirm p{margin:0;font-size:12px;line-height:1.55;color:var(--tx-soft)}
+.c-rconfirm p b{color:var(--ink);font-weight:600;overflow-wrap:anywhere}
+.c-rconfirm .acts{display:flex;gap:8px;flex-wrap:wrap}
+.c-rsent{margin:0;display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#3D7A50;overflow-wrap:anywhere}
+/* Same line, no green tick, when nothing proves an email actually left. */
+.c-rsent.mut{color:var(--tx-faint);font-weight:500}
+.c-rhint{font-size:11px;color:var(--tx-faint);line-height:1.5}
+/* Supplier request form (right rail). Same stacked-field shape as the return
+   confirmation above it, so the two cards read as one family. */
+.c-supform{display:flex;flex-direction:column;gap:10px}
+.c-supform .f{display:flex;flex-direction:column;gap:4px}
+.c-supform .f > span{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx-faint)}
+.c-supform .c-input{flex:none;width:100%;box-sizing:border-box;padding:8px 10px;font-size:12.5px}
+.c-supform textarea.c-input{resize:vertical;line-height:1.5;font-family:inherit}
+.c-supform .acts{display:flex;gap:8px;flex-wrap:wrap}
 
 /* AI per-ticket switch: green on, red off */
 .c-aiswitch{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:600;background:#E8F0EB;color:#3D7A50;white-space:nowrap}
@@ -893,7 +1037,13 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 
 /* overview 6-kpi + wide lane rows + langs */
 .c-kpis.six{grid-template-columns:repeat(6,1fr)}
-@media (max-width:1280px){.c-kpis.six{grid-template-columns:repeat(3,1fr)}}
+.c-kpis.k8{grid-template-columns:repeat(4,1fr)}
+.c-statmix{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.c-statmix .cell{background:var(--band);border-radius:10px;padding:12px 14px}
+.c-statmix .cell .n{display:block;font-size:22px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.c-statmix .cell .l{display:block;font-size:11.5px;color:var(--tx-soft);margin-top:2px}
+@media (max-width:900px){.c-statmix{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:1280px){.c-kpis.six{grid-template-columns:repeat(3,1fr)}.c-kpis.k8{grid-template-columns:repeat(2,1fr)}}
 .c-lane-row.wide{grid-template-columns:150px 1fr 44px}
 .c-langs{display:flex;gap:8px;flex-wrap:wrap}
 .c-lang{display:inline-flex;align-items:center;gap:7px;background:var(--band);border-radius:999px;padding:7px 13px;font-size:12.5px}
@@ -909,9 +1059,6 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 .c-teamrow .hd .stores{font-size:12px;color:var(--tx-faint)}
 .c-teamrow .hd .at{font-size:11px;color:var(--tx-faint)}
 .c-teamrow .perms{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-top:12px}
-.c-teamrow .perms label{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--tx-soft);cursor:pointer}
-.c-teamrow .perms label.lock{opacity:.55;cursor:default}
-.c-teamrow .perms input{accent-color:var(--ink);width:14px;height:14px}
 .c-filterblock .hd{font-size:13.5px;font-weight:600}
 .c-filterblock .chips{display:flex;gap:6px;flex-wrap:wrap}
 .fchip{display:inline-flex;align-items:center;gap:6px;background:var(--band);border-radius:999px;padding:6px 8px 6px 12px;font-size:12.5px}
@@ -927,14 +1074,16 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 /* status select + internal notes (Gorgias pattern: full-width tinted block,
    author + label + timestamp on one hairline header) */
 .c-statuschip .dot,.c-menu .dot{width:7px;height:7px;border-radius:50%;flex:none;display:inline-block}
-.c-note{background:#FCF9F0;border:1px solid #EDE5CC;border-radius:9px;padding:10px 13px;font-size:13px;line-height:1.6;color:#4A4433}
-.c-note .nh{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#8A7A3B;margin-bottom:4px}
-.c-note .nh b{font-weight:700;color:#5C5334}
-.c-note .nh svg{color:#B3A469}
-.c-note .nh .at{margin-left:auto;font-weight:500;font-size:10.5px;color:#B3A469;font-variant-numeric:tabular-nums}
-.c-note.ai{background:#FAFAF7;border-color:#E3E1D5}
-.c-note.ai .nh{color:#6E6A52}
-p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;padding:0}
+.c-inote{background:#FCF9F0;border:1px solid #EDE5CC;border-radius:9px;padding:10px 13px;font-size:13px;line-height:1.6;color:#4A4433}
+.c-inote .nh{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#8A7A3B;margin-bottom:4px}
+.c-inote .nh b{font-weight:700;color:#5C5334}
+.c-inote .nh svg{color:#B3A469}
+.c-inote .nh .at{margin-left:auto;font-weight:500;font-size:10.5px;color:#B3A469;font-variant-numeric:tabular-nums}
+.c-inote.ai{background:#FAFAF7;border-color:#E3E1D5}
+.c-inote.ai .nh{color:#6E6A52}
+/* c-note is the muted caption everywhere. The cream card it used to double as
+   is now .c-inote, so a div/span caption no longer becomes a cream box by
+   accident (that is what boxed 'No timeline events.' and the 'via Gmail' chip). */
 .c-compose .opt{font-weight:400;color:var(--tx-faint);font-size:11px;margin-left:6px}
 .c-orderchip{display:inline-flex;align-items:center;gap:8px;background:var(--band);border-radius:9px;padding:9px 12px;font-size:12.5px;font-weight:500}
 .c-orderchip button{display:flex;padding:2px;border-radius:50%;color:var(--tx-faint)}
@@ -981,7 +1130,46 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 .tour-bubble .skip{font-size:12px;color:rgba(255,255,255,.6)}
 .tour-bubble .skip:hover{color:#fff}
 .tour-bubble .next{background:#fff;color:var(--ink);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600}
-.c-tourbtn{margin-left:auto;width:22px;height:22px;border-radius:50%;background:#ECECEA;color:var(--tx-soft);font-size:12px;font-weight:700}
+/* Both buttons used to carry margin-left:auto, so the second shoved itself to
+   the edge instead of sitting beside the first; and with no flex centring the "?"
+   glyph rode its text baseline while the sign-out SVG centred on the box. */
+.c-tourbtn,.console2 .c-tourbtn{width:22px;height:22px;border-radius:50%;background:#ECECEA;color:var(--tx-soft);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none;padding:0;line-height:1}
+.c-me .c-tourbtn:first-of-type{margin-left:auto}
+.c-me .c-tourbtn + .c-tourbtn{margin-left:6px}
+
+/* API key creation: a labelled form instead of one cramped inline strip. */
+.c-keyform{display:grid;grid-template-columns:1fr 170px;gap:12px 14px;align-items:end}
+.c-keyform .f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.c-keyform .f > span{font-size:11.5px;font-weight:600;color:var(--tx-soft)}
+.c-keyform .f > span i{font-style:normal;font-weight:400;color:var(--tx-faint)}
+.c-keyform .f input{width:100%}
+.c-keyaccess{grid-column:1/2}
+.c-keyform > .c-act{grid-column:2/3;justify-self:end}
+
+/* Nothing in the console renders a raw checkbox any more: every binary setting is
+   a .c-toggle switch. This stays as the single designed fallback so one added
+   later cannot arrive as the bare platform box. Resetting min-width and padding
+   is the guard that matters, not width: an ancestor form rule (.c-rulebuilder
+   input) sets min-width:160px and padding:7px 9px, and under border-box both are
+   floors that width:16px cannot undo. That is how the Full access box ended up
+   160px wide across the form. */
+.console2 input[type="checkbox"]{
+  appearance:none;-webkit-appearance:none;margin:0;padding:0;flex:none;
+  width:16px;height:16px;min-width:0;max-width:16px;border:1.5px solid #D6D8DC;border-radius:5px;background:#fff;
+  display:inline-grid;place-content:center;cursor:pointer;
+  transition:background .14s ease,border-color .14s ease,box-shadow .14s ease;
+}
+.console2 input[type="checkbox"]:hover:not(:disabled){border-color:#B4B7BD}
+.console2 input[type="checkbox"]::before{
+  content:"";width:10px;height:10px;transform:scale(0);transition:transform .12s ease-out;
+  background:#fff;
+  clip-path:polygon(14% 44%,0 65%,50% 100%,100% 16%,80% 0%,43% 62%);
+}
+.console2 input[type="checkbox"]:checked{background:var(--ink);border-color:var(--ink)}
+.console2 input[type="checkbox"]:checked::before{transform:scale(1)}
+.console2 input[type="checkbox"]:disabled{opacity:.45;cursor:not-allowed}
+.console2 input[type="checkbox"]:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media (max-width:720px){.c-keyform{grid-template-columns:1fr}.c-keyaccess,.c-keyform > .c-act{grid-column:1/2}.c-keyform > .c-act{justify-self:start}}
 .c-tourbtn:hover{background:var(--ink);color:#fff}
 .console2.collapsed .c-tourbtn{display:none}
 
@@ -1142,8 +1330,8 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 .ob2{flex-direction:row}
 .ob2-side{width:320px;flex:none;background:#fff;border-right:1px solid var(--line);padding:26px 26px 22px;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh}
 .ob2-side .brand{display:flex;align-items:center;gap:6px}
-.ob2-side .brand img{height:14px;display:block;transform:translateY(-0.5px)}
-.ob2-side .brand .wm{font-weight:600;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
+.ob2-side .brand img{height:11.9px;display:block;transform:translateY(-0.5px)}
+.ob2-side .brand .wm{font-weight:600;font-size:15px;letter-spacing:-.025em;color:var(--ink)}
 .ob2-sub{font-size:12.5px;line-height:1.6;color:var(--tx-faint);margin:16px 0 26px;max-width:24ch}
 .ob-vsteps{display:flex;flex-direction:column;gap:0;flex:1}
 .vstep{display:flex;gap:12px}
@@ -1270,7 +1458,7 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 /* saved replies menu + pre-send check chip */
 .console2 .c-macrobtn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--tx-faint);border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:#fff;margin-right:10px}
 .console2 .c-macrobtn:hover{color:var(--ink);background:var(--band)}
-.c-sanity{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;cursor:help;white-space:nowrap}
+.c-sanity{background:none;border:none;padding:0;font-family:inherit;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;cursor:help;white-space:nowrap}
 .c-sanity.ok{color:#3D7A50}
 .c-sanity.warn{color:#B4472F}
 
@@ -1314,21 +1502,276 @@ p.c-note{background:none;border:none;color:var(--tx-faint);max-width:none;paddin
 .c-rulebuilder .sp{flex:1}
 
 /* live-mode gate */
-.lg-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--band)}
-.lg-card{width:100%;max-width:360px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:30px 32px;display:flex;flex-direction:column;gap:10px}
+/* Full-screen cards shown INSTEAD of the console shell (sign-in, session check,
+   paywall). Column, so the rail's lockup sits above the card and these screens are
+   identifiably Resolver; .lg-brand is the same .c-brand markup, sized down. */
+.lg-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--band);padding:24px}
+.c-brand.lg-brand{padding:0;font-size:13.5px;justify-content:center;color:var(--ink)}
+.c-brand.lg-brand img{height:10.5px}
+/* Centred at the container, not per element: a narrow single-action card with a
+   centred lockup above it and centred helper text below reads broken with a
+   left-aligned heading in the middle. Inputs keep their own left-aligned text,
+   because centred placeholder text in a field is its own kind of wrong. */
+.lg-card{width:100%;max-width:360px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:30px 32px;display:flex;flex-direction:column;gap:10px;text-align:center}
+.lg-card input{text-align:left}
+/* Recovery link on the sign-in card. Deliberately a text link, not a button: it must be
+   findable without competing with the primary action next to it. */
+.lg-link{background:none;border:0;padding:4px 0 0;margin:0;font:inherit;font-size:12.5px;
+  color:var(--tx-soft);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.lg-link:hover{color:var(--ink)}
+.lg-link:disabled{opacity:.5;cursor:default}
 .lg-card h1{font-size:20px;letter-spacing:-.02em}
 .lg-note{font-size:12.5px;color:var(--tx-soft);line-height:1.55}
 .lg-card input{border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-family:var(--pj);font-size:13.5px;outline:none}
 .lg-card input:focus{border-color:var(--ink)}
-.lg-google{border:1px solid var(--line);border-radius:999px;padding:10px;font-size:13.5px;font-weight:600;background:#fff}
+.lg-google{display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:10px;font-size:13.5px;font-weight:600;background:#fff}
 .lg-google:hover{background:var(--band)}
 .lg-or{text-align:center;font-size:11px;color:var(--tx-faint)}
 .lg-submit{background:var(--ink);color:#fff;border-radius:999px;padding:10px;font-size:13.5px;font-weight:600}
 .lg-submit:disabled{opacity:.4}
 .lg-err{font-size:12px;color:#B4472F}
-.lg-back{font-size:12px;color:var(--tx-faint);text-align:center;text-decoration:underline;text-underline-offset:2px}
+/* Secondary action inside a login-style card: same shape as .lg-submit, no fill.
+   Used by the paywall's Recheck, which must read as an action and not as the
+   primary one. */
+.lg-ghost{border:1px solid var(--line);border-radius:999px;padding:10px;font-size:13.5px;font-weight:600;background:#fff;color:var(--ink)}
+.lg-ghost:hover:enabled{background:var(--band)}
+.lg-ghost:disabled{opacity:.55}
 .lg-signout{position:fixed;right:14px;bottom:14px;z-index:80;font-size:10.5px;font-weight:700;letter-spacing:.04em;background:#2F6B45;color:#fff;border-radius:999px;padding:6px 12px;box-shadow:0 4px 14px -4px rgba(0,0,0,.3)}
 
 /* live SOP editor */
 .c-livesop{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-family:var(--pj);font-size:13px;line-height:1.6;outline:none;resize:vertical}
 .c-livesop:focus{border-color:var(--ink)}
+.c-lrow.clickable{cursor:pointer;transition:background .1s}
+.c-lrow.clickable:hover{background:var(--band)}
+
+/* order re-match controls in the ticket rail */
+.c-omatch{display:flex;gap:6px;align-items:center;margin:8px 0 6px}
+.c-omatch input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-family:var(--pj);font-size:12.5px;background:#fff;outline:none}
+.c-omatch input:focus{border-color:var(--ink-soft,var(--line))}
+
+/* row triage badges */
+.c-bdg{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:.02em;border-radius:999px;padding:2px 7px;margin-right:4px;white-space:nowrap;background:var(--band);color:var(--tx-soft);border:1px solid var(--line)}
+.c-bdg.red{background:#FBEFEC;color:#B4472F;border-color:#E5B8AC}
+.c-bdg.amber{background:#FDF6E9;color:#8A6320;border-color:#E8D5A8}
+.c-bdg.mut{background:transparent;color:var(--tx-faint)}
+
+/* Cutover: stores still served by the legacy support app are visible but inert. */
+.c-store-menu button.c-store-legacy{opacity:.42;cursor:not-allowed}
+.c-store-menu button.c-store-legacy:hover{background:transparent}
+/* A quiet one-line notice at the top of the console: work still happening in the
+   background, or something that stopped. Sits in the .c-stack column, so it is a row
+   above the view rather than a box beside it. */
+/* Inset from the console's edges, not flush against them. It lives in .c-stack, which
+   is a bare flex column with no padding of its own, so a bar with only inner padding
+   ran edge to edge, touched the top chrome and the rail, and read as part of the window
+   rather than as a notice inside the page. The 28px sides match .c-page so it lines up
+   with the content underneath instead of floating over it. */
+.c-note-bar{display:flex;align-items:center;justify-content:center;gap:9px;
+  margin:14px 28px 0;padding:10px 16px;border:1px solid var(--line);
+  border-radius:11px;background:var(--tint);color:var(--ink);font-size:13px;line-height:1.45;flex:0 0 auto}
+/* One short line about one thing: centred, like the other single-purpose cards in here.
+   Left-aligned text in a bar this wide leaves the sentence stranded at one end. */
+.c-note-bar > span{text-align:center}
+.c-note-bar.warn{background:var(--warn-tint,var(--tint));border-color:var(--warn-line,var(--line))}
+/* Pushed to the right edge so the message stays centred rather than being shifted off
+   centre by the button's width. */
+.c-note-bar button{position:absolute;right:16px;border:none;background:transparent;color:var(--tx-soft);
+  font-size:12.5px;font-weight:600;cursor:pointer;padding:2px 4px}
+.c-note-bar:has(button){position:relative}
+.c-note-bar button:hover{color:var(--ink)}
+
+/* A store whose lanes are open because it was grandfathered, not because they were
+   earned. Deliberately louder than the bars it contradicts. */
+.c-waiver{display:block;margin-top:6px;padding:7px 10px;border-radius:8px;font-size:11.5px;line-height:1.5;
+  background:var(--warn-tint,var(--tint));border:1px solid var(--warn-line,var(--line));color:var(--ink)}
+
+/* The AI corrected its own draft before sending. Sits above the failure list in the
+   "why wasn't this sent?" panel, because it changes how everything under it reads: a
+   reply that was rewritten is not the same event as one that was right first time. */
+.c-repair{margin:0 0 8px;padding:8px 11px;border-radius:9px;font-size:12.5px;line-height:1.5;
+  background:var(--tint);color:var(--ink);border:1px solid var(--line)}
+.c-repair.warn{background:var(--warn-tint,var(--tint));border-color:var(--warn-line,var(--line))}
+
+/* First run, and a filter that matched nothing. One card, centred: a title, at
+   most two short lines and at most one action. An empty screen is the worst
+   possible place for a paragraph, so nothing else is allowed in here. Same
+   lockup as .c-gone, borrowed rather than re-invented, and the same tokens. */
+.c-first{max-width:400px;margin:36px auto;text-align:center;padding:22px;
+  background:var(--paper);border:1px solid var(--line);border-radius:16px}
+.c-first .ic{width:42px;height:42px;border-radius:12px;display:inline-flex;align-items:center;
+  justify-content:center;background:var(--tint);color:var(--indigo);margin-bottom:12px}
+.c-first h3{font-size:15.5px;font-weight:700;color:var(--ink);margin:0 0 7px}
+.c-first p{font-size:13px;line-height:1.55;color:var(--tx-soft);margin:0 0 6px;overflow-wrap:anywhere}
+.c-first p:last-child{margin-bottom:0}
+.c-first .pri{margin-top:14px;min-height:38px;padding:0 17px;border:none;border-radius:999px;
+  font-family:var(--pj);font-size:13.5px;font-weight:600;cursor:pointer;background:var(--indigo);color:var(--paper)}
+.c-first .pri:hover{background:var(--indigo-d)}
+@media (max-width:620px){.c-first{margin:18px auto;padding:18px}}
+
+/* A store leaving the account. Sits above the console (which is itself position:fixed
+   inset:0) and below nothing, because until it is answered every number on screen is
+   about a store that is no longer there. */
+.c-gone-wrap{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(22,24,28,.42)}
+.c-gone{width:100%;max-width:420px;background:#fff;border-radius:16px;padding:22px;text-align:center;box-shadow:0 24px 60px -20px rgba(0,0,0,.4)}
+.c-gone .ic{width:42px;height:42px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:var(--tint);color:var(--indigo);margin-bottom:12px}
+.c-gone h3{font-size:16.5px;font-weight:700;color:var(--ink);margin:0 0 7px}
+.c-gone p{font-size:13.5px;line-height:1.55;color:var(--tx-soft);margin:0 0 18px}
+.c-gone .acts{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}
+.c-gone .acts button{min-height:38px;padding:0 17px;border-radius:999px;font-size:13.5px;font-weight:600}
+.c-gone .acts .pri{background:var(--indigo);color:#fff}
+.c-gone .acts .pri:hover{background:var(--indigo-d)}
+.c-gone .acts .sec{border:1px solid var(--line);color:var(--ink)}
+.c-gone .acts .sec:hover{background:var(--band)}
+.c-store-tag{margin-left:auto;font-size:10px;letter-spacing:.02em;text-transform:uppercase;
+  padding:2px 6px;border-radius:6px;border:1px solid var(--line);color:var(--tx-faint);white-space:nowrap}
+.c-storecard.is-legacy{opacity:.55}
+.c-storecard .hd .dot.off{background:#9AA0A6}
+.c-storecard .rm{margin-left:8px;color:#B4472F;background:none;border:none;cursor:pointer;font-size:12px}
+.c-storecard .rm:hover{text-decoration:underline}
+
+/* Settings > Operations: one row per manual job. */
+.c-ops{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.c-opsrow{display:flex;align-items:flex-start;gap:13px;padding:15px 16px;border-bottom:1px solid var(--line)}
+.c-opsrow:last-child{border-bottom:none}
+.c-opsrow .ic{display:flex;align-items:center;justify-content:center;width:30px;height:30px;flex:0 0 30px;
+  border-radius:8px;background:var(--band);color:var(--ink)}
+.c-opsrow .tx{flex:1;min-width:0}
+.c-opsrow .tx b{display:block;font-size:13.5px;font-weight:600;color:var(--ink)}
+.c-opsrow .tx p{margin:3px 0 0;font-size:12.5px;line-height:1.5;color:var(--tx-faint)}
+.c-opsrow .tx .res{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:12px;font-weight:500}
+.c-opsrow .tx .res.ok{color:#2F7D4F}
+.c-opsrow .tx .res.err{color:#B4472F}
+.c-opsrow > .c-act{flex:0 0 auto;margin-top:2px}
+/* Inline parameter for a job that takes one (backfill window). */
+.c-opsrow .tx .ctl{margin-top:9px}
+.c-jobfield{display:inline-flex;align-items:center;gap:8px}
+.c-jobfield > span{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx-faint)}
+.c-jobfield select.c-input{flex:none;width:auto;min-width:118px;padding:8px 10px;font-size:12.5px;background:#fff}
+
+/* Settings > Stores: one compact row per store (was a 250px card per store). */
+.c-storerow{display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px solid var(--line);
+  border-radius:10px;background:#fff}
+.c-storerow + .c-storerow{margin-top:6px}
+.c-storerow.is-legacy{opacity:.5}
+/* Archived store awaiting restore: muted, but the "Bring back" action stays
+   fully legible (unlike .is-legacy, whose rows have no action at all). */
+.c-storerow.is-archived{background:var(--band)}
+.c-storerow.is-archived .l1 b,.c-storerow.is-archived .l1 .dom{color:var(--tx-faint)}
+.c-storerow.is-archived > .c-act{flex:0 0 auto}
+.c-storerow > .dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#3D7A50}
+.c-storerow > .dot.off{background:#B6BAC0}
+.c-storerow .tx{flex:1;min-width:0}
+.c-storerow .l1{display:flex;align-items:center;gap:8px;min-width:0}
+.c-storerow .l1 b{font-size:13.5px;font-weight:600;color:var(--ink)}
+.c-storerow .l1 .dom{font-size:12px;color:var(--tx-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-storerow .l2{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:11.5px;color:var(--tx-faint)}
+.c-storerow .l2 code{background:none;padding:0;font-size:11.5px;color:var(--tx-soft);font-variant-ligatures:none}
+.c-storerow .l2 .sep{opacity:.5}
+.c-storerow .l2 .ok{color:#3D7A50}
+.c-storerow .l2 .warn{color:#B4472F}
+.c-storerow .open{font-size:11.5px;color:var(--tx-faint);white-space:nowrap}
+.c-storerow .rm{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;
+  border-radius:8px;border:none;background:none;color:var(--tx-faint);cursor:pointer}
+.c-storerow .rm:hover{background:#FBEFEC;color:#B4472F}
+.c-storerow .rm:disabled{opacity:.5;cursor:default}
+
+.c-notifrow.is-off{opacity:.5}
+.c-notifrow.is-off .c-switch{cursor:not-allowed}
+
+/* Collapsed rail: .c-collapse keeps margin-left:auto from the expanded header,
+   so once the logo and wordmark are hidden the toggle is the only child left
+   and auto-margin shoves it off-centre. Reset it and match the nav icon box so
+   it sits on the same vertical axis as everything below. */
+.console2.collapsed .c-collapse{margin-left:0;width:32px;height:32px;padding:0;
+  align-items:center;justify-content:center}
+
+/* Collapsed rail: single icon axis.
+   The labels are collapsed with width:0 rather than removed, and a zero-width
+   flex child still contributes its parent's `gap`. That pushed the brand toggle
+   +2.5px and the store avatar -5px off the axis the nav icons sit on, so three
+   different centres were visible down a 52px rail. Remove them outright and
+   zero the gaps so every row centres on the same pixel. */
+.console2.collapsed .c-brand,
+.console2.collapsed .c-store,
+.console2.collapsed .c-me,
+.console2.collapsed .c-nav .item,
+.console2.collapsed .c-set-link{gap:0;justify-content:center}
+.console2.collapsed .c-brand .bw,
+.console2.collapsed .c-store .nm,
+.console2.collapsed .c-store .mut,
+.console2.collapsed .c-me span:not(.av),
+.console2.collapsed .c-nav .item span,
+.console2.collapsed .c-nav .item .n,
+.console2.collapsed .c-set-link span{display:none}
+.console2.collapsed .c-collapse{margin:0}
+
+/* Composer bar: chunks move to the next line whole. Without nowrap the
+   countdown broke mid-phrase and left a dangling separator before Cancel. */
+.c-cbar > .c-act,.c-cbar > .c-regen{flex:none}
+.c-act.on{background:#E4E4E0;box-shadow:inset 0 0 0 1px rgba(22,24,28,.16)}
+.c-cbar .c-bartoggle{flex:none}
+.c-cbar .sp{flex:1 1 0;min-width:0}
+
+/* Narrow right-hand panel: a long prose value (order-match reason) right-aligned
+   inside an inline-flex wraps ragged. Stack it under its label instead. */
+.c-kv.stack{flex-direction:column;align-items:flex-start;gap:3px}
+.c-kv.stack b{text-align:left;justify-content:flex-start;line-height:1.45}
+/* Order-match actions read as an action list, not four underlined prose links. */
+.c-omatch-links{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:4px}
+.c-omatch-links .link{display:inline-flex;align-items:center;gap:6px;font-size:12px;
+  color:var(--tx-soft);text-decoration:none;cursor:pointer}
+.c-omatch-links .link:hover{color:var(--ink);text-decoration:underline}
+
+/* Empty cell: an em dash reads as 'no value', a bare middot reads as debris. */
+.c-dash{color:var(--tx-faint)}
+
+/* Checks chip became a button (click opens the trace). Suppress the ring on
+   mouse click, keep it for keyboard focus. */
+.c-sanity:focus:not(:focus-visible){outline:none}
+.c-sanity:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:6px}
+
+/* Auto-send verdict + expander are one control. Three tones, no new hue:
+   the same green/red/faint already used for sent, held and quiet states. */
+.c-checks.ok{color:#3D7A50}
+.c-checks.warn{color:#B4472F}
+.c-checks.mut{color:var(--tx-faint)}
+.c-checks.ok:hover,.c-checks.warn:hover,.c-checks.mut:hover{background:var(--band)}
+
+/* "Why wasn't this sent" — the panel under the composer bar. Replaces the old
+   .tr-list decision trace, which was fed by a field no server ever wrote. */
+.c-why{margin-top:10px;padding:11px 13px;background:var(--band);border-radius:9px}
+.c-why .hd{font-size:12.5px;line-height:1.55;color:var(--ink);margin:0}
+.c-why .fails{margin:9px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.c-why .fails li{position:relative;padding-left:16px;font-size:12px;line-height:1.5;color:#B4472F}
+.c-why .fails li::before{content:'';position:absolute;left:4px;top:7px;width:5px;height:5px;border-radius:50%;background:#B4472F}
+.c-why .kv{margin:10px 0 0;display:flex;flex-direction:column;gap:2px}
+.c-why .kv > div{display:flex;gap:12px;align-items:baseline;padding:4px 0;border-top:1px solid var(--line)}
+.c-why .kv > div:first-child{border-top:none}
+.c-why .kv dt{flex:none;min-width:104px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx-faint)}
+.c-why .kv dd{margin:0;font-size:12px;color:var(--tx-soft);overflow-wrap:anywhere}
+
+/* Side panel is a grid item; without min-width:0 it refuses to shrink below its
+   content's intrinsic width, so dragging the splitter clipped labels mid-word
+   ("Timeline" -> "Timelin") instead of reflowing them. */
+.c-ctx2 .card,.c-ctx2 .c-kv,.c-ctx2 .c-omatch{min-width:0}
+.c-ctx2 .c-kv b,.c-ctx2 .c-kv span{overflow-wrap:anywhere}
+.c-omatch-links .link{white-space:nowrap}
+
+/* The auto-send countdown is status, not an action — it lives in the composer
+   header next to 'drafted Xm ago', which keeps the action bar to one row. */
+.c-autosend.hdr{margin-left:auto;font-size:11.5px}
+.c-autosend.hdr + .meta{margin-left:10px}
+
+/* Regenerate with agent instructions - the prompt box the old platform had. */
+.c-regen{position:relative;display:inline-flex}
+.c-prompt-pop{position:absolute;bottom:calc(100% + 10px);right:0;width:358px;background:#fff;border:1px solid rgba(22,24,28,.09);border-radius:14px;box-shadow:0 1px 2px rgba(22,24,28,.05),0 12px 28px -6px rgba(22,24,28,.16);z-index:30;padding:13px 13px 12px;display:flex;flex-direction:column;gap:9px;text-align:left;cursor:default}
+.c-prompt-h{font-size:12px;font-weight:600;color:var(--ink)}
+.c-prompt-t{width:100%;box-sizing:border-box;resize:vertical;min-height:64px;font:inherit;font-size:13px;line-height:1.45;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;outline:none}
+.c-prompt-t:focus{background:#fff;border-color:rgba(22,24,28,.22)}
+.c-prompt-t::placeholder{color:var(--tx-faint)}
+.c-prompt-f{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.c-prompt-hint{font-size:11px;line-height:1.3;color:var(--tx-faint)}
+.c-prompt-f .c-act{flex:none;padding:8px 14px}
+
+/* Regenerate + prompt as ONE control: clicking regenerates, the caret opens the
+   prompt. A fourth pill pushed Approve & send onto a second row. */

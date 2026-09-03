@@ -154,13 +154,11 @@ export function GetStarted() {
             <span className="ob-ic"><Check size={22} strokeWidth={2} /></span>
             <h1>Store connected. Create your login.</h1>
             <p>Your Resolver account manages every store you connect. This is the email you&rsquo;ll sign in with.</p>
-            <div className="ob-form">
-              <label>Email<input type="email" placeholder="you@store.com" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-              <label>Password<input type="password" placeholder="At least 8 characters" value={pw} onChange={(e) => setPw(e.target.value)} /></label>
-            </div>
-            <button className="btn pri" disabled={busy || !email || pw.length < 8} onClick={() => fake(700)}>
-              {busy ? <Loader2 size={15} className="c-spin" /> : null} Create account <ArrowRight size={15} />
-            </button>
+            {/* This page is an illustrative walkthrough, not a real signup: the
+                previous version collected an email AND a password and sent them
+                nowhere. Sign-in happens in the console via Google. */}
+            <p className="ob-note">You&rsquo;ll sign in with your Google account — there&rsquo;s no separate password to create.</p>
+            <a className="btn pri" href="/app">Go to sign in <ArrowRight size={15} /></a>
           </section>
         )}
 
