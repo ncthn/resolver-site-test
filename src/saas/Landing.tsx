@@ -25,7 +25,15 @@ const LOGO = '/logo/recolor/oct-black-t.png';
 
 const START = '/get-started';
 const LOGIN = '/app';
-const DEMO = '/contact';
+// Cal.com, not the contact page. Every "Book a demo" pointed at /contact, so a visitor
+// ready to talk had to fill a form and then wait for someone to answer it. This is the
+// booking page itself: they pick a slot and it is done.
+//
+// A plain link rather than Cal's popup embed, deliberately. The embed is a vendor script
+// on every page load for a button most visitors never press, and this page's job is to
+// load fast. If demo volume ever justifies the inline experience, the popup is a drop-in
+// upgrade from here.
+const DEMO = 'https://cal.com/ops-only-upg4tp/30min';
 const PRICING_FULL = '/pricing';
 
 const reduced = () =>
@@ -70,7 +78,7 @@ export function Nav() {
         </nav>
         <div className="nv-cta">
           <a className="login" href={LOGIN}>Log in</a>
-          <a className="btn soft sm demo" href={DEMO}>Book a demo</a>
+          <a className="btn soft sm demo" href={DEMO} target="_blank" rel="noopener noreferrer">Book a demo</a>
           <a className="btn pri sm" href={START}>Start in draft-only mode</a>
         </div>
       </div>
@@ -204,7 +212,7 @@ function Hero() {
           transition={{ duration: 0.5, delay: 0.24 }}
         >
           <a className="btn pri" href={START}>Start in draft-only mode</a>
-          <a className="btn soft" href={DEMO}>Book a demo</a>
+          <a className="btn soft" href={DEMO} target="_blank" rel="noopener noreferrer">Book a demo</a>
         </motion.div>
         <motion.span
           className="hero2-note"
@@ -575,7 +583,7 @@ function Guarantees() {
               behaves, on every plan, from the first minute. The lanes, the window, the
               languages: that is how you keep the machine on a leash while it does the work.
             </p>
-            <a className="btn pri" href={DEMO}>See it on your tickets</a>
+            <a className="btn pri" href={DEMO} target="_blank" rel="noopener noreferrer">See it on your tickets</a>
           </div>
         </Reveal>
         <div className="stats-cards">
@@ -925,7 +933,7 @@ function Cta() {
           <p>Ten minutes of setup. Nothing sends until you flip a lane.</p>
           <div className="ctas">
             <a className="btn pri" href={START}>Start in draft-only mode</a>
-            <a className="btn soft" href={DEMO} style={{ background: '#fff' }}>Book a demo</a>
+            <a className="btn soft" href={DEMO} target="_blank" rel="noopener noreferrer" style={{ background: '#fff' }}>Book a demo</a>
           </div>
         </Reveal>
       </div>
