@@ -18,22 +18,42 @@ const DEMO_MAIL = 'hello@resolver.chat';
 const CAL_LINK = 'ops-only-upg4tp/30min';
 export const CAL_URL = `https://cal.com/${CAL_LINK}`;
 
-function loadCal(): Promise<any> {
+// Cal's embed.js does not define window.Cal itself, it expects the vendor
+// queueing stub to already be there and flushes into it. Appending the script
+// on its own throws "Cal is not defined" inside embed.js, so install the stub
+// first, exactly as Cal's own snippet does.
+function installCalStub() {
   const w = window as any;
-  if (w.__calReady) return w.__calReady;
-  w.__calReady = new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://app.cal.com/embed/embed.js';
-    s.async = true;
-    s.onload = () => {
-      // embed.js defines window.Cal once it has run.
-      if (typeof w.Cal === 'function') resolve(w.Cal);
-      else reject(new Error('cal-embed-missing'));
-    };
-    s.onerror = () => reject(new Error('cal-embed-blocked'));
-    document.head.appendChild(s);
-  });
-  return w.__calReady;
+  if (w.Cal) return;
+  const d = document;
+  const push = (a: any, ar: any) => { a.q.push(ar); };
+  w.Cal = function (...ar: any[]) {
+    const cal = w.Cal;
+    if (!cal.loaded) {
+      cal.ns = {};
+      cal.q = cal.q || [];
+      const sc = d.createElement('script');
+      sc.src = 'https://app.cal.com/embed/embed.js';
+      sc.async = true;
+      d.head.appendChild(sc);
+      cal.loaded = true;
+    }
+    if (ar[0] === 'init') {
+      const api = function (...a: any[]) { push(api, a); };
+      const namespace = ar[1];
+      (api as any).q = (api as any).q || [];
+      if (typeof namespace === 'string') {
+        cal.ns[namespace] = cal.ns[namespace] || api;
+        push(cal.ns[namespace], ar);
+        push(cal, ['initNamespace', namespace]);
+      } else {
+        push(cal, ar);
+      }
+      return;
+    }
+    push(cal, ar);
+  };
+  w.Cal.q = [];
 }
 
 /** Inline Cal.com booker with a plain-link fallback if the embed cannot load. */
@@ -42,36 +62,40 @@ function CalBooker() {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    loadCal()
-      .then((Cal: any) => {
-        if (cancelled || !box.current) return;
-        Cal('init', { origin: 'https://app.cal.com' });
-        Cal('inline', {
-          elementOrSelector: box.current,
-          calLink: CAL_LINK,
-          config: { layout: 'month_view' },
-        });
-        Cal('ui', { hideEventTypeDetails: false, layout: 'month_view' });
-      })
-      .catch(() => { if (!cancelled) setFailed(true); });
-    return () => { cancelled = true; };
+    installCalStub();
+    const Cal = (window as any).Cal;
+    Cal('init', { origin: 'https://app.cal.com' });
+    Cal('inline', {
+      elementOrSelector: box.current,
+      calLink: CAL_LINK,
+      config: { layout: 'month_view' },
+    });
+    Cal('ui', { hideEventTypeDetails: false, layout: 'month_view' });
+    // The embed is queued, not awaited, so there is no error callback to hook.
+    // If nothing rendered by then, assume it was blocked and offer the link.
+    const t = setTimeout(() => {
+      if (!box.current?.querySelector('iframe')) setFailed(true);
+    }, 8000);
+    return () => clearTimeout(t);
   }, []);
 
-  if (failed) {
-    return (
-      <div className="pg-card cal-fallback">
-        <p style={{ color: 'var(--tx-soft)', fontSize: 13.5, lineHeight: 1.6 }}>
-          The calendar could not load here, it is usually a blocker extension.
-        </p>
-        <a className="btn pri" href={CAL_URL} target="_blank" rel="noopener noreferrer" style={{ marginTop: 14 }}>
-          Open the booking page
-        </a>
-      </div>
-    );
-  }
-  return <div className="cal-inline" ref={box} />;
+  return (
+    <>
+      <div className="cal-inline" ref={box} hidden={failed} />
+      {failed && (
+        <div className="pg-card cal-fallback">
+          <p style={{ color: 'var(--tx-soft)', fontSize: 13.5, lineHeight: 1.6 }}>
+            The calendar could not load here, it is usually a blocker extension.
+          </p>
+          <a className="btn pri" href={CAL_URL} target="_blank" rel="noopener noreferrer" style={{ marginTop: 14 }}>
+            Open the booking page
+          </a>
+        </div>
+      )}
+    </>
+  );
 }
+
 
 function Page({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
