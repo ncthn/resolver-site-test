@@ -60,11 +60,14 @@ h1,h2,h3{letter-spacing:-.03em;text-wrap:balance;font-weight:600}
 /* Lockup geometry: the mark hangs from the baseline at .675em. Inter Tight's
    ascender is .7275em, but the mark is a solid flat-topped octagon, and a dense
    shape set to the same line as a thin stem reads taller than it is, so it sits
-   ~0.9px inside the ascenders. The gap is 6px rather than the type-derived 7px
-   because the artwork is cropped hard to its ink and carries none of the side
-   bearing a letterform does; 5px closed it up too far. Was 13.5px, centred on the flex line and nudged up
+   ~0.9px inside the ascenders. The gap is .3529em (6px at the 17px nav) rather
+   than the type-derived 7px, because the artwork is cropped hard to its ink and
+   carries none of the side bearing a letterform does; 5px closed it up too far.
+   Both numbers are em, never px: a fixed-pixel gap kept the mark scaling with the
+   wordmark while the space between them did not, so the lockup read differently
+   at every size. Was 13.5px, centred on the flex line and nudged up
    half a pixel: three errors stacking into a mark that matched neither edge. */
-.brand{display:inline-flex;align-items:baseline;gap:6px;font-size:17px}
+.brand{display:inline-flex;align-items:baseline;gap:.3529em;font-size:17px}
 .brand img{height:.675em;width:auto;display:block}
 .brand .wm{font-weight:600;font-size:1em;letter-spacing:-.025em;line-height:1}
 .nv-links{display:flex;gap:4px;justify-self:center}
